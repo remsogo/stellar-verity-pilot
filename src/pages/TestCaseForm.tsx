@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navigation/Navbar";
-import { Sidebar } from "@/components/UI/Sidebar";
+import { CustomSidebar } from "@/components/UI/CustomSidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TestCase } from "@/types";
+import { TestCase, Status, Priority } from "@/types";
 import { Check, ChevronLeft, Plus, Trash } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -50,6 +50,7 @@ const TestCaseForm = () => {
     automated: false,
     tags: [],
     requirements: [],
+    project_id: ""
   });
 
   const [testSteps, setTestSteps] = useState<TestStepForm[]>([{ 
@@ -101,7 +102,23 @@ const TestCaseForm = () => {
           return;
         }
 
-        setTestCase(testCaseData);
+        // Transform DB fields to match our frontend type
+        const transformedData = {
+          id: testCaseData.id,
+          title: testCaseData.title,
+          description: testCaseData.description,
+          status: testCaseData.status as Status,
+          priority: testCaseData.priority as Priority,
+          author: testCaseData.author,
+          project_id: testCaseData.project_id,
+          estimate_time: testCaseData.estimate_time,
+          automated: testCaseData.automated,
+          preconditions: testCaseData.preconditions,
+          requirements: testCaseData.requirements,
+          tags: testCaseData.tags
+        };
+
+        setTestCase(transformedData);
 
         // Fetch test steps
         const { data: stepsData, error: stepsError } = await supabase
@@ -245,7 +262,16 @@ const TestCaseForm = () => {
         const { error } = await supabase
           .from("test_cases")
           .update({
-            ...testCase,
+            title: testCase.title,
+            description: testCase.description,
+            status: testCase.status,
+            priority: testCase.priority,
+            preconditions: testCase.preconditions,
+            automated: testCase.automated,
+            tags: testCase.tags,
+            project_id: testCase.project_id,
+            estimate_time: testCase.estimate_time,
+            requirements: testCase.requirements,
             updated_at: new Date().toISOString()
           })
           .eq("id", id);
@@ -256,7 +282,16 @@ const TestCaseForm = () => {
         const { data, error } = await supabase
           .from("test_cases")
           .insert({
-            ...testCase,
+            title: testCase.title!,
+            description: testCase.description,
+            status: testCase.status as Status,
+            priority: testCase.priority as Priority,
+            preconditions: testCase.preconditions,
+            automated: testCase.automated,
+            tags: testCase.tags || [],
+            project_id: testCase.project_id!,
+            estimate_time: testCase.estimate_time,
+            requirements: testCase.requirements || [],
             author
           })
           .select();
@@ -272,11 +307,13 @@ const TestCaseForm = () => {
           .filter(step => step.id)
           .map(step => step.id);
           
-        await supabase
-          .from("test_steps")
-          .delete()
-          .eq("test_case_id", testCaseId)
-          .not("id", "in", `(${currentStepIds.join(",")})`);
+        if (currentStepIds.length > 0) {
+          await supabase
+            .from("test_steps")
+            .delete()
+            .eq("test_case_id", testCaseId)
+            .not("id", "in", `(${currentStepIds.join(",")})`);
+        }
       }
       
       // Update or insert steps
@@ -317,7 +354,7 @@ const TestCaseForm = () => {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+      <CustomSidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
         <main className="flex-1 overflow-y-auto p-6">
@@ -424,7 +461,7 @@ const TestCaseForm = () => {
                       <Label htmlFor="status">Status</Label>
                       <Select
                         value={testCase.status}
-                        onValueChange={(value) => handleSelectChange("status", value)}
+                        onValueChange={(value) => handleSelectChange("status", value as Status)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
@@ -442,7 +479,7 @@ const TestCaseForm = () => {
                       <Label htmlFor="priority">Priority</Label>
                       <Select
                         value={testCase.priority}
-                        onValueChange={(value) => handleSelectChange("priority", value)}
+                        onValueChange={(value) => handleSelectChange("priority", value as Priority)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select priority" />

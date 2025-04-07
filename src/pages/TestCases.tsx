@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navigation/Navbar";
-import { Sidebar } from "@/components/UI/Sidebar";
+import { CustomSidebar } from "@/components/UI/CustomSidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,8 +35,29 @@ const TestCases = () => {
           return;
         }
 
-        setTestCases(data as TestCase[]);
-        setFilteredTestCases(data as TestCase[]);
+        // Transform database fields to match our frontend TestCase type
+        const transformedData = data.map(item => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          status: item.status as TestCase['status'],
+          priority: item.priority as TestCase['priority'],
+          author: item.author,
+          project_id: item.project_id,
+          estimate_time: item.estimate_time,
+          automated: item.automated,
+          preconditions: item.preconditions,
+          requirements: item.requirements,
+          tags: item.tags,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+          // Add these for frontend compatibility
+          createdAt: item.created_at,
+          updatedAt: item.updated_at
+        }));
+
+        setTestCases(transformedData);
+        setFilteredTestCases(transformedData);
       } catch (error) {
         console.error("Error fetching test cases:", error);
       } finally {
@@ -79,7 +100,7 @@ const TestCases = () => {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+      <CustomSidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
         <main className="flex-1 overflow-y-auto p-6">

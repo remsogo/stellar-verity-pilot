@@ -3,17 +3,26 @@ export type Status = 'passed' | 'failed' | 'pending' | 'blocked';
 
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
 
+// Updated to match database schema
 export type TestCase = {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   status: Status;
   priority: Priority;
   author: string;
-  createdAt: string;
-  updatedAt: string;
-  steps: TestStep[];
+  project_id: string;
+  estimate_time?: number;
+  automated?: boolean;
+  preconditions?: string;
+  requirements?: string[];
   tags: string[];
+  created_at?: string;
+  updated_at?: string;
+  // These fields are for frontend use
+  createdAt?: string;
+  updatedAt?: string;
+  steps?: TestStep[];
 };
 
 export type TestStep = {
