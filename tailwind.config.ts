@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -52,16 +53,15 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
-				}
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+        },
+        warning: {
+          DEFAULT: 'hsl(var(--warning))',
+        },
+        info: {
+          DEFAULT: 'hsl(var(--info))',
+        },
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,12 +84,33 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+        'pulse-subtle': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.7' },
+        },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-5px)' },
+        }
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
-			}
+				'accordion-up': 'accordion-up 0.2s ease-out',
+        'pulse-subtle': 'pulse-subtle 3s infinite ease-in-out',
+        'float': 'float 5s infinite ease-in-out',
+			},
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: '100%',
+          },
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
