@@ -20,13 +20,16 @@ import {
   FolderTree,
   Home,
   LayoutDashboard,
+  LogOut,
   Settings,
   User2,
 } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const navItems = [
   { name: "Dashboard", icon: LayoutDashboard, path: "/" },
@@ -39,7 +42,54 @@ const navItems = [
 
 export const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+  const [user, setUser] = useState<{ fullName: string; email: string } | null>(null);
+
+  useEffect(() => {
+    const getUserProfile = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      if (authUser) {
+        const { data: profileData } = await supabase
+          .from("user_profiles")
+          .select("full_name, email")
+          .eq("auth_id", authUser.id)
+          .single();
+          
+        if (profileData) {
+          setUser({
+            fullName: profileData.full_name,
+            email: profileData.email
+          });
+        } else {
+          setUser({
+            fullName: authUser.user_metadata?.full_name || "User",
+            email: authUser.email || ""
+          });
+        }
+      }
+    };
+    
+    getUserProfile();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      getUserProfile();
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Signed out successfully");
+      navigate("/auth");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Failed to sign out");
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -87,8 +137,8 @@ export const Sidebar = () => {
                   <User2 className="h-4 w-4" />
                 </div>
                 <div className="ml-2">
-                  <p className="text-sm font-medium">John Doe</p>
-                  <p className="text-xs text-muted-foreground">Admin</p>
+                  <p className="text-sm font-medium">{user?.fullName || "User"}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email || ""}</p>
                 </div>
               </div>
             </div>
@@ -111,8 +161,13 @@ export const Sidebar = () => {
                 )}
               </Button>
               <ThemeToggle />
-              <Button variant="ghost" size="icon">
-                <Settings size={18} />
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={handleSignOut}
+                title="Sign out"
+              >
+                <LogOut size={18} />
               </Button>
             </div>
           </div>
