@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
@@ -51,46 +52,48 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route 
-              path="/" 
-              element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/test-cases" 
-              element={
-                <ProtectedRoute>
-                  <TestCases />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/test-cases/new" 
-              element={
-                <ProtectedRoute>
-                  <TestCaseForm />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/test-cases/:id" 
-              element={
-                <ProtectedRoute>
-                  <TestCaseForm />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <SidebarProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route 
+                path="/" 
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/test-cases" 
+                element={
+                  <ProtectedRoute>
+                    <TestCases />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/test-cases/new" 
+                element={
+                  <ProtectedRoute>
+                    <TestCaseForm />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/test-cases/:id" 
+                element={
+                  <ProtectedRoute>
+                    <TestCaseForm />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </SidebarProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
