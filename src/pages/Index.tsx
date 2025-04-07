@@ -1,6 +1,6 @@
 
 import { Navbar } from "@/components/Navigation/Navbar";
-import { Sidebar } from "@/components/UI/Sidebar";
+import { Sidebar } from "@/components/ui/sidebar"; // Fixed import path to lowercase 'ui'
 import { DashboardStats } from "@/components/Dashboard/DashboardStats";
 import { TestsChart } from "@/components/Dashboard/TestsChart";
 import { TestCaseList } from "@/components/TestCases/TestCaseList";
