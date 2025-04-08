@@ -47,7 +47,9 @@ export const TestCaseDataDriven: React.FC<TestCaseDataDrivenProps> = ({
                 <InfoIcon className="h-4 w-4 mr-2" />
                 <AlertDescription>
                   Enter test data sets in JSON format. Each set should have an id, name, and values object.
-                  Example: [{"id": "1", "name": "Valid User", "values": {"username": "john", "password": "secure123"}}]
+                  <div className="mt-1 font-mono text-xs">
+                    Example: {`[{"id": "1", "name": "Valid User", "values": {"username": "john", "password": "secure123"}}]`}
+                  </div>
                 </AlertDescription>
               </Alert>
               <Controller
@@ -58,7 +60,7 @@ export const TestCaseDataDriven: React.FC<TestCaseDataDrivenProps> = ({
                   <Textarea
                     {...field}
                     id="test_data"
-                    placeholder='[{"id": "1", "name": "Test Set 1", "values": {"input1": "value1", "input2": "value2"}}]'
+                    placeholder={`[{"id": "1", "name": "Test Set 1", "values": {"input1": "value1", "input2": "value2"}}]`}
                     className="h-40 font-mono"
                     disabled={isLoading}
                   />
