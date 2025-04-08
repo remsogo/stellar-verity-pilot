@@ -779,6 +779,16 @@ export type Database = {
         Args: { p_cycle_id: string }
         Returns: Json
       }
+      get_user_projects: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }[]
+      }
       is_member_of_project: {
         Args: { project_id: string }
         Returns: boolean

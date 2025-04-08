@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { Project } from '@/types/project';
@@ -8,19 +7,9 @@ import { Project } from '@/types/project';
  */
 export async function getProjects(): Promise<Project[]> {
   try {
-    // Get the current user ID
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-    
-    // Use regular query to get projects the user has access to
+    // Use the get_user_projects function we created
     const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('project_users.user_id', user.id)
-      .order('created_at', { ascending: false });
+      .rpc('get_user_projects');
     
     if (error) throw error;
     return data as Project[] || [];
@@ -47,17 +36,13 @@ export async function getProject(id: string): Promise<Project | null> {
       throw new Error('User not authenticated');
     }
     
-    // Check if user has access to this project first
-    const { data: projectAccess, error: accessError } = await supabase
-      .from('project_users')
-      .select('*')
-      .eq('project_id', id)
-      .eq('user_id', user.id)
-      .maybeSingle();
+    // Use is_member_of_project function to check access
+    const { data: hasAccess, error: accessError } = await supabase
+      .rpc('is_member_of_project', { project_id: id });
     
     if (accessError) throw accessError;
     
-    if (!projectAccess) {
+    if (!hasAccess) {
       throw new Error('You do not have access to this project');
     }
     
