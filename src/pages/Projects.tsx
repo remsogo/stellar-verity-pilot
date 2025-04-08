@@ -23,13 +23,15 @@ const Projects = () => {
     queryFn: getProjects,
     enabled: !!user,
     retry: 1, // Only retry once to avoid excessive retries on policy errors
-    onError: (error: any) => {
-      console.error('Error fetching projects:', error);
-      toast({
-        title: "Error fetching projects",
-        description: error.message || "There was an error fetching your projects",
-        variant: "destructive"
-      });
+    meta: {
+      onError: (error: any) => {
+        console.error('Error fetching projects:', error);
+        toast({
+          title: "Error fetching projects",
+          description: error.message || "There was an error fetching your projects",
+          variant: "destructive"
+        });
+      }
     }
   });
 
