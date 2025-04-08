@@ -14,6 +14,7 @@ import {
   PlayCircle,
   LogOut,
   BugPlay,
+  Rocket,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -95,12 +96,13 @@ export const CustomSidebar = () => {
   return (
     <Sidebar
       id="sidebar"
-      className="border-r h-screen w-64 flex flex-col justify-between"
+      className="border-r border-border/20 h-screen w-64 flex flex-col justify-between bg-card/80 backdrop-blur-sm"
     >
       <div className="flex flex-col h-full">
         <div className="p-4 pt-6 pb-6 flex items-center gap-2">
+          <Rocket size={24} className="text-primary float-animation" />
           <div>
-            <div className="font-semibold text-lg">TestMaster</div>
+            <div className="font-semibold text-lg bg-gradient-to-r from-primary to-purple-300 bg-clip-text text-transparent">TestMaster</div>
             <div className="text-xs opacity-50">Test Management System</div>
           </div>
         </div>
@@ -108,7 +110,7 @@ export const CustomSidebar = () => {
         <div className="px-2 mb-4">
           <Button
             variant="outline"
-            className="w-full justify-start"
+            className="w-full justify-start rounded-full bg-card/70 border-primary/20 hover:bg-primary/10 hover:border-primary/40 transition-colors"
             onClick={toggleModal}
           >
             <Search className="h-4 w-4 mr-2" />
@@ -121,7 +123,11 @@ export const CustomSidebar = () => {
             <Button
               key={item.id}
               variant={activeItem === item.id ? "default" : "ghost"}
-              className="w-full justify-start"
+              className={`w-full justify-start transition-all duration-200 ${
+                activeItem === item.id 
+                  ? "rounded-lg bg-primary text-white" 
+                  : "rounded-lg hover:bg-primary/10 hover:text-primary"
+              }`}
               onClick={item.onClick}
               data-testid={`sidebar-${item.id}`}
             >
@@ -135,7 +141,7 @@ export const CustomSidebar = () => {
           <div className="space-y-1 px-2 pb-4">
             <Button
               variant="ghost"
-              className="w-full justify-start"
+              className="w-full justify-start rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
               onClick={() => navigate("/settings")}
             >
               <Settings className="h-4 w-4" />
@@ -143,7 +149,7 @@ export const CustomSidebar = () => {
             </Button>
             <Button
               variant="ghost"
-              className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/20"
+              className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-colors"
               onClick={handleSignOut}
             >
               <LogOut className="h-4 w-4" />
@@ -153,9 +159,9 @@ export const CustomSidebar = () => {
               <ThemeToggle />
             </div>
           </div>
-          <div className="p-4 border-t">
+          <div className="p-4 border-t border-border/20 bg-card/40">
             <div className="flex items-center gap-3">
-              <CircleUserRound className="h-8 w-8 text-muted-foreground" />
+              <CircleUserRound className="h-8 w-8 text-primary" />
               <div>
                 <div className="font-medium text-sm">User Profile</div>
                 <div className="text-xs text-muted-foreground">
