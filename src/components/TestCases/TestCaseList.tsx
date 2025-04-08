@@ -4,10 +4,8 @@ import { TestCaseCard } from "./TestCaseCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Filter, Plus, ChevronRight, ChevronDown, Folder, FileText } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
-import { getTestCase } from "@/lib/api/testCases/getTestCase";
 import { getChildTestCases } from "@/lib/api/testCases/getChildTestCases";
 
 interface TestCaseListProps {

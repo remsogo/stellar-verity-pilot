@@ -39,5 +39,7 @@ export const mapDbTestCaseToTestCase = (dbTestCase: DbTestCase): TestCase => {
     steps: dbTestCase.steps ? dbTestCase.steps.map(mapDbTestStepToTestStep) : undefined,
     // Initialize empty children array
     children: [],
+    // Store children_ids for reference
+    children_ids: [],
   };
 };
