@@ -97,10 +97,10 @@ const TestExecutionDetails = () => {
 
         // Fetch execution steps with test step details
         if (id) {
-          // Using proper type assertion for the RPC function
-          const { data, error: stepsError } = await supabase.rpc<ExecutionStepWithDetails[]>(
+          // Fixed: Providing both type arguments for the RPC call
+          const { data, error: stepsError } = await supabase.rpc<ExecutionStepWithDetails[], GetExecutionStepsParams>(
             'get_execution_steps_with_details', 
-            { execution_id_param: id } as GetExecutionStepsParams
+            { execution_id_param: id }
           );
 
           if (stepsError) {
