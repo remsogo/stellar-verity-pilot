@@ -14,8 +14,9 @@ export const getTestCase = async (id: string): Promise<TestCase> => {
     throw new Error(`Error fetching test case: ${error.message}`);
   }
 
-  // Use type assertion instead of unknown conversion
-  return mapDbTestCaseToTestCase(data as DbTestCase);
+  // Utilisation d'une assertion de type sans unknown
+  const dbTestCase = data as DbTestCase;
+  return mapDbTestCaseToTestCase(dbTestCase);
 };
 
 export const getChildTestCases = async (parentId: string): Promise<TestCase[]> => {
@@ -28,8 +29,9 @@ export const getChildTestCases = async (parentId: string): Promise<TestCase[]> =
     throw new Error(`Error fetching child test cases: ${error.message}`);
   }
 
-  // Use type assertion for the array
-  return (data as DbTestCase[]).map(mapDbTestCaseToTestCase);
+  // Utilisez une assertion de type directe sans chaîne
+  const dbTestCases = data as DbTestCase[];
+  return dbTestCases.map(mapDbTestCaseToTestCase);
 };
 
 export const updateTestCase = async (testCase: Partial<TestCase> & { id: string }): Promise<TestCase> => {

@@ -119,15 +119,16 @@ const TestCaseForm = () => {
           ? data.status 
           : "Draft");
         
-        // Safely handle is_parent and parent_id with explicit type checking
+        // Utilisons des assertions de type pour gérer correctement is_parent et parent_id
         if ('is_parent' in data) {
-          // Use Boolean() to ensure proper boolean type conversion
-          setValue("is_parent", Boolean(data.is_parent));
+          // Conversion explicite en boolean avec !!
+          setValue("is_parent", !!data.is_parent);
         }
         
         if ('parent_id' in data) {
-          // Only set parent_id if it exists and is not null
-          setValue("parent_id", data.parent_id || null);
+          // Utiliser une assertion de type et une conversion sécurisée
+          const parentId = data.parent_id as string | null;
+          setValue("parent_id", parentId);
         }
       }
     } catch (error: any) {

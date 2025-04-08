@@ -1,3 +1,4 @@
+
 export type Status = 'passed' | 'failed' | 'pending' | 'blocked' | 'Ready' | 'Draft';
 
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
@@ -10,7 +11,8 @@ export type TestStep = {
   order: number;
 };
 
-export type TestCase = {
+// Interface de base pour éviter les références circulaires
+export interface BaseTestCase {
   id: string;
   title: string;
   description?: string;
@@ -27,12 +29,15 @@ export type TestCase = {
   parent_id?: string | null;
   created_at?: string;
   updated_at?: string;
-  // These fields are for frontend use
   createdAt?: string;
   updatedAt?: string;
   steps?: TestStep[];
-  // To avoid circular references, we'll make children optional and limited
-  children?: Omit<TestCase, 'children'>[];
+}
+
+// Type principal avec les enfants, qui utilise BaseTestCase pour éviter les références circulaires
+export type TestCase = BaseTestCase & {
+  // Les enfants sont de type BaseTestCase (sans enfants)
+  children?: BaseTestCase[];
 };
 
 export type TestExecution = {
