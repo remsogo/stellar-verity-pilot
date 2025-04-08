@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { ProjectRole } from '@/integrations/supabase/project-types';
@@ -110,14 +109,14 @@ export async function deleteProject(id: string) {
 
 export async function getProjectUsers(projectId: string) {
   try {
-    // Join project_users with user_profiles to get user details
+    // Fetch project users with user profile data
     const { data, error } = await supabase
       .from('project_users')
       .select(`
         id,
         user_id,
         role,
-        user_profiles!left (
+        user_profiles:user_id (
           email,
           full_name
         )
@@ -126,15 +125,22 @@ export async function getProjectUsers(projectId: string) {
     
     if (error) throw error;
     
-    // Format the response
+    // Format the response to a consistent structure
     if (Array.isArray(data)) {
-      return data.map(item => ({
-        id: item.id,
-        user_id: item.user_id,
-        email: item.user_profiles?.email || item.user_id,
-        full_name: item.user_profiles?.full_name || null,
-        role: item.role
-      }));
+      return data.map(item => {
+        // Handle possible null/undefined user_profiles safely
+        const userProfile = item.user_profiles || {};
+        // Use type assertion to inform TypeScript about the structure
+        const profile = userProfile as { email?: string; full_name?: string };
+        
+        return {
+          id: item.id,
+          user_id: item.user_id,
+          email: profile.email || item.user_id.toString(),
+          full_name: profile.full_name || null,
+          role: item.role
+        };
+      });
     }
     
     return [];
@@ -149,11 +155,11 @@ export async function addUserToProject(projectId: string, email: string, role: P
     // First find the user by email to get their ID
     const { data: userProfile, error: userError } = await supabase
       .from('user_profiles')
-      .select('auth_id')
+      .select('auth_id, email, full_name')
       .eq('email', email)
       .maybeSingle();
     
-    // If user doesn't exist, use the email as ID (it will be resolved when they sign up)
+    // If user doesn't exist by email, use the email as ID (it will be resolved when they sign up)
     const userId = userProfile?.auth_id || email;
     
     // Add user to project
@@ -169,11 +175,14 @@ export async function addUserToProject(projectId: string, email: string, role: P
     
     if (error) throw error;
     
+    // Safely extract user profile data with type assertions
+    const profileData = userProfile as { email?: string; full_name?: string } || {};
+    
     return {
       id: data.id,
       user_id: data.user_id,
-      email: email,
-      full_name: userProfile?.full_name || null,
+      email: profileData.email || email,
+      full_name: profileData.full_name || null,
       role: data.role
     };
   } catch (error: any) {
