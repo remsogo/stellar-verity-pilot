@@ -8,13 +8,15 @@ import { useUser } from "@/hooks/use-user";
 import { useSelectedProject } from "@/hooks/use-selected-project";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/use-toast";
+import { useLogout } from "@/hooks/use-logout";
 
 export const CustomSidebar = () => {
   const sidebar = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useUser();
-  const { selectedProjectId, clearSelectedProject } = useSelectedProject();
+  const { user } = useUser();
+  const { selectedProjectId } = useSelectedProject();
+  const { logout } = useLogout();
 
   const menuItems = [
     { name: "Dashboard", path: "/", icon: Home, requiresProject: true },
@@ -24,21 +26,6 @@ export const CustomSidebar = () => {
     { name: "Projects", path: "/projects", icon: Users, requiresProject: false },
     { name: "Parameters", path: "/parameters", icon: Settings, requiresProject: true },
   ];
-
-  const handleSignOut = async () => {
-    try {
-      // Clear selected project before signing out
-      clearSelectedProject();
-      await signOut();
-      toast({
-        title: "Signed out successfully",
-        description: "You have been signed out of your account",
-      });
-      navigate("/auth");
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
 
   return (
     <Sidebar 
@@ -110,7 +97,7 @@ export const CustomSidebar = () => {
           </div>
           <div className="flex items-center justify-between px-3">
             <ThemeToggle />
-            <Button variant="ghost" size="icon" onClick={handleSignOut}>
+            <Button variant="ghost" size="icon" onClick={logout}>
               <LogOut size={16} />
             </Button>
           </div>
