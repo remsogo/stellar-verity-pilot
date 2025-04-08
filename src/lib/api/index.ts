@@ -13,3 +13,11 @@ export {
   updateDefect,
   deleteDefect
 } from './defects';
+export {
+  getProjects,
+  getProject,
+  createProject,
+  updateProject,
+  deleteProject,
+  inviteUserToProject
+} from './projects';

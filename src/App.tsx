@@ -18,6 +18,9 @@ import TestExecutionDetails from "./pages/TestExecutionDetails";
 import Defects from "./pages/Defects";
 import DefectForm from "./pages/DefectForm";
 import DefectDetails from "./pages/DefectDetails";
+import Projects from "./pages/Projects";
+import ProjectForm from "./pages/ProjectForm";
+import ProjectDetails from "./pages/ProjectDetails";
 
 const queryClient = new QueryClient();
 
@@ -150,6 +153,39 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <DefectForm />
+                  </ProtectedRoute>
+                } 
+              />
+              {/* Project Management Routes */}
+              <Route 
+                path="/projects" 
+                element={
+                  <ProtectedRoute>
+                    <Projects />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/projects/new" 
+                element={
+                  <ProtectedRoute>
+                    <ProjectForm />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/projects/:id" 
+                element={
+                  <ProtectedRoute>
+                    <ProjectDetails />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/projects/:id/edit" 
+                element={
+                  <ProtectedRoute>
+                    <ProjectForm />
                   </ProtectedRoute>
                 } 
               />
