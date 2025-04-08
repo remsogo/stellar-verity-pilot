@@ -8,9 +8,13 @@ export const mapDbTestCycleToTestCycle = async (dbTestCycle: DbTestCycle): Promi
   // Get test plan details
   const testPlan = await getTestPlan(dbTestCycle.test_plan_id);
   
-  // Get execution stats - using aggregation functions instead of group
+  // Get execution stats - we'll use a direct query instead of rpc
   const { data: executionStats, error } = await supabase
-    .rpc('get_test_cycle_stats', { cycle_id: dbTestCycle.id });
+    .from("test_executions")
+    .select("status, count")
+    .eq("test_cycle_id", dbTestCycle.id)
+    .filter("status", "in", '("passed","failed","blocked","pending")')
+    .group_by("status");
   
   let progress = {
     passed: 0,
@@ -21,7 +25,7 @@ export const mapDbTestCycleToTestCycle = async (dbTestCycle: DbTestCycle): Promi
   };
   
   if (executionStats && !error) {
-    // Assume we get an array with stats objects
+    // Process the stats
     executionStats.forEach((stat: any) => {
       if (stat.status === 'passed') progress.passed = stat.count || 0;
       if (stat.status === 'failed') progress.failed = stat.count || 0;
@@ -49,19 +53,23 @@ export const mapDbTestCycleToTestCycle = async (dbTestCycle: DbTestCycle): Promi
   };
 };
 
+// Use a custom type for Database operations since the test_cycles table is not in the Supabase types
 export const getTestCycles = async (projectId: string): Promise<TestCycle[]> => {
+  // Use a raw query approach that doesn't rely on the Database types
   const { data, error } = await supabase
     .from("test_cycles")
     .select("*")
-    .eq("project_id", projectId);
+    .eq("project_id", projectId) as { data: DbTestCycle[] | null, error: any };
 
   if (error) {
     throw new Error(`Error fetching test cycles: ${error.message}`);
   }
 
   const cycles: TestCycle[] = [];
-  for (const cycle of data as DbTestCycle[]) {
-    cycles.push(await mapDbTestCycleToTestCycle(cycle));
+  if (data) {
+    for (const cycle of data) {
+      cycles.push(await mapDbTestCycleToTestCycle(cycle));
+    }
   }
 
   return cycles;
@@ -72,13 +80,17 @@ export const getTestCycle = async (id: string): Promise<TestCycle> => {
     .from("test_cycles")
     .select("*")
     .eq("id", id)
-    .single();
+    .single() as { data: DbTestCycle | null, error: any };
 
   if (error) {
     throw new Error(`Error fetching test cycle: ${error.message}`);
   }
 
-  return await mapDbTestCycleToTestCycle(data as DbTestCycle);
+  if (!data) {
+    throw new Error(`Test cycle not found: ${id}`);
+  }
+
+  return await mapDbTestCycleToTestCycle(data);
 };
 
 export const createTestCycle = async (testCycle: Omit<TestCycle, 'id' | 'created_at' | 'updated_at' | 'execution_progress'>): Promise<TestCycle> => {
@@ -99,13 +111,17 @@ export const createTestCycle = async (testCycle: Omit<TestCycle, 'id' | 'created
     .from("test_cycles")
     .insert([dbTestCycle])
     .select()
-    .single();
+    .single() as { data: DbTestCycle | null, error: any };
 
   if (error) {
     throw new Error(`Error creating test cycle: ${error.message}`);
   }
 
-  return await mapDbTestCycleToTestCycle(data as DbTestCycle);
+  if (!data) {
+    throw new Error('Failed to create test cycle');
+  }
+
+  return await mapDbTestCycleToTestCycle(data);
 };
 
 export const updateTestCycle = async (testCycle: Partial<TestCycle> & { id: string }): Promise<TestCycle> => {
@@ -124,20 +140,24 @@ export const updateTestCycle = async (testCycle: Partial<TestCycle> & { id: stri
     .update(dbTestCycle)
     .eq("id", testCycle.id)
     .select()
-    .single();
+    .single() as { data: DbTestCycle | null, error: any };
 
   if (error) {
     throw new Error(`Error updating test cycle: ${error.message}`);
   }
 
-  return await mapDbTestCycleToTestCycle(data as DbTestCycle);
+  if (!data) {
+    throw new Error(`Test cycle not found: ${testCycle.id}`);
+  }
+
+  return await mapDbTestCycleToTestCycle(data);
 };
 
 export const deleteTestCycle = async (id: string): Promise<void> => {
   const { error } = await supabase
     .from("test_cycles")
     .delete()
-    .eq("id", id);
+    .eq("id", id) as { error: any };
 
   if (error) {
     throw new Error(`Error deleting test cycle: ${error.message}`);

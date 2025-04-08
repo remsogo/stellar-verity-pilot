@@ -1,9 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { TestCase } from "@/types/testCase";
+import { BaseTestCase } from "@/types/testCase";
 
-// Type for child test cases without recursive structure
-export type ChildTestCase = Omit<TestCase, 'children'>;
+// Simple non-recursive type for child test cases
+export type ChildTestCase = BaseTestCase;
 
 /**
  * Fetches all child test cases for a given parent test case
