@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -96,10 +97,11 @@ const TestExecutionDetails = () => {
 
         // Fetch execution steps with test step details
         if (id) {
-          // Fixed: Use proper typing for the RPC call
+          // Fixed: Use the correct typing for RPC call
           const { data, error: stepsError } = await supabase
-            .rpc('get_execution_steps_with_details', { execution_id_param: id })
-            .returns<ExecutionStepWithDetails[]>();
+            .rpc<ExecutionStepWithDetails[]>('get_execution_steps_with_details', { 
+              execution_id_param: id 
+            });
 
           if (stepsError) {
             console.error("Error fetching steps:", stepsError);
