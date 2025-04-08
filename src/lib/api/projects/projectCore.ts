@@ -8,9 +8,12 @@ import { Project } from '@/types/project';
  */
 export async function getProjects(): Promise<Project[]> {
   try {
-    // Use the RPC function to avoid infinite recursion
+    // Use a regular query instead of RPC since the function isn't properly registered
     const { data, error } = await supabase
-      .rpc('get_user_projects')
+      .from('projects')
+      .select('*')
+      .join('project_users', { 'projects.id': 'project_users.project_id' })
+      .eq('project_users.user_id', supabase.auth.getUser().then(res => res.data.user?.id))
       .order('created_at', { ascending: false });
     
     if (error) throw error;
@@ -33,7 +36,11 @@ export async function getProject(id: string): Promise<Project | null> {
   try {
     // Check if user has access to this project first
     const { data: projectAccess, error: accessError } = await supabase
-      .rpc('is_member_of_project', { project_id: id });
+      .from('project_users')
+      .select('*')
+      .eq('project_id', id)
+      .eq('user_id', supabase.auth.getUser().then(res => res.data.user?.id))
+      .maybeSingle();
     
     if (accessError) throw accessError;
     

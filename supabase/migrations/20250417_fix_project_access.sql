@@ -1,4 +1,7 @@
 
+-- Drop function if it exists (using proper syntax)
+DROP FUNCTION IF EXISTS public.get_user_projects();
+
 -- Create a function to get user projects without infinite recursion
 CREATE OR REPLACE FUNCTION public.get_user_projects()
 RETURNS SETOF projects
