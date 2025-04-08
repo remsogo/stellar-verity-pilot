@@ -11,12 +11,13 @@ import { TestCaseBasicInfo } from "./TestCaseBasicInfo";
 import { TestCaseSteps } from "./TestCaseSteps";
 import { TestCaseMetadata } from "./TestCaseMetadata";
 import { TestCaseButtons } from "./TestCaseButtons";
-import { TestCaseFormValues, testCaseSchema, convertFormPriorityToApiPriority, convertFormStatusToApiStatus } from "./TestCaseFormTypes";
+import { TestCaseFormValues, testCaseSchema, convertFormPriorityToApiPriority, convertFormStatusToApiStatus, parseTestData } from "./TestCaseFormTypes";
 import { getTestCase } from "@/lib/api/testCases/getTestCase";
 import { createTestCase } from "@/lib/api/testCases/createTestCase";
 import { updateTestCase } from "@/lib/api/testCases/updateTestCase";
 import { Priority, Status } from "@/types";
 import { TestCaseTags } from "./TestCaseTags";
+import { TestCaseDataDriven } from "./TestCaseDataDriven";
 
 interface TestCaseFormProps {
   id?: string;
@@ -33,7 +34,8 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
     defaultValues: {
       priority: "Medium",
       status: "Draft",
-      tags: []
+      tags: [],
+      data_driven: false,
     },
   });
 
@@ -81,6 +83,12 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
       }
       setValue("status", formattedStatus);
       
+      // Set data-driven fields
+      setValue("data_driven", testCase.data_driven || false);
+      if (testCase.test_data) {
+        setValue("test_data", JSON.stringify(testCase.test_data, null, 2));
+      }
+      
       // Set tags
       setValue("tags", testCase.tags || []);
       
@@ -119,7 +127,9 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
         status: statusValue,
         author: "Current User",
         project_id: selectedProjectId,
-        tags: data.tags || []
+        tags: data.tags || [],
+        data_driven: data.data_driven,
+        test_data: parseTestData(data.test_data)
       };
       
       if (id) {
@@ -174,6 +184,11 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
             control={control} 
             errors={errors} 
             isLoading={isLoading} 
+          />
+
+          <TestCaseDataDriven
+            control={control}
+            isLoading={isLoading}
           />
 
           <TestCaseMetadata 

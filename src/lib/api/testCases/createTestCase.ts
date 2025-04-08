@@ -17,6 +17,8 @@ export const createTestCase = async (testCase: Partial<TestCase>): Promise<TestC
     project_id: testCase.project_id,
     estimate_time: testCase.estimate_time,
     automated: testCase.automated || false,
+    data_driven: testCase.data_driven || false,
+    test_data: testCase.test_data,
     preconditions: testCase.preconditions,
     requirements: testCase.requirements,
     tags: testCase.tags || []

@@ -28,6 +28,8 @@ export const mapDbTestCaseToTestCase = (dbTestCase: DbTestCase): TestCase => {
     project_id: dbTestCase.project_id,
     estimate_time: dbTestCase.estimate_time,
     automated: dbTestCase.automated,
+    data_driven: dbTestCase.data_driven,
+    test_data: Array.isArray(dbTestCase.test_data) ? dbTestCase.test_data : undefined,
     preconditions: dbTestCase.preconditions,
     requirements: dbTestCase.requirements,
     tags: dbTestCase.tags,

@@ -220,6 +220,7 @@ export type Database = {
           author: string
           automated: boolean | null
           created_at: string
+          data_driven: boolean | null
           description: string | null
           estimate_time: number | null
           id: string
@@ -229,6 +230,7 @@ export type Database = {
           requirements: string[] | null
           status: string
           tags: string[] | null
+          test_data: Json | null
           title: string
           updated_at: string
         }
@@ -236,6 +238,7 @@ export type Database = {
           author: string
           automated?: boolean | null
           created_at?: string
+          data_driven?: boolean | null
           description?: string | null
           estimate_time?: number | null
           id?: string
@@ -245,6 +248,7 @@ export type Database = {
           requirements?: string[] | null
           status?: string
           tags?: string[] | null
+          test_data?: Json | null
           title: string
           updated_at?: string
         }
@@ -252,6 +256,7 @@ export type Database = {
           author?: string
           automated?: boolean | null
           created_at?: string
+          data_driven?: boolean | null
           description?: string | null
           estimate_time?: number | null
           id?: string
@@ -261,6 +266,7 @@ export type Database = {
           requirements?: string[] | null
           status?: string
           tags?: string[] | null
+          test_data?: Json | null
           title?: string
           updated_at?: string
         }

@@ -11,6 +11,8 @@ export const testCaseSchema = z.object({
   priority: z.enum(["High", "Medium", "Low"]).default("Medium"),
   status: z.enum(["Draft", "Ready", "Blocked"]).default("Draft"),
   tags: z.array(z.string()).default([]),
+  data_driven: z.boolean().default(false),
+  test_data: z.string().optional(),
 });
 
 export type TestCaseFormValues = z.infer<typeof testCaseSchema>;
@@ -31,5 +33,16 @@ export const convertFormStatusToApiStatus = (formStatus: string): Status => {
     case "ready": return "ready";
     case "blocked": return "blocked";
     default: return "draft";
+  }
+};
+
+// Parse JSON test data from string
+export const parseTestData = (testDataString?: string) => {
+  if (!testDataString) return null;
+  try {
+    return JSON.parse(testDataString);
+  } catch (error) {
+    console.error("Error parsing test data:", error);
+    return null;
   }
 };

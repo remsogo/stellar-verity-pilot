@@ -53,6 +53,13 @@ export interface TestCollection {
   updated_at?: string;
 }
 
+// TestData type for data-driven tests
+export type TestDataSet = {
+  id: string;
+  name: string;
+  values: Record<string, any>;
+};
+
 // Complete TestCase type with tags for organization
 export type TestCase = {
   id: string;
@@ -64,6 +71,8 @@ export type TestCase = {
   project_id: string;
   estimate_time?: number;
   automated?: boolean;
+  data_driven?: boolean;
+  test_data?: TestDataSet[];
   preconditions?: string;
   requirements?: string[];
   tags: string[];
@@ -85,6 +94,8 @@ export type DbTestCase = {
   project_id: string;
   estimate_time?: number;
   automated?: boolean;
+  data_driven?: boolean;
+  test_data?: Record<string, any> | TestDataSet[];
   preconditions?: string;
   requirements?: string[];
   tags: string[];

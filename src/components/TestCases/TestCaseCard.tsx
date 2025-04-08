@@ -4,7 +4,7 @@ import { Card, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Tag } from "lucide-react";
+import { ArrowRight, Database, Tag } from "lucide-react";
 
 interface TestCaseCardProps {
   testCase: TestCase;
@@ -20,6 +20,12 @@ export const TestCaseCard = ({ testCase, showTags = false }: TestCaseCardProps) 
             <h3 className="font-medium">
               {testCase.title}
             </h3>
+            {testCase.data_driven && (
+              <Badge variant="outline" className="bg-blue-100">
+                <Database className="h-3 w-3 mr-1" />
+                Data-driven
+              </Badge>
+            )}
           </div>
           <CardDescription className="mt-1 line-clamp-2">
             {testCase.description || "No description provided"}
@@ -60,6 +66,12 @@ export const TestCaseCard = ({ testCase, showTags = false }: TestCaseCardProps) 
         <span>ID: {testCase.id.substring(0, 8)}</span>
         <span>•</span>
         <span>Priority: {testCase.priority}</span>
+        {testCase.data_driven && testCase.test_data && (
+          <>
+            <span>•</span>
+            <span>Data Sets: {Array.isArray(testCase.test_data) ? testCase.test_data.length : 0}</span>
+          </>
+        )}
       </CardFooter>
     </Card>
   );
