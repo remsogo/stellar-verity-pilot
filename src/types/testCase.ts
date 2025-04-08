@@ -33,10 +33,10 @@ export interface BaseTestCase {
   steps?: TestStep[];
 }
 
-// Type principal with children reference but avoiding circular references
+// Type principal with children reference as string[] to avoid circular reference
 export type TestCase = BaseTestCase & {
-  // Use id strings instead of complete objects to avoid circular reference
-  children?: string[];
+  // Store just the IDs of children to avoid circular reference
+  children: string[];
 };
 
 // Type pour la base de données
@@ -71,7 +71,7 @@ export type DbTestStep = {
 };
 
 // Status et Priority
-export type Status = 'passed' | 'failed' | 'pending' | 'blocked' | 'Ready' | 'Draft' | 'Blocked';
+export type Status = 'passed' | 'failed' | 'pending' | 'blocked' | 'ready' | 'draft' | 'blocked';
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
 
 // Assurons-nous que les statuts correspondent à ceux utilisés dans l'application
