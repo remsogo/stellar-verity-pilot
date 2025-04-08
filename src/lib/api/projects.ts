@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { ProjectRole } from '@/integrations/supabase/project-types';
@@ -109,27 +110,24 @@ export async function deleteProject(id: string) {
 
 export async function getProjectUsers(projectId: string) {
   try {
-    // Use direct SQL query instead of RPC function
+    // Use the RPC function to get project users
     const { data, error } = await supabase
-      .from('project_users')
-      .select(`
-        id,
-        user_id,
-        role,
-        user_profiles!inner(email, full_name)
-      `)
-      .eq('project_id', projectId);
+      .rpc('get_project_users', { p_project_id: projectId });
     
     if (error) throw error;
     
-    // Format the data to match our expected structure
-    return data.map(item => ({
-      id: item.id,
-      user_id: item.user_id,
-      email: item.user_profiles?.email || item.user_id,
-      full_name: item.user_profiles?.full_name || null,
-      role: item.role
-    })) || [];
+    // Format the response
+    if (Array.isArray(data)) {
+      return data.map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        email: item.email || item.user_id,
+        full_name: item.full_name || null,
+        role: item.role
+      }));
+    }
+    
+    return [];
   } catch (error: any) {
     console.error('Error fetching project users:', error);
     throw error;
@@ -138,19 +136,12 @@ export async function getProjectUsers(projectId: string) {
 
 export async function addUserToProject(projectId: string, email: string, role: ProjectRole) {
   try {
-    // In a real app, you would look up the user ID by email first
-    // For simplicity, we're using the email as the user_id directly
-    const userId = email;
-    
     const { data, error } = await supabase
-      .from('project_users')
-      .insert({
-        project_id: projectId,
-        user_id: userId,
-        role: role
-      })
-      .select()
-      .single();
+      .rpc('add_user_to_project', {
+        p_project_id: projectId,
+        p_user_id: email,
+        p_role: role
+      });
     
     if (error) throw error;
     
@@ -164,12 +155,11 @@ export async function addUserToProject(projectId: string, email: string, role: P
 export async function updateUserRole(projectId: string, userId: string, role: ProjectRole) {
   try {
     const { data, error } = await supabase
-      .from('project_users')
-      .update({ role })
-      .eq('project_id', projectId)
-      .eq('user_id', userId)
-      .select()
-      .single();
+      .rpc('update_user_role', {
+        p_project_id: projectId,
+        p_user_id: userId,
+        p_role: role
+      });
     
     if (error) throw error;
     
@@ -182,11 +172,11 @@ export async function updateUserRole(projectId: string, userId: string, role: Pr
 
 export async function removeUserFromProject(projectId: string, userId: string) {
   try {
-    const { error } = await supabase
-      .from('project_users')
-      .delete()
-      .eq('project_id', projectId)
-      .eq('user_id', userId);
+    const { data, error } = await supabase
+      .rpc('remove_user_from_project', {
+        p_project_id: projectId,
+        p_user_id: userId
+      });
     
     if (error) throw error;
     

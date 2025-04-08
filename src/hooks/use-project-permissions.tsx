@@ -1,9 +1,17 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from './use-user';
-import type { ProjectRole, ProjectMember } from '@/integrations/supabase/project-types';
+import type { ProjectRole } from '@/integrations/supabase/project-types';
 
-export type { ProjectRole, ProjectMember };
+// Re-export types with proper syntax for isolated modules
+export type { ProjectRole };
+export interface ProjectMember {
+  id: string;
+  email: string;
+  name?: string;
+  role: ProjectRole;
+}
 
 export const useProjectPermissions = (projectId?: string) => {
   const { user } = useUser();
@@ -29,49 +37,35 @@ export const useProjectPermissions = (projectId?: string) => {
         setIsLoading(true);
         setError(null);
 
-        // Get current user's role for this project with raw query
-        const { data: userRoleData, error: userRoleError } = await supabase.rpc(
-          'get_project_users',
-          { p_project_id: projectId }
-        ).then(response => {
-          const userRecord = response.data?.find(record => record.user_id === user.id);
-          return { 
-            data: userRecord ? { role: userRecord.role } : null, 
-            error: response.error 
-          };
-        });
+        // Get all project members
+        const { data: membersData, error: membersError } = await supabase
+          .rpc('get_project_users', { p_project_id: projectId });
 
-        if (userRoleError && userRoleError.code !== 'PGRST116') {
-          // PGRST116 is "No rows returned" - we handle this case by setting userRole to null
-          console.error('Error fetching user role:', userRoleError);
-          setError('Failed to fetch your permissions for this project.');
+        if (membersError) {
+          console.error('Error fetching project members:', membersError);
+          setError('Failed to fetch project members.');
+          setMembers([]);
           setUserRole(null);
-        } else {
-          setUserRole(userRoleData?.role as ProjectRole || null);
-        }
+        } else if (membersData) {
+          // Find current user's role
+          const currentUserData = Array.isArray(membersData) 
+            ? membersData.find((member: any) => member.user_id === user.id)
+            : null;
+          
+          setUserRole(currentUserData?.role as ProjectRole || null);
 
-        // Only fetch members if the user has access to the project
-        if (userRoleData?.role) {
-          // Get all project members
-          const { data: membersData, error: membersError } = await supabase.rpc(
-            'get_project_users',
-            { p_project_id: projectId }
-          );
-
-          if (membersError) {
-            console.error('Error fetching project members:', membersError);
-            setError('Failed to fetch project members.');
-            setMembers([]);
-          } else if (membersData) {
-            // Convert the raw data to ProjectMember format
-            const membersList: ProjectMember[] = membersData.map(member => ({
-              id: member.id,
-              email: member.email || member.user_id,
-              name: member.full_name || 'User',
+          // Convert the raw data to ProjectMember format
+          if (Array.isArray(membersData)) {
+            const membersList: ProjectMember[] = membersData.map((member: any) => ({
+              id: member.id as string,
+              email: member.email as string,
+              name: member.full_name as string || 'User',
               role: member.role as ProjectRole,
             }));
             
             setMembers(membersList);
+          } else {
+            setMembers([]);
           }
         }
       } catch (err) {
@@ -100,23 +94,19 @@ export const useProjectPermissions = (projectId?: string) => {
       );
 
       if (error) {
-        if (error.code === '23505') { // Unique violation
-          throw new Error('This user is already a member of this project.');
-        }
         console.error('Error adding user to project:', error);
-        throw new Error('Failed to add user to project.');
+        throw new Error(error.message || 'Failed to add user to project.');
       }
 
       // Add the new member to the members list
-      setMembers(prev => [
-        ...prev,
-        {
-          id: data || Date.now().toString(), // Use the returned ID or a temporary one
-          email: email,
-          name: 'New User',
-          role,
-        }
-      ]);
+      const newMember: ProjectMember = {
+        id: data.id as string,
+        email: data.email as string,
+        name: data.full_name as string || 'New User',
+        role: data.role as ProjectRole,
+      };
+
+      setMembers(prev => [...prev, newMember]);
 
       return true;
     } catch (error: any) {
@@ -135,7 +125,7 @@ export const useProjectPermissions = (projectId?: string) => {
         throw new Error('Member not found');
       }
 
-      const { error } = await supabase.rpc(
+      const { data, error } = await supabase.rpc(
         'update_user_role',
         {
           p_project_id: projectId,
@@ -146,7 +136,7 @@ export const useProjectPermissions = (projectId?: string) => {
 
       if (error) {
         console.error('Error updating user role:', error);
-        throw new Error('Failed to update user role.');
+        throw new Error(error.message || 'Failed to update user role.');
       }
 
       // Update local state
@@ -173,7 +163,7 @@ export const useProjectPermissions = (projectId?: string) => {
         throw new Error('Member not found');
       }
 
-      const { error } = await supabase.rpc(
+      const { data, error } = await supabase.rpc(
         'remove_user_from_project',
         {
           p_project_id: projectId,
@@ -183,7 +173,7 @@ export const useProjectPermissions = (projectId?: string) => {
 
       if (error) {
         console.error('Error removing user from project:', error);
-        throw new Error('Failed to remove user from project.');
+        throw new Error(error.message || 'Failed to remove user from project.');
       }
 
       // Update local state
