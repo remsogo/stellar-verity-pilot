@@ -1,59 +1,27 @@
 
-export type Status = 'passed' | 'failed' | 'pending' | 'blocked' | 'Ready' | 'Draft';
+// Réexportation des types depuis les fichiers modulaires
+export * from './testCase';
+export * from './testExecution';
+export * from './testPlan';
 
-export type Priority = 'low' | 'medium' | 'high' | 'critical';
+// Types génériques ou partagés
 
-export type TestStep = {
-  id: string;
-  description: string;
-  expectedResult: string;
-  testCaseId: string;
-  order: number;
-};
-
-// Interface de base pour éviter les références circulaires
-export interface BaseTestCase {
+// Type pour les defects
+export type Defect = {
   id: string;
   title: string;
   description?: string;
-  status: Status;
-  priority: Priority;
-  author: string;
+  status: 'open' | 'in-progress' | 'resolved' | 'closed' | 'reopened';
+  severity: Priority;
+  reporter: string;
+  assignee?: string;
   project_id: string;
-  estimate_time?: number;
-  automated?: boolean;
-  preconditions?: string;
-  requirements?: string[];
-  tags: string[];
-  is_parent?: boolean;
-  parent_id?: string | null;
-  created_at?: string;
-  updated_at?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  steps?: TestStep[];
-}
-
-// Type principal avec les enfants, qui utilise BaseTestCase pour éviter les références circulaires
-export type TestCase = BaseTestCase & {
-  // Les enfants sont de type BaseTestCase (sans enfants)
-  children?: BaseTestCase[];
+  test_execution_id?: string;
+  created_at: string;
+  updated_at: string;
 };
 
-export type TestExecution = {
-  id: string;
-  testCaseId: string;
-  testCase: TestCase;
-  executor: string;
-  status: Status;
-  startTime: string;
-  endTime?: string;
-  environment: string;
-  buildVersion?: string;
-  notes?: string;
-  defects: string[];
-};
-
+// Type pour les suites de test
 export type TestSuite = {
   id: string;
   name: string;
@@ -61,6 +29,7 @@ export type TestSuite = {
   testCases: string[];
 };
 
+// Types pour le tableau de bord
 export type DashboardStat = {
   label: string;
   value: number;
@@ -76,76 +45,5 @@ export type TestTrend = {
   blocked: number;
 };
 
-export type ExecutionStep = {
-  id: string;
-  test_step_id: string;
-  execution_id: string;
-  status: Status;
-  actual_result: string | null;
-  step_order: number;
-  description: string;
-  expected_result: string;
-};
-
-// Defect type
-export type Defect = {
-  id: string;
-  title: string;
-  description?: string;
-  status: 'open' | 'in-progress' | 'resolved' | 'closed' | 'reopened';
-  severity: Priority;
-  reporter: string;
-  assignee?: string;
-  project_id: string;
-  test_execution_id?: string;
-  created_at: string;
-  updated_at: string;
-};
-
-// Database models that map directly to Supabase tables
-export type DbTestCase = {
-  id: string;
-  title: string;
-  description?: string;
-  status: string;
-  priority: string;
-  author: string;
-  project_id: string;
-  estimate_time?: number;
-  automated?: boolean;
-  preconditions?: string;
-  requirements?: string[];
-  tags: string[];
-  created_at: string;
-  updated_at: string;
-  is_parent?: boolean;
-  parent_id?: string | null;
-  steps?: DbTestStep[];
-};
-
-export type DbTestStep = {
-  id: string;
-  description: string;
-  expected_result: string;
-  test_case_id: string;
-  step_order: number;
-  created_at: string;
-  updated_at: string;
-};
-
-export type DbTestExecution = {
-  id: string;
-  test_case_id: string;
-  executor: string;
-  status: string;
-  start_time: string;
-  end_time?: string;
-  environment: string;
-  notes?: string;
-  defects?: string[];
-  created_at: string;
-  updated_at: string;
-  test_suite_id?: string;
-  build_version?: string;
-  testCase?: DbTestCase;
-};
+// Réimportation pour avoir accès au type Priority
+import { Priority } from './testCase';

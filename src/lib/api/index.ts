@@ -1,11 +1,19 @@
 
-export { getTestCase, updateTestCase, createTestCase, getChildTestCases } from './testCases';
+// Export APIs from organized module files
+export { 
+  getTestCase, 
+  updateTestCase, 
+  createTestCase, 
+  getChildTestCases 
+} from './testCases';
+
 export { 
   getTestExecution, 
   getExecutionDetails, 
   createTestExecution, 
   updateTestExecution 
 } from './testExecutions';
+
 export {
   getDefects,
   getDefect,
@@ -13,6 +21,7 @@ export {
   updateDefect,
   deleteDefect
 } from './defects';
+
 export {
   getProjects,
   getProject,
@@ -21,6 +30,7 @@ export {
   deleteProject,
   inviteUserToProject
 } from './projects';
+
 export {
   getTestPlans,
   getTestPlan,
