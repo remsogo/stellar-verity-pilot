@@ -1,5 +1,5 @@
 
-import { TestCase } from "@/types";
+import { TestCase, TestCaseStatus } from "@/types";
 import { Card, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,8 +35,8 @@ export const TestCaseCard = ({ testCase, isChild = false, showBadge = false }: T
         <div className="flex items-center gap-2">
           <Badge
             variant={
-              testCase.status === "passed" ? "default" :
-              testCase.status === "pending" ? "secondary" :
+              testCase.status === TestCaseStatus.PASSED ? "default" :
+              testCase.status === TestCaseStatus.PENDING ? "secondary" :
               "destructive"
             }
           >

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -12,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { TestCasePriority } from '@/types';
 
 const Defects = () => {
   const { data: defects, isLoading, error } = useQuery({
@@ -26,10 +26,10 @@ const Defects = () => {
   const closedCount = defects?.filter(d => d.status === 'closed').length || 0;
 
   // Calculate counts for each severity
-  const criticalCount = defects?.filter(d => d.severity === 'critical').length || 0;
-  const highCount = defects?.filter(d => d.severity === 'high').length || 0;
-  const mediumCount = defects?.filter(d => d.severity === 'medium').length || 0;
-  const lowCount = defects?.filter(d => d.severity === 'low').length || 0;
+  const criticalCount = defects?.filter(d => d.severity === TestCasePriority.CRITICAL).length || 0;
+  const highCount = defects?.filter(d => d.severity === TestCasePriority.HIGH).length || 0;
+  const mediumCount = defects?.filter(d => d.severity === TestCasePriority.MEDIUM).length || 0;
+  const lowCount = defects?.filter(d => d.severity === TestCasePriority.LOW).length || 0;
 
   return (
     <MainLayout
@@ -196,7 +196,7 @@ const Defects = () => {
             <Card>
               <CardContent className="p-0">
                 <DefectsList 
-                  defects={(defects || []).filter(d => d.severity === 'critical')} 
+                  defects={(defects || []).filter(d => d.severity === TestCasePriority.CRITICAL)} 
                   isLoading={isLoading} 
                 />
               </CardContent>
@@ -207,7 +207,7 @@ const Defects = () => {
             <Card>
               <CardContent className="p-0">
                 <DefectsList 
-                  defects={(defects || []).filter(d => d.severity === 'high')} 
+                  defects={(defects || []).filter(d => d.severity === TestCasePriority.HIGH)} 
                   isLoading={isLoading} 
                 />
               </CardContent>

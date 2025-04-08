@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DefectForm, DefectFormValues } from './DefectForm';
 import { Bug } from 'lucide-react';
 import { useUser } from '@/hooks/use-user';
+import { TestCasePriority } from '@/types';
 
 interface CreateDefectFromExecutionProps {
   testExecutionId: string;
@@ -34,7 +35,7 @@ export const CreateDefectFromExecution: React.FC<CreateDefectFromExecutionProps>
         title: values.title || `Issue with "${testCaseTitle}"`,
         description: values.description || '',
         status: values.status || 'open',
-        severity: values.severity || 'medium',
+        severity: values.severity || TestCasePriority.MEDIUM,
         reporter: user?.email || values.reporter || '',
         assignee: values.assignee,
         test_execution_id: testExecutionId,
@@ -88,7 +89,7 @@ export const CreateDefectFromExecution: React.FC<CreateDefectFromExecutionProps>
             title: `Issue with "${testCaseTitle}"`,
             description: '',
             status: 'open',
-            severity: 'medium',
+            severity: TestCasePriority.MEDIUM,
             reporter: user?.email || '',
             project_id: projectId,
             test_execution_id: testExecutionId,

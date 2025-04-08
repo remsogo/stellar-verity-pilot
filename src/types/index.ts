@@ -4,6 +4,9 @@ export * from './testCase';
 export * from './testExecution';
 export * from './testPlan';
 
+// Import Priority from testCase to use in Defect type
+import { Priority } from './testCase';
+
 // Types génériques ou partagés
 
 // Type pour les defects
@@ -44,6 +47,3 @@ export type TestTrend = {
   pending: number;
   blocked: number;
 };
-
-// Réimportation pour avoir accès au type Priority
-import { Priority } from './testCase';

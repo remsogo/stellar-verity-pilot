@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/Layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ import { testCases } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { useSelectedProject } from "@/hooks/use-selected-project";
 import { Badge } from "@/components/ui/badge";
-import { TestCase } from "@/types";
+import { TestCase, TestCaseStatus } from "@/types";
 import { getChildTestCases } from "@/lib/api/testCases/getChildTestCases";
 import { mapDbTestCaseToTestCase } from "@/lib/api/testCaseMappers";
 
@@ -191,8 +192,8 @@ const TestCases = () => {
                         <TableCell>
                           <Badge
                             variant={
-                              testCase.status === "passed" || testCase.status === "ready" ? "default" :
-                              testCase.status === "pending" || testCase.status === "draft" ? "secondary" :
+                              testCase.status === TestCaseStatus.PASSED || testCase.status === TestCaseStatus.READY ? "default" :
+                              testCase.status === TestCaseStatus.PENDING || testCase.status === TestCaseStatus.DRAFT ? "secondary" :
                               "destructive"
                             }
                           >
@@ -225,8 +226,8 @@ const TestCases = () => {
                             <TableCell>
                               <Badge
                                 variant={
-                                  child.status === "passed" || child.status === "ready" ? "default" :
-                                  child.status === "pending" || child.status === "draft" ? "secondary" :
+                                  child.status === TestCaseStatus.PASSED || child.status === TestCaseStatus.READY ? "default" :
+                                  child.status === TestCaseStatus.PENDING || child.status === TestCaseStatus.DRAFT ? "secondary" :
                                   "destructive"
                                 }
                               >

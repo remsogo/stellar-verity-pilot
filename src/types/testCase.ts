@@ -10,7 +10,7 @@ export type TestStep = {
   order: number;
 };
 
-// Enum for status values to ensure consistency
+// Enum for status values (lowercase strings for consistency)
 export enum TestCaseStatus {
   PASSED = "passed",
   FAILED = "failed",
@@ -20,7 +20,7 @@ export enum TestCaseStatus {
   DRAFT = "draft"
 }
 
-// Enum for priority values
+// Enum for priority values (lowercase strings for consistency)
 export enum TestCasePriority {
   LOW = "low",
   MEDIUM = "medium",
@@ -29,8 +29,8 @@ export enum TestCasePriority {
 }
 
 // Status et Priority types based on enums
-export type Status = keyof typeof TestCaseStatus;
-export type Priority = keyof typeof TestCasePriority;
+export type Status = typeof TestCaseStatus[keyof typeof TestCaseStatus];
+export type Priority = typeof TestCasePriority[keyof typeof TestCasePriority];
 
 // Base test case type without children relationship
 export interface BaseTestCase {
@@ -57,7 +57,6 @@ export interface BaseTestCase {
 
 // Complete TestCase type with optional children array
 export type TestCase = BaseTestCase & {
-  // Children are stored as string IDs to prevent circular reference
   children?: string[];
 };
 
@@ -96,30 +95,20 @@ export type DbTestStep = {
 export const normalizeStatus = (status: string): Status => {
   const normalizedStatus = status.toLowerCase();
   
-  switch(normalizedStatus) {
-    case "ready":
-    case "draft":
-    case "blocked":
-    case "passed":
-    case "failed":
-    case "pending":
-      return normalizedStatus as Status;
-    default:
-      return "pending"; // Default status
+  if (Object.values(TestCaseStatus).includes(normalizedStatus as Status)) {
+    return normalizedStatus as Status;
   }
+  
+  return TestCaseStatus.PENDING;
 };
 
 // Utility function to normalize priority values
 export const normalizePriority = (priority: string): Priority => {
   const normalizedPriority = priority.toLowerCase();
   
-  switch(normalizedPriority) {
-    case "low":
-    case "medium":
-    case "high":
-    case "critical":
-      return normalizedPriority as Priority;
-    default:
-      return "medium"; // Default priority
+  if (Object.values(TestCasePriority).includes(normalizedPriority as Priority)) {
+    return normalizedPriority as Priority;
   }
+  
+  return TestCasePriority.MEDIUM;
 };

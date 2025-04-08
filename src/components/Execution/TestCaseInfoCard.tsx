@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TestCase } from '@/types';
+import { TestCase, TestCasePriority } from '@/types';
 import { Calendar, Clock, Tag, FileText } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
 
@@ -20,9 +20,9 @@ export const TestCaseInfoCard: React.FC<TestCaseInfoCardProps> = ({ testCase }) 
           <h4 className="text-sm font-medium text-muted-foreground mb-1">Priority</h4>
           <div className="flex items-center">
             <Badge variant={
-              testCase.priority === 'critical' ? 'destructive' :
-              testCase.priority === 'high' ? 'destructive' :
-              testCase.priority === 'medium' ? 'default' :
+              testCase.priority === TestCasePriority.CRITICAL ? 'destructive' :
+              testCase.priority === TestCasePriority.HIGH ? 'destructive' :
+              testCase.priority === TestCasePriority.MEDIUM ? 'default' :
               'secondary'
             }>
               {testCase.priority.charAt(0).toUpperCase() + testCase.priority.slice(1)}

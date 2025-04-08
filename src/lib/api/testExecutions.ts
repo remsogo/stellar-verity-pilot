@@ -1,5 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { DbTestExecution, TestExecution, Status } from "@/types";
+import { DbTestExecution, TestExecution, Status, TestCaseStatus, TestCasePriority } from "@/types";
 import { mapDbTestCaseToTestCase } from "./testCaseMappers";
 
 // Helper to convert DB model to frontend model
@@ -11,8 +12,8 @@ const mapDbExecutionToExecution = (dbExecution: DbTestExecution): TestExecution 
       id: '',
       title: '',
       description: '',
-      status: 'pending',
-      priority: 'medium',
+      status: TestCaseStatus.PENDING,
+      priority: TestCasePriority.MEDIUM,
       author: '',
       project_id: '',
       tags: [],

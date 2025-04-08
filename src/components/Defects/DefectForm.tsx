@@ -3,7 +3,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Defect } from '@/types';
+import { Defect, TestCasePriority, Priority } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -25,14 +25,13 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
-const severityEnum = ['low', 'medium', 'high', 'critical'] as const;
-const statusEnum = ['open', 'in-progress', 'resolved', 'closed', 'reopened'] as const;
+const defectStatusEnum = ['open', 'in-progress', 'resolved', 'closed', 'reopened'] as const;
 
 const defectFormSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  status: z.enum(statusEnum),
-  severity: z.enum(severityEnum),
+  status: z.enum(defectStatusEnum),
+  severity: z.enum(['low', 'medium', 'high', 'critical'] as const),
   reporter: z.string().min(1, 'Reporter is required'),
   assignee: z.string().optional(),
   project_id: z.string().min(1, 'Project is required'),
@@ -65,7 +64,7 @@ export const DefectForm: React.FC<DefectFormProps> = ({
           title: defect.title,
           description: defect.description || '',
           status: defect.status,
-          severity: defect.severity as (typeof severityEnum)[number],
+          severity: defect.severity,
           reporter: defect.reporter,
           assignee: defect.assignee || '',
           project_id: defect.project_id,
@@ -75,7 +74,7 @@ export const DefectForm: React.FC<DefectFormProps> = ({
           title: '',
           description: '',
           status: 'open',
-          severity: 'medium',
+          severity: TestCasePriority.MEDIUM,
           reporter: '', // In a real app, this would be the current user
           assignee: '',
           project_id: projects.length > 0 ? projects[0].id : '',
