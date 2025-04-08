@@ -1,6 +1,6 @@
 
 import { z } from "zod";
-import { Priority, Status } from "@/types";
+import { Priority, Status, TestParameter } from "@/types";
 
 export const testCaseSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
@@ -13,6 +13,7 @@ export const testCaseSchema = z.object({
   tags: z.array(z.string()).default([]),
   data_driven: z.boolean().default(false),
   test_data: z.string().optional(),
+  parameters: z.string().optional(),
 });
 
 export type TestCaseFormValues = z.infer<typeof testCaseSchema>;
@@ -43,6 +44,18 @@ export const parseTestData = (testDataString?: string) => {
     return JSON.parse(testDataString);
   } catch (error) {
     console.error("Error parsing test data:", error);
+    return null;
+  }
+};
+
+// Parse JSON parameters from string
+export const parseParameters = (parametersString?: string): TestParameter[] | null => {
+  if (!parametersString) return null;
+  try {
+    const parsed = JSON.parse(parametersString);
+    return Array.isArray(parsed) ? parsed : [parsed];
+  } catch (error) {
+    console.error("Error parsing parameters:", error);
     return null;
   }
 };

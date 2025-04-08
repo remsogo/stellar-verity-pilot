@@ -36,6 +36,13 @@ export const mapDbTestCaseToTestCase = (dbTestCase: DbTestCase): TestCase => {
           ? [dbTestCase.test_data] 
           : undefined
       : undefined,
+    parameters: dbTestCase.parameters && typeof dbTestCase.parameters === 'object'
+      ? Array.isArray(dbTestCase.parameters)
+        ? dbTestCase.parameters
+        : Object.keys(dbTestCase.parameters).length > 0
+          ? [dbTestCase.parameters]
+          : undefined
+      : undefined,
     preconditions: dbTestCase.preconditions,
     requirements: dbTestCase.requirements,
     tags: dbTestCase.tags,

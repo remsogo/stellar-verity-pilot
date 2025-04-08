@@ -11,13 +11,13 @@ import { TestCaseBasicInfo } from "./TestCaseBasicInfo";
 import { TestCaseSteps } from "./TestCaseSteps";
 import { TestCaseMetadata } from "./TestCaseMetadata";
 import { TestCaseButtons } from "./TestCaseButtons";
-import { TestCaseFormValues, testCaseSchema, convertFormPriorityToApiPriority, convertFormStatusToApiStatus, parseTestData } from "./TestCaseFormTypes";
+import { TestCaseFormValues, testCaseSchema, convertFormPriorityToApiPriority, convertFormStatusToApiStatus, parseTestData, parseParameters } from "./TestCaseFormTypes";
 import { getTestCase } from "@/lib/api/testCases/getTestCase";
 import { createTestCase } from "@/lib/api/testCases/createTestCase";
 import { updateTestCase } from "@/lib/api/testCases/updateTestCase";
 import { Priority, Status } from "@/types";
 import { TestCaseTags } from "./TestCaseTags";
-import { TestCaseDataDriven } from "./TestCaseDataDriven";
+import { TestCaseParameters } from "./TestCaseParameters";
 
 interface TestCaseFormProps {
   id?: string;
@@ -85,8 +85,10 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
       
       // Set data-driven fields
       setValue("data_driven", testCase.data_driven || false);
-      if (testCase.test_data) {
-        setValue("test_data", JSON.stringify(testCase.test_data, null, 2));
+      
+      // Set parameters if they exist
+      if (testCase.parameters) {
+        setValue("parameters", JSON.stringify(testCase.parameters, null, 2));
       }
       
       // Set tags
@@ -129,7 +131,7 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
         project_id: selectedProjectId,
         tags: data.tags || [],
         data_driven: data.data_driven,
-        test_data: parseTestData(data.test_data)
+        parameters: parseParameters(data.parameters)
       };
       
       if (id) {
@@ -186,7 +188,7 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
             isLoading={isLoading} 
           />
 
-          <TestCaseDataDriven
+          <TestCaseParameters
             control={control}
             isLoading={isLoading}
           />

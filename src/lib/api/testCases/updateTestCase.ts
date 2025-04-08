@@ -16,7 +16,7 @@ export const updateTestCase = async (testCase: Partial<TestCase> & { id: string 
     priority: testCase.priority,
     automated: testCase.automated,
     data_driven: testCase.data_driven,
-    test_data: testCase.test_data,
+    parameters: testCase.parameters,
     estimate_time: testCase.estimate_time,
     preconditions: testCase.preconditions,
     requirements: testCase.requirements,

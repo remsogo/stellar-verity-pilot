@@ -53,6 +53,14 @@ export interface TestCollection {
   updated_at?: string;
 }
 
+// TestParameter type for variable-based tests
+export type TestParameter = {
+  name: string;
+  description?: string;
+  type: "string" | "number" | "boolean" | "array" | "object";
+  defaultValue?: any;
+};
+
 // TestData type for data-driven tests
 export type TestDataSet = {
   id: string;
@@ -73,6 +81,7 @@ export type TestCase = {
   automated?: boolean;
   data_driven?: boolean;
   test_data?: TestDataSet[];
+  parameters?: TestParameter[];
   preconditions?: string;
   requirements?: string[];
   tags: string[];
@@ -96,6 +105,7 @@ export type DbTestCase = {
   automated?: boolean;
   data_driven?: boolean;
   test_data?: any; // Use 'any' for maximum compatibility with JSON data
+  parameters?: any; // For storing parameters in the database
   preconditions?: string;
   requirements?: string[];
   tags: string[];
