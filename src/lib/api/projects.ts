@@ -11,7 +11,7 @@ export async function getProjects() {
     
     if (error) throw error;
     return data || [];
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching projects:', error);
     toast({
       title: 'Error fetching projects',
@@ -32,7 +32,7 @@ export async function getProject(id: string) {
     
     if (error) throw error;
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching project:', error);
     toast({
       title: 'Error fetching project',
@@ -45,28 +45,27 @@ export async function getProject(id: string) {
 
 export async function createProject(name: string, description?: string) {
   try {
+    // Get the current authenticated user's session
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error('Authentication required to create a project');
+    }
+    
     const { data, error } = await supabase
       .from('projects')
       .insert([{ name, description }])
       .select()
       .single();
     
-    if (error) throw error;
-    
-    toast({
-      title: 'Project created',
-      description: `Project "${name}" has been created successfully.`,
-    });
+    if (error) {
+      throw error;
+    }
     
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating project:', error);
-    toast({
-      title: 'Error creating project',
-      description: error.message,
-      variant: 'destructive',
-    });
-    return null;
+    throw error; // We rethrow to let the component handle the error
   }
 }
 
@@ -81,20 +80,10 @@ export async function updateProject(id: string, updates: { name?: string; descri
     
     if (error) throw error;
     
-    toast({
-      title: 'Project updated',
-      description: `Project "${updates.name || 'project'}" has been updated successfully.`,
-    });
-    
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating project:', error);
-    toast({
-      title: 'Error updating project',
-      description: error.message,
-      variant: 'destructive',
-    });
-    return null;
+    throw error; // We rethrow to let the component handle the error
   }
 }
 
@@ -107,20 +96,10 @@ export async function deleteProject(id: string) {
     
     if (error) throw error;
     
-    toast({
-      title: 'Project deleted',
-      description: 'The project has been deleted successfully.',
-    });
-    
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting project:', error);
-    toast({
-      title: 'Error deleting project',
-      description: error.message,
-      variant: 'destructive',
-    });
-    return false;
+    throw error; // We rethrow to let the component handle the error
   }
 }
 
@@ -134,13 +113,8 @@ export async function inviteUserToProject(projectId: string, email: string, role
     });
     
     return { success: true, email, projectId, role };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error inviting user:', error);
-    toast({
-      title: 'Error inviting user',
-      description: error.message,
-      variant: 'destructive',
-    });
-    return { success: false };
+    throw error; // We rethrow to let the component handle the error
   }
 }

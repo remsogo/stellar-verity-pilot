@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { createProject, updateProject } from '@/lib/api/projects';
+import { useUser } from '@/hooks/use-user';
 
 interface ProjectFormProps {
   projectId?: string;
@@ -27,6 +28,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   const [description, setDescription] = React.useState(initialData?.description || '');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const navigate = useNavigate();
+  const { user } = useUser();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +39,17 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
         description: 'Please enter a project name',
         variant: 'destructive',
       });
+      return;
+    }
+
+    // Ensure user is authenticated
+    if (!user) {
+      toast({
+        title: 'Authentication required',
+        description: 'You must be logged in to create or edit projects',
+        variant: 'destructive',
+      });
+      navigate('/auth');
       return;
     }
     
@@ -60,11 +73,11 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
           navigate(`/projects/${project.id}`);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting project:', error);
       toast({
         title: `Error ${isEditing ? 'updating' : 'creating'} project`,
-        description: error.message,
+        description: error.message || 'An unexpected error occurred',
         variant: 'destructive',
       });
     } finally {
