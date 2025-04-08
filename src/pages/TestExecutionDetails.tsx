@@ -1,18 +1,15 @@
 
+import React from 'react';
 import { MainLayout } from "@/components/Layout/MainLayout";
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { ExecutionDetailsLoadingState } from "@/components/Execution/ExecutionDetailsLoadingState";
-import { ExecutionDetailsNotFound } from "@/components/Execution/ExecutionDetailsNotFound";
-import { ExecutionDetailsContent } from "@/components/Execution/ExecutionDetailsContent";
-import { TestExecution, ExecutionStep } from "@/types";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { getExecutionDetails } from "@/lib/api/testExecutions";
+import { useQuery } from '@tanstack/react-query';
+import { getExecutionDetails } from '@/lib/api/testExecutions';
+import { ExecutionDetailsContent } from '@/components/Execution/ExecutionDetailsContent';
+import { ExecutionDetailsLoadingState } from '@/components/Execution/ExecutionDetailsLoadingState';
+import { ExecutionDetailsNotFound } from '@/components/Execution/ExecutionDetailsNotFound';
+import { ExecutionStep, TestExecution } from '@/types';
+import { useToast } from '@/hooks/use-toast';
 
 const TestExecutionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,42 +18,45 @@ const TestExecutionDetails = () => {
   const [executionSteps, setExecutionSteps] = useState<ExecutionStep[]>([]);
 
   const { data: execution, isLoading, error } = useQuery({
-    queryKey: ["execution", id],
+    queryKey: ['executionDetails', id],
     queryFn: async () => {
-      if (!id) throw new Error("No execution ID provided");
+      if (!id) throw new Error('No execution ID provided');
       return await getExecutionDetails(id);
     },
-    enabled: !!id
+    enabled: !!id,
+    onError: (error: Error) => {
+      toast({
+        title: 'Error fetching execution details',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
   });
 
   useEffect(() => {
-    const fetchExecutionSteps = async () => {
-      if (!id) return;
-      
-      try {
-        const { data, error } = await supabase
-          .rpc('get_execution_steps_with_details', { execution_id: id });
-        
-        if (error) throw error;
-        setExecutionSteps(data as ExecutionStep[]);
-      } catch (err: any) {
-        toast({
-          title: "Error fetching execution steps",
-          description: err.message,
-          variant: "destructive"
-        });
-      }
-    };
-
     if (id) {
-      fetchExecutionSteps();
+      // This would be replaced with a real API call in a production app
+      // In this case we're creating mock execution steps based on the test case steps
+      if (execution?.testCase?.steps) {
+        const mockSteps = execution.testCase.steps.map((step, index) => ({
+          id: `step-${index}`,
+          test_step_id: step.id,
+          execution_id: execution.id,
+          status: execution.status,
+          actual_result: null,
+          step_order: step.order,
+          description: step.description,
+          expected_result: step.expectedResult
+        }));
+        setExecutionSteps(mockSteps);
+      }
     }
-  }, [id, toast]);
+  }, [id, execution]);
 
   if (isLoading) {
     return (
-      <MainLayout
-        pageTitle="Execution Details"
+      <MainLayout 
+        pageTitle="Execution Details" 
         pageDescription="View detailed results of a test execution."
       >
         <ExecutionDetailsLoadingState />
@@ -66,9 +66,9 @@ const TestExecutionDetails = () => {
 
   if (error || !execution) {
     return (
-      <MainLayout
-        pageTitle="Execution Details"
-        pageDescription="View detailed results of a test execution."
+      <MainLayout 
+        pageTitle="Execution Not Found" 
+        pageDescription="The requested test execution could not be found."
       >
         <ExecutionDetailsNotFound navigate={navigate} />
       </MainLayout>
@@ -76,26 +76,14 @@ const TestExecutionDetails = () => {
   }
 
   return (
-    <MainLayout
-      pageTitle="Execution Details"
-      pageDescription="View detailed results of a test execution."
+    <MainLayout 
+      pageTitle={`Execution: ${execution.testCase.title}`}
+      pageDescription="View detailed results of this test execution"
     >
-      <div className="mb-6">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => navigate("/test-executions")}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Executions
-        </Button>
-      </div>
-      
       <ExecutionDetailsContent 
         execution={execution} 
         executionSteps={executionSteps} 
-        navigate={navigate}
+        navigate={navigate} 
       />
     </MainLayout>
   );

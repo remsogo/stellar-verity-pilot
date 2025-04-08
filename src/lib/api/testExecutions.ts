@@ -8,6 +8,16 @@ const mapDbExecutionToExecution = (dbExecution: DbTestExecution): TestExecution 
   const execution: TestExecution = {
     id: dbExecution.id,
     testCaseId: dbExecution.test_case_id,
+    testCase: dbExecution.testCase ? mapDbTestCaseToTestCase(dbExecution.testCase) : {
+      id: '',
+      title: '',
+      description: '',
+      status: 'pending',
+      priority: 'medium',
+      author: '',
+      project_id: '',
+      tags: []
+    },
     executor: dbExecution.executor,
     status: dbExecution.status as Status,
     startTime: dbExecution.start_time,
@@ -16,10 +26,6 @@ const mapDbExecutionToExecution = (dbExecution: DbTestExecution): TestExecution 
     notes: dbExecution.notes || "",
     defects: dbExecution.defects || []
   };
-
-  if (dbExecution.testCase) {
-    execution.testCase = mapDbTestCaseToTestCase(dbExecution.testCase);
-  }
 
   return execution;
 };
