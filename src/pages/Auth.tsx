@@ -7,35 +7,29 @@ import { ThemeToggle } from "@/components/UI/ThemeToggle";
 import { useSelectedProject } from "@/hooks/use-selected-project";
 import { LoginForm, LoginFormValues } from "@/components/Auth/LoginForm";
 import { SignupForm, SignupFormValues } from "@/components/Auth/SignupForm";
-import { checkAuthSession, loginUser, signupUser } from "@/components/Auth/AuthService";
+import { loginUser, signupUser } from "@/components/Auth/AuthService";
+import { useAuth } from "@/context/AuthContext";
 
 const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
-  const [checkingSession, setCheckingSession] = useState(true);
   const { refreshProjectSelection } = useSelectedProject();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   
   // Get the redirect path from location state or default to '/projects'
   const from = (location.state as { from?: string })?.from || "/projects";
 
   useEffect(() => {
-    const checkSession = async () => {
-      const session = await checkAuthSession();
-      if (session) {
-        console.log("User already authenticated, redirecting to:", from);
-        navigate(from === "/auth" ? "/projects" : from, { replace: true });
-      } else {
-        console.log("No active session found, showing login form");
-      }
-      setCheckingSession(false);
-    };
-    
-    checkSession();
-  }, [navigate, from]);
+    // If user is already authenticated, redirect them
+    if (!authLoading && isAuthenticated) {
+      console.log("User already authenticated, redirecting to:", from);
+      navigate(from === "/auth" ? "/projects" : from, { replace: true });
+    }
+  }, [isAuthenticated, authLoading, navigate, from]);
 
-  if (checkingSession) {
+  if (authLoading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center">
         <p>Loading...</p>

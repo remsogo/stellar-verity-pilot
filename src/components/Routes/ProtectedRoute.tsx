@@ -1,14 +1,13 @@
 
 import { useState, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useSelectedProject } from "@/hooks/use-selected-project";
 import { toast } from "@/components/ui/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { selectedProjectId, isLoading: isProjectLoading } = useSelectedProject();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const location = useLocation();
 
   // Exempt paths that don't require project selection
@@ -39,52 +38,17 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log('ProtectedRoute rendered', { 
       isAuthenticated, 
-      isLoading, 
+      isAuthLoading, 
       selectedProjectId, 
       isProjectLoading,
       path: location.pathname,
       isExemptPath,
       requiresProject
     });
-  }, [isAuthenticated, isLoading, selectedProjectId, isProjectLoading, location.pathname, isExemptPath, requiresProject]);
-
-  useEffect(() => {
-    let mounted = true;
-    
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (mounted) {
-          setIsAuthenticated(!!session);
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('Auth check error:', error);
-        if (mounted) {
-          setIsAuthenticated(false);
-          setIsLoading(false);
-        }
-      }
-    };
-
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (mounted) {
-        setIsAuthenticated(!!session);
-        setIsLoading(false);
-      }
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
+  }, [isAuthenticated, isAuthLoading, selectedProjectId, isProjectLoading, location.pathname, isExemptPath, requiresProject]);
 
   // Show loading state while authentication is being checked
-  if (isLoading) {
+  if (isAuthLoading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
