@@ -3,13 +3,20 @@ import { Search } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 
-export const SearchBar = () => {
+interface SearchBarProps {
+  onClose?: () => void;
+}
+
+export const SearchBar = ({ onClose }: SearchBarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Searching for:", searchQuery);
     // Implement search functionality here
+    if (onClose) {
+      onClose();
+    }
   };
 
   return (

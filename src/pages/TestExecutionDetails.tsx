@@ -16,7 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Calendar, Clock, User, Tag, CheckCircle, XCircle, AlertCircle } from "lucide-react";
-import { TestExecution, TestCase, Status, ExecutionStep } from "@/types";
+import { TestExecution, TestCase, Status, Priority, ExecutionStep } from "@/types";
 import { toast } from "sonner";
 
 const TestExecutionDetails = () => {
@@ -85,7 +85,7 @@ const TestExecutionDetails = () => {
 
         setExecution(executionObj);
 
-        // Fetch execution steps with test step details using a SQL query since we need joins
+        // Fetch execution steps with test step details using a stored procedure
         const { data: stepsData, error: stepsError } = await supabase
           .rpc('get_execution_steps_with_details', { execution_id_param: id });
 
