@@ -103,8 +103,9 @@ const TestExecutionDetails = () => {
 
         // Fetch execution steps with test step details
         if (id) {
+          // Fix the RPC typing by using the correct generic parameters
           const { data, error: stepsError } = await supabase
-            .rpc<ExecutionStepWithDetails[], GetExecutionStepsParams>('get_execution_steps_with_details', { 
+            .rpc<ExecutionStepWithDetails>('get_execution_steps_with_details', { 
               execution_id_param: id 
             });
 
