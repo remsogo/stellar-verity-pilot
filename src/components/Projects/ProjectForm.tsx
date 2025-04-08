@@ -9,7 +9,7 @@ import { toast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { createProject, updateProject } from '@/lib/api/projects';
 import { useUser } from '@/hooks/use-user';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { useSelectedProject } from '@/hooks/use-selected-project';
 
 interface ProjectFormProps {
@@ -96,6 +96,17 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
       // Format a more user-friendly error message
       let errorMessage = err.message || 'An unexpected error occurred';
       
+      // Check for specific error messages and make them more user-friendly
+      if (errorMessage.includes('duplicate key') || errorMessage.includes('unique constraint')) {
+        errorMessage = 'A project with this name already exists.';
+      } else if (errorMessage.includes('JWT')) {
+        errorMessage = 'Your session has expired. Please log in again.';
+      } else if (errorMessage.includes('permission denied')) {
+        errorMessage = 'You do not have permission to perform this action.';
+      } else if (errorMessage.includes('recursion')) {
+        errorMessage = 'Error with database policies. Please try again or contact support.';
+      }
+      
       setError(errorMessage);
       
       toast({
@@ -121,11 +132,11 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           {error && (
-            <div className="bg-destructive/10 p-3 rounded-md flex items-start gap-2 mb-4">
-              <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
+            <div className="bg-destructive/10 p-3 rounded-md flex items-start gap-2 mb-4 text-destructive">
+              <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="font-medium text-destructive">Error</p>
-                <p className="text-sm text-muted-foreground">{error}</p>
+                <p className="font-medium">Error</p>
+                <p className="text-sm">{error}</p>
               </div>
             </div>
           )}
@@ -155,6 +166,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
             type="button" 
             variant="outline"
             onClick={() => navigate('/projects')}
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
@@ -162,9 +174,14 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
             type="submit" 
             disabled={isSubmitting}
           >
-            {isSubmitting 
-              ? (isEditing ? 'Updating...' : 'Creating...') 
-              : (isEditing ? 'Update Project' : 'Create Project')}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isEditing ? 'Updating...' : 'Creating...'}
+              </>
+            ) : (
+              isEditing ? 'Update Project' : 'Create Project'
+            )}
           </Button>
         </CardFooter>
       </Card>

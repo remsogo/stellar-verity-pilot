@@ -924,8 +924,16 @@ export type Database = {
         Args: { project_id: string; user_id: string }
         Returns: boolean
       }
+      is_project_admin_secure: {
+        Args: { p_project_id: string }
+        Returns: boolean
+      }
       is_project_member: {
         Args: { project_id: string; user_id: string }
+        Returns: boolean
+      }
+      is_project_member_secure: {
+        Args: { p_project_id: string }
         Returns: boolean
       }
       remove_user_from_project: {

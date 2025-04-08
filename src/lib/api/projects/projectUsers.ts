@@ -179,8 +179,9 @@ export async function removeUserFromProject(projectId: string, userId: string) {
  */
 export async function checkUserProjectMembership(projectId: string): Promise<boolean> {
   try {
+    // Use our new secure function to avoid RLS recursion issues
     const { data, error } = await supabase
-      .rpc('is_member_of_project', { project_id: projectId });
+      .rpc('is_project_member_secure', { p_project_id: projectId });
     
     if (error) throw error;
     

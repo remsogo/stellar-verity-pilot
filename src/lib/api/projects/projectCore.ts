@@ -30,9 +30,9 @@ export async function getProjects(): Promise<Project[]> {
  */
 export async function getProject(id: string): Promise<Project | null> {
   try {
-    // Check if user is a member of the project first
+    // Check if user is a member of the project first using our secure function
     const { data: hasAccess, error: accessError } = await supabase
-      .rpc('is_member_of_project', { project_id: id });
+      .rpc('is_project_member_secure', { p_project_id: id });
     
     if (accessError) throw accessError;
     
@@ -61,13 +61,15 @@ export async function getProject(id: string): Promise<Project | null> {
 
 /**
  * Creates a new project and adds current user as an owner
- * Uses a simpler approach without RLS complications
  */
 export async function createProject(name: string, description?: string): Promise<Project | null> {
   console.log('Starting project creation with:', { name, description });
   
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    // Get current user session
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) throw userError;
     
     if (!user) {
       throw new Error('Authentication required to create a project');
