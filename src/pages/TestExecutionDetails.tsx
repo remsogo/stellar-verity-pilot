@@ -97,14 +97,15 @@ const TestExecutionDetails = () => {
         setExecution(executionObj);
 
         // Fetch execution steps with test step details using the stored procedure
-        const { data: stepsData, error: stepsError } = await supabase
-          .rpc<ExecutionStepWithDetails>('get_execution_steps_with_details', { execution_id_param: id });
+        const { data, error: stepsError } = await supabase
+          .rpc('get_execution_steps_with_details', { execution_id_param: id });
 
         if (stepsError) {
           console.error("Error fetching steps:", stepsError);
           toast.error("Could not load execution step details");
-        } else if (stepsData && stepsData.length > 0) {
-          const formattedSteps: ExecutionStep[] = stepsData.map((step: ExecutionStepWithDetails) => ({
+        } else if (data && Array.isArray(data) && data.length > 0) {
+          const stepsData = data as ExecutionStepWithDetails[];
+          const formattedSteps: ExecutionStep[] = stepsData.map((step) => ({
             id: step.id,
             test_step_id: step.test_step_id,
             execution_id: step.execution_id,
