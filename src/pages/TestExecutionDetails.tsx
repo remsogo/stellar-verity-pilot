@@ -19,6 +19,17 @@ import { ArrowLeft, Calendar, Clock, User, Tag, CheckCircle, XCircle, AlertCircl
 import { TestExecution, TestCase, Status, Priority, ExecutionStep } from "@/types";
 import { toast } from "sonner";
 
+interface ExecutionStepWithDetails {
+  id: string;
+  test_step_id: string;
+  execution_id: string;
+  status: string;
+  actual_result: string | null;
+  step_order: number;
+  description: string;
+  expected_result: string;
+}
+
 const TestExecutionDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -85,15 +96,15 @@ const TestExecutionDetails = () => {
 
         setExecution(executionObj);
 
-        // Fetch execution steps with test step details using a stored procedure
+        // Fetch execution steps with test step details using the stored procedure
         const { data: stepsData, error: stepsError } = await supabase
-          .rpc('get_execution_steps_with_details', { execution_id_param: id });
+          .rpc<ExecutionStepWithDetails>('get_execution_steps_with_details', { execution_id_param: id });
 
         if (stepsError) {
           console.error("Error fetching steps:", stepsError);
           toast.error("Could not load execution step details");
         } else if (stepsData && stepsData.length > 0) {
-          const formattedSteps: ExecutionStep[] = stepsData.map((step: any) => ({
+          const formattedSteps: ExecutionStep[] = stepsData.map((step: ExecutionStepWithDetails) => ({
             id: step.id,
             test_step_id: step.test_step_id,
             execution_id: step.execution_id,
