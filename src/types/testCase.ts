@@ -10,7 +10,7 @@ export type TestStep = {
   order: number;
 };
 
-// Base TestCase sans les relations circulaires
+// Base type without circular references
 export interface BaseTestCase {
   id: string;
   title: string;
@@ -33,9 +33,10 @@ export interface BaseTestCase {
   steps?: TestStep[];
 }
 
-// Type principal avec les enfants, utilisant BaseTestCase pour éviter les références circulaires
+// Type principal with children reference but avoiding circular references
 export type TestCase = BaseTestCase & {
-  children?: BaseTestCase[];
+  // Use id strings instead of complete objects to avoid circular reference
+  children?: string[];
 };
 
 // Type pour la base de données

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,13 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useSelectedProject } from "@/hooks/use-selected-project";
 import { TestCaseBasicInfo } from "./TestCaseBasicInfo";
 import { TestCaseRelationship } from "./TestCaseRelationship";
 import { TestCaseSteps } from "./TestCaseSteps";
 import { TestCaseMetadata } from "./TestCaseMetadata";
 import { testCaseSchema, TestCaseFormValues } from "./TestCaseFormTypes";
+import { getTestCase } from "@/lib/api/testCases/getTestCase";
+import { createTestCase } from "@/lib/api/testCases/createTestCase";
+import { updateTestCase } from "@/lib/api/testCases/updateTestCase";
 
 interface TestCaseFormProps {
   id?: string;
@@ -72,50 +73,35 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
   const fetchTestCase = async (testCaseId: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("test_cases")
-        .select("*, test_steps(description, expected_result)")
-        .eq("id", testCaseId)
-        .single();
-
-      if (error) {
-        throw error;
+      const testCase = await getTestCase(testCaseId);
+      
+      setValue("title", testCase.title);
+      setValue("description", testCase.description || "");
+      setValue("preconditions", testCase.preconditions || "");
+      
+      if (testCase.steps && testCase.steps.length > 0) {
+        const stepsText = testCase.steps.map(step => step.description).join("\n");
+        setValue("steps", stepsText);
+        
+        setValue("expected_result", testCase.steps[0].expectedResult);
+      } else {
+        setValue("steps", "");
+        setValue("expected_result", "");
       }
-
-      if (data) {
-        setValue("title", data.title);
-        setValue("description", data.description || "");
-        setValue("preconditions", data.preconditions || "");
-        
-        // Pour la simplicité, concaténer tous les steps en une seule chaîne
-        if (data.test_steps && data.test_steps.length > 0) {
-          const stepsText = data.test_steps.map((step: any) => step.description).join("\n");
-          setValue("steps", stepsText);
-          
-          // Utiliser le résultat attendu du premier step pour la simplicité
-          setValue("expected_result", data.test_steps[0].expected_result);
-        } else {
-          setValue("steps", "");
-          setValue("expected_result", "");
-        }
-        
-        setValue("priority", data.priority === "high" ? "High" : data.priority === "medium" ? "Medium" : "Low");
-        setValue("status", data.status === "Draft" || data.status === "Ready" || data.status === "Blocked" 
-          ? data.status 
-          : "Draft");
-        
-        // Utilisons des assertions de type pour gérer correctement is_parent et parent_id
-        if ('is_parent' in data) {
-          // Conversion explicite en boolean avec !!
-          setValue("is_parent", !!data.is_parent);
-        }
-        
-        if ('parent_id' in data) {
-          // Utiliser une assertion de type et une conversion sécurisée
-          const parentId = data.parent_id as string | null;
-          setValue("parent_id", parentId);
-        }
-      }
+      
+      const formattedPriority = testCase.priority.charAt(0).toUpperCase() + testCase.priority.slice(1);
+      setValue("priority", formattedPriority as "High" | "Medium" | "Low");
+      
+      setValue("status", 
+        (testCase.status === "Draft" || testCase.status === "Ready" || testCase.status === "Blocked") 
+          ? testCase.status 
+          : "Draft"
+      );
+      
+      setValue("is_parent", Boolean(testCase.is_parent));
+      
+      setValue("parent_id", testCase.parent_id || null);
+      
     } catch (error: any) {
       toast({
         title: "Error fetching test case",
@@ -139,7 +125,6 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
 
     setIsLoading(true);
     try {
-      // If it's a parent test, remove any parent_id
       if (data.is_parent) {
         data.parent_id = null;
       }
@@ -148,45 +133,28 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
         title: data.title,
         description: data.description,
         preconditions: data.preconditions,
-        priority: data.priority.toLowerCase(),
+        priority: data.priority.toLowerCase() as any,
         status: data.status,
-        author: "Current User", // This would be the actual user in a real application
+        author: "Current User",
         project_id: selectedProjectId,
         is_parent: data.is_parent,
         parent_id: data.parent_id,
-        tags: []
+        tags: [] as string[]
       };
       
       if (id) {
-        const { error } = await supabase
-          .from("test_cases")
-          .update(testCaseData)
-          .eq("id", id);
-
-        if (error) {
-          throw error;
-        }
-
-        // Update the test steps separately
-        // For simplicity we're not implementing this fully
-
+        await updateTestCase({
+          id,
+          ...testCaseData
+        });
+        
         toast({
           title: "Test case updated",
           description: "The test case has been successfully updated.",
         });
       } else {
-        const { data: newTestCase, error } = await supabase
-          .from("test_cases")
-          .insert([testCaseData])
-          .select()
-          .single();
-
-        if (error) {
-          throw error;
-        }
-
-        // For simplicity we're not implementing steps creation fully here
-
+        await createTestCase(testCaseData);
+        
         toast({
           title: "Test case created",
           description: "The test case has been successfully created.",

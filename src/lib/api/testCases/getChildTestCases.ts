@@ -16,6 +16,6 @@ export const getChildTestCases = async (parentId: string): Promise<TestCase[]> =
     throw new Error(`Error fetching child test cases: ${error.message}`);
   }
 
-  const dbTestCases = data as DbTestCase[];
-  return dbTestCases.map(mapDbTestCaseToTestCase);
+  // Use type assertion to avoid deep type checking issues
+  return (data as DbTestCase[]).map(mapDbTestCaseToTestCase);
 };
