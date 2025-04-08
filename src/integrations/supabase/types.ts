@@ -259,6 +259,8 @@ export type Database = {
           description: string | null
           estimate_time: number | null
           id: string
+          is_parent: boolean | null
+          parent_id: string | null
           preconditions: string | null
           priority: string
           project_id: string
@@ -277,6 +279,8 @@ export type Database = {
           description?: string | null
           estimate_time?: number | null
           id?: string
+          is_parent?: boolean | null
+          parent_id?: string | null
           preconditions?: string | null
           priority?: string
           project_id: string
@@ -295,6 +299,8 @@ export type Database = {
           description?: string | null
           estimate_time?: number | null
           id?: string
+          is_parent?: boolean | null
+          parent_id?: string | null
           preconditions?: string | null
           priority?: string
           project_id?: string
@@ -306,6 +312,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "test_cases_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "test_cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "test_cases_project_id_fkey"
             columns: ["project_id"]

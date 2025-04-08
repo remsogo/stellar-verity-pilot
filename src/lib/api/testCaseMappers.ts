@@ -50,6 +50,9 @@ export const mapDbTestCaseToTestCase = (dbTestCase: DbTestCase): TestCase => {
     updated_at: dbTestCase.updated_at,
     // Map steps if they exist
     steps: dbTestCase.steps ? dbTestCase.steps.map(mapDbTestStepToTestStep) : undefined,
+    // Add the new parent-child fields
+    is_parent: dbTestCase.is_parent,
+    parent_id: dbTestCase.parent_id,
   };
 };
 

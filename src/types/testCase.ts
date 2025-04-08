@@ -90,6 +90,10 @@ export type TestCase = {
   createdAt?: string;
   updatedAt?: string;
   steps?: TestStep[];
+  // New fields for parent-child relationship
+  is_parent?: boolean;
+  parent_id?: string | null;
+  child_test_cases?: TestCase[]; // Not stored in DB, used for UI representation
 };
 
 // Type pour la base de données
@@ -112,6 +116,9 @@ export type DbTestCase = {
   created_at: string;
   updated_at: string;
   steps?: DbTestStep[];
+  // New fields for parent-child relationship
+  is_parent?: boolean;
+  parent_id?: string | null;
 };
 
 export type DbTestStep = {
