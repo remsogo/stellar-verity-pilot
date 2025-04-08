@@ -8,12 +8,18 @@ import { Project } from '@/types/project';
  */
 export async function getProjects(): Promise<Project[]> {
   try {
-    // Use a regular query instead of RPC since the function isn't properly registered
+    // Get the current user ID
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    
+    // Use regular query to get projects the user has access to
     const { data, error } = await supabase
       .from('projects')
       .select('*')
-      .join('project_users', { 'projects.id': 'project_users.project_id' })
-      .eq('project_users.user_id', supabase.auth.getUser().then(res => res.data.user?.id))
+      .eq('project_users.user_id', user.id)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
@@ -34,12 +40,19 @@ export async function getProjects(): Promise<Project[]> {
  */
 export async function getProject(id: string): Promise<Project | null> {
   try {
+    // Get the current user ID
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    
     // Check if user has access to this project first
     const { data: projectAccess, error: accessError } = await supabase
       .from('project_users')
       .select('*')
       .eq('project_id', id)
-      .eq('user_id', supabase.auth.getUser().then(res => res.data.user?.id))
+      .eq('user_id', user.id)
       .maybeSingle();
     
     if (accessError) throw accessError;

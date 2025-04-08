@@ -67,7 +67,7 @@ export const ProjectSelector = () => {
           <CommandList>
             <CommandEmpty>No projects found.</CommandEmpty>
             <CommandGroup>
-              {projects.map((project) => (
+              {projects.map((project: Project) => (
                 <CommandItem
                   key={project.id}
                   value={project.id}
