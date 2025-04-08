@@ -3,7 +3,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Defect, TestCasePriority, Priority } from '@/types';
+import { Defect } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -25,13 +25,15 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
+// Define the defect status and severity types
 const defectStatusEnum = ['open', 'in-progress', 'resolved', 'closed', 'reopened'] as const;
+const defectSeverityEnum = ['low', 'medium', 'high', 'critical'] as const;
 
 const defectFormSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   status: z.enum(defectStatusEnum),
-  severity: z.enum(['low', 'medium', 'high', 'critical'] as const),
+  severity: z.enum(defectSeverityEnum),
   reporter: z.string().min(1, 'Reporter is required'),
   assignee: z.string().optional(),
   project_id: z.string().min(1, 'Project is required'),
@@ -74,7 +76,7 @@ export const DefectForm: React.FC<DefectFormProps> = ({
           title: '',
           description: '',
           status: 'open',
-          severity: TestCasePriority.MEDIUM,
+          severity: 'medium',
           reporter: '', // In a real app, this would be the current user
           assignee: '',
           project_id: projects.length > 0 ? projects[0].id : '',

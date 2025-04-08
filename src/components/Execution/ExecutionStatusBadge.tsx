@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Status, TestCaseStatus } from '@/types';
+import { Status } from '@/types';
 import { CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -13,19 +13,19 @@ export const ExecutionStatusBadge: React.FC<ExecutionStatusBadgeProps> = ({ stat
   let variant: 'default' | 'destructive' | 'outline' | 'secondary' = 'default';
   
   switch (status) {
-    case TestCaseStatus.PASSED:
+    case "passed":
       icon = <CheckCircle className="h-3.5 w-3.5 mr-1" />;
       variant = 'default';
       break;
-    case TestCaseStatus.FAILED:
+    case "failed":
       icon = <XCircle className="h-3.5 w-3.5 mr-1" />;
       variant = 'destructive';
       break;
-    case TestCaseStatus.PENDING:
+    case "pending":
       icon = <Clock className="h-3.5 w-3.5 mr-1" />;
       variant = 'secondary';
       break;
-    case TestCaseStatus.BLOCKED:
+    case "blocked":
       icon = <AlertTriangle className="h-3.5 w-3.5 mr-1" />;
       variant = 'outline';
       break;

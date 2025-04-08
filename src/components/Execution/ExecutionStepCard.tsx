@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ExecutionStep, TestCaseStatus } from '@/types';
+import { ExecutionStep } from '@/types';
 import { AlertTriangle, Check, Clock, X } from 'lucide-react';
 
 interface ExecutionStepCardProps {
@@ -11,11 +11,11 @@ interface ExecutionStepCardProps {
 export const ExecutionStepCard: React.FC<ExecutionStepCardProps> = ({ step }) => {
   const getStatusIcon = () => {
     switch (step.status) {
-      case TestCaseStatus.PASSED:
+      case "passed":
         return <Check className="h-5 w-5 text-green-500" />;
-      case TestCaseStatus.FAILED:
+      case "failed":
         return <X className="h-5 w-5 text-red-500" />;
-      case TestCaseStatus.BLOCKED:
+      case "blocked":
         return <AlertTriangle className="h-5 w-5 text-orange-500" />;
       default:
         return <Clock className="h-5 w-5 text-yellow-500" />;
@@ -24,11 +24,11 @@ export const ExecutionStepCard: React.FC<ExecutionStepCardProps> = ({ step }) =>
 
   const getStatusClass = () => {
     switch (step.status) {
-      case TestCaseStatus.PASSED:
+      case "passed":
         return 'border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30';
-      case TestCaseStatus.FAILED:
+      case "failed":
         return 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30';
-      case TestCaseStatus.BLOCKED:
+      case "blocked":
         return 'border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30';
       default:
         return 'border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950/30';

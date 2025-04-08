@@ -20,7 +20,7 @@ export const getChildTestCases = async (parentId: string): Promise<TestCase[]> =
     }
 
     // Map DB test cases to frontend model
-    const testCases = (data as DbTestCase[]).map(dbTestCase => 
+    const testCases = (data as DbTestCase[] || []).map(dbTestCase => 
       mapDbTestCaseToTestCase(dbTestCase)
     );
     

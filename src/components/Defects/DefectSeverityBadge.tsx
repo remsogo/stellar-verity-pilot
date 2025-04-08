@@ -1,10 +1,9 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Priority } from '@/types';
 
 interface DefectSeverityBadgeProps {
-  severity: Priority;
+  severity: "low" | "medium" | "high" | "critical";
 }
 
 export const DefectSeverityBadge: React.FC<DefectSeverityBadgeProps> = ({ severity }) => {

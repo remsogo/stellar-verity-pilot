@@ -7,11 +7,10 @@ import { DefectForm as DefectFormComponent, DefectFormValues } from '@/component
 import { getDefect, createDefect, updateDefect } from '@/lib/api/defects';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/hooks/use-user';
-import { TestCasePriority } from '@/types';
 
 const DefectFormPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -83,8 +82,8 @@ const DefectFormPage = () => {
       reporter: user?.email || values.reporter || '',
       project_id: values.project_id || projects[0].id,
       description: values.description || '',
-      status: values.status || 'open', // Ensuring status is not optional
-      severity: values.severity || TestCasePriority.MEDIUM, // Ensuring severity is not optional
+      status: values.status || 'open', 
+      severity: values.severity || 'medium',
       assignee: values.assignee,
       test_execution_id: values.test_execution_id
     };

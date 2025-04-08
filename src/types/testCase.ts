@@ -28,9 +28,9 @@ export enum TestCasePriority {
   CRITICAL = "critical"
 }
 
-// Status et Priority types based on enums
-export type Status = typeof TestCaseStatus[keyof typeof TestCaseStatus];
-export type Priority = typeof TestCasePriority[keyof typeof TestCasePriority];
+// Using literal types to ensure type compatibility
+export type Status = "passed" | "failed" | "pending" | "blocked" | "ready" | "draft";
+export type Priority = "low" | "medium" | "high" | "critical";
 
 // Base test case type without children relationship
 export interface BaseTestCase {
@@ -95,20 +95,26 @@ export type DbTestStep = {
 export const normalizeStatus = (status: string): Status => {
   const normalizedStatus = status.toLowerCase();
   
-  if (Object.values(TestCaseStatus).includes(normalizedStatus as Status)) {
-    return normalizedStatus as Status;
+  switch (normalizedStatus) {
+    case "passed": return "passed";
+    case "failed": return "failed";
+    case "pending": return "pending";
+    case "blocked": return "blocked";
+    case "ready": return "ready";
+    case "draft": return "draft";
+    default: return "pending";
   }
-  
-  return TestCaseStatus.PENDING;
 };
 
 // Utility function to normalize priority values
 export const normalizePriority = (priority: string): Priority => {
   const normalizedPriority = priority.toLowerCase();
   
-  if (Object.values(TestCasePriority).includes(normalizedPriority as Priority)) {
-    return normalizedPriority as Priority;
+  switch (normalizedPriority) {
+    case "low": return "low";
+    case "medium": return "medium";
+    case "high": return "high";
+    case "critical": return "critical";
+    default: return "medium";
   }
-  
-  return TestCasePriority.MEDIUM;
 };

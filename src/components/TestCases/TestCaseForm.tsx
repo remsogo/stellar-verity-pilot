@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
@@ -12,12 +11,13 @@ import { TestCaseBasicInfo } from "./TestCaseBasicInfo";
 import { TestCaseRelationship } from "./TestCaseRelationship";
 import { TestCaseSteps } from "./TestCaseSteps";
 import { TestCaseMetadata } from "./TestCaseMetadata";
+import { TestCaseButtons } from "./TestCaseButtons";
 import { testCaseSchema, TestCaseFormValues } from "./TestCaseFormTypes";
 import { getTestCase } from "@/lib/api/testCases/getTestCase";
 import { createTestCase } from "@/lib/api/testCases/createTestCase";
 import { updateTestCase } from "@/lib/api/testCases/updateTestCase";
 import { supabase } from "@/integrations/supabase/client";
-import { Status, normalizeStatus } from "@/types";
+import { normalizeStatus } from "@/types";
 
 interface TestCaseFormProps {
   id?: string;
@@ -149,8 +149,8 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
         title: data.title,
         description: data.description,
         preconditions: data.preconditions,
-        priority: data.priority.toLowerCase() as any,
-        status: normalizeStatus(data.status.toLowerCase()), // Use normalizeStatus for consistency
+        priority: data.priority.toLowerCase(),
+        status: normalizeStatus(data.status.toLowerCase()),
         author: "Current User",
         project_id: selectedProjectId,
         is_parent: data.is_parent,
@@ -220,10 +220,7 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
 
           <Separator />
 
-          <div className="flex justify-end space-x-2">
-            <Button variant="ghost" onClick={() => navigate("/test-cases")}>Cancel</Button>
-            <Button type="submit" disabled={isLoading}>{isLoading ? "Saving..." : "Save"}</Button>
-          </div>
+          <TestCaseButtons isLoading={isLoading} />
         </form>
       </CardContent>
     </Card>

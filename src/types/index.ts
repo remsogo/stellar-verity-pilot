@@ -4,9 +4,6 @@ export * from './testCase';
 export * from './testExecution';
 export * from './testPlan';
 
-// Import Priority from testCase to use in Defect type
-import { Priority } from './testCase';
-
 // Types génériques ou partagés
 
 // Type pour les defects
@@ -15,7 +12,7 @@ export type Defect = {
   title: string;
   description?: string;
   status: 'open' | 'in-progress' | 'resolved' | 'closed' | 'reopened';
-  severity: Priority;
+  severity: "low" | "medium" | "high" | "critical"; // Use string literals directly
   reporter: string;
   assignee?: string;
   project_id: string;

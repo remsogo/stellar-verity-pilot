@@ -1,5 +1,5 @@
 
-import { DashboardStat, Status, TestCase, TestExecution, TestTrend } from "@/types";
+import { DashboardStat, TestCase, TestExecution, TestTrend } from "@/types";
 
 // Dashboard Stats
 export const dashboardStats: DashboardStat[] = [
