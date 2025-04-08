@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getProjects } from '@/lib/api';
 import { toast } from '@/components/ui/use-toast';
 
@@ -9,7 +8,7 @@ export const useSelectedProject = () => {
     localStorage.getItem('selectedProjectId')
   );
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
+  const [hasChecked, setHasChecked] = useState(false);
 
   // Save to localStorage whenever selectedProjectId changes
   useEffect(() => {
@@ -20,23 +19,20 @@ export const useSelectedProject = () => {
     }
   }, [selectedProjectId]);
 
-  // Check if the user has a selected project, otherwise redirect to project selection
+  // Check if the user has a selected project
   useEffect(() => {
     const checkSelectedProject = async () => {
+      if (hasChecked) return; // Avoid running multiple times
+      
       try {
         setIsLoading(true);
         // If we don't have a selected project, check if there are any projects
         if (!selectedProjectId) {
           const projects = await getProjects();
-          if (projects.length === 0) {
-            // If no projects, redirect to create project page
-            navigate('/projects/new');
-          } else if (projects.length === 1) {
+          
+          if (projects.length === 1) {
             // If only one project, select it automatically
             setSelectedProjectId(projects[0].id);
-          } else {
-            // Multiple projects, redirect to projects list for selection
-            navigate('/projects');
           }
         }
       } catch (error) {
@@ -48,11 +44,12 @@ export const useSelectedProject = () => {
         });
       } finally {
         setIsLoading(false);
+        setHasChecked(true);
       }
     };
 
     checkSelectedProject();
-  }, [selectedProjectId, navigate]);
+  }, [selectedProjectId, hasChecked]);
 
   const selectProject = (projectId: string) => {
     setSelectedProjectId(projectId);
@@ -66,6 +63,7 @@ export const useSelectedProject = () => {
     selectedProjectId,
     selectProject,
     clearSelectedProject,
-    isLoading
+    isLoading,
+    hasChecked
   };
 };

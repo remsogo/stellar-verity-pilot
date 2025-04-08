@@ -1,2 +1,2 @@
 
-export { getTestCollections } from './getTestCollections';
+export * from './getTestCollections';

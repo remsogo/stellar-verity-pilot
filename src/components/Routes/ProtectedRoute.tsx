@@ -8,7 +8,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { selectedProjectId, isLoading: isProjectLoading } = useSelectedProject();
+  const { selectedProjectId, isLoading: isProjectLoading, clearSelectedProject } = useSelectedProject();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -43,7 +43,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  if (isLoading || (isProjectLoading && !isExemptPath)) {
+  if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
@@ -51,8 +51,14 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/auth" replace />;
   }
 
-  // If we need a selected project and don't have one for non-exempt routes
-  if (!isExemptPath && !selectedProjectId) {
+  // If on projects page but getting stuck, clear the selected project
+  if (location.pathname === '/projects' && isProjectLoading) {
+    clearSelectedProject();
+    return <div className="flex items-center justify-center h-screen">Loading projects...</div>;
+  }
+
+  // Only check for selectedProjectId when on non-exempt paths and not loading project data
+  if (!isExemptPath && !selectedProjectId && !isProjectLoading) {
     return <Navigate to="/projects" replace />;
   }
 
