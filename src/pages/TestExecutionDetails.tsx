@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Calendar, Clock, User, Tag, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, User, Tag, CheckCircle, XCircle, AlertCircle, Gauge, Zap } from "lucide-react";
 import { TestExecution, TestCase, Status, Priority, ExecutionStep } from "@/types";
 import { toast } from "sonner";
 
@@ -103,9 +103,9 @@ const TestExecutionDetails = () => {
 
         // Fetch execution steps with test step details
         if (id) {
-          // Fix the RPC typing by using the correct generic parameters
+          // Fix the RPC typing by correctly specifying both generic type parameters
           const { data, error: stepsError } = await supabase
-            .rpc<ExecutionStepWithDetails>('get_execution_steps_with_details', { 
+            .rpc<ExecutionStepWithDetails[], GetExecutionStepsParams>('get_execution_steps_with_details', { 
               execution_id_param: id 
             });
 
@@ -221,6 +221,11 @@ const TestExecutionDetails = () => {
     );
   }
 
+  // Calculate execution time in minutes
+  const executionTimeMinutes = execution.endTime && execution.startTime 
+    ? Math.round((new Date(execution.endTime).getTime() - new Date(execution.startTime).getTime()) / 60000) 
+    : 0;
+
   return (
     <div className="flex h-screen overflow-hidden">
       <CustomSidebar />
@@ -245,7 +250,10 @@ const TestExecutionDetails = () => {
                 <CardTitle>{execution.testCase.title}</CardTitle>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {getStatusBadge(execution.status)}
-                  <Badge variant="outline">{execution.environment}</Badge>
+                  <Badge variant="outline" className="flex items-center">
+                    <Gauge className="h-3.5 w-3.5 mr-1.5" />
+                    {execution.environment}
+                  </Badge>
                   {execution.testCase.tags.map((tag) => (
                     <Badge key={tag} variant="secondary" className="flex items-center">
                       <Tag className="h-3 w-3 mr-1" />
@@ -261,7 +269,7 @@ const TestExecutionDetails = () => {
                     <p className="text-sm">{execution.testCase.description || "No description provided."}</p>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <h3 className="text-sm font-medium text-muted-foreground mb-1">Executed By</h3>
                       <p className="text-sm flex items-center">
@@ -274,6 +282,13 @@ const TestExecutionDetails = () => {
                       <p className="text-sm flex items-center">
                         <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                         {formatDate(execution.startTime)}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-1">Execution Time</h3>
+                      <p className="text-sm flex items-center">
+                        <Clock className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                        {executionTimeMinutes} minutes
                       </p>
                     </div>
                   </div>
@@ -296,9 +311,14 @@ const TestExecutionDetails = () => {
                     ) : (
                       <div className="space-y-6">
                         {executionSteps.map((step, index) => (
-                          <div key={step.id} className="border rounded-md p-4">
+                          <div key={step.id} className="border rounded-md p-4 transition-all hover:shadow-md">
                             <div className="flex justify-between items-start mb-2">
-                              <h4 className="font-medium">Step {step.step_order}</h4>
+                              <h4 className="font-medium flex items-center">
+                                <span className="flex items-center justify-center bg-muted w-6 h-6 rounded-full mr-2 text-xs">
+                                  {step.step_order}
+                                </span>
+                                Step {step.step_order}
+                              </h4>
                               {getStatusBadge(step.status)}
                             </div>
                             
@@ -327,29 +347,39 @@ const TestExecutionDetails = () => {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="justify-end pt-0">
+              <CardFooter className="justify-between pt-0">
                 <Button 
                   variant="outline"
+                  onClick={() => navigate(`/test-cases/${execution.testCaseId}`)}
+                >
+                  View Test Case
+                </Button>
+                <Button 
+                  className="bg-primary flex items-center"
                   onClick={() => navigate(`/test-execution/${execution.testCaseId}`)}
                 >
+                  <Zap className="h-4 w-4 mr-2" />
                   Run Test Again
                 </Button>
               </CardFooter>
             </Card>
             
             <div className="space-y-6">
-              <Card>
+              <Card className="bg-gradient-to-br from-background to-muted/40 border-none shadow-md">
                 <CardHeader>
-                  <CardTitle>Execution Summary</CardTitle>
+                  <CardTitle className="flex items-center">
+                    <Gauge className="h-5 w-5 mr-2 text-primary" />
+                    Execution Summary
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-muted/50 p-3 rounded-md text-center">
+                      <div className="bg-background/80 backdrop-blur-sm p-3 rounded-md text-center shadow-sm">
                         <div className="text-sm text-muted-foreground">Total Steps</div>
                         <div className="text-2xl font-bold mt-1">{executionSteps.length}</div>
                       </div>
-                      <div className="bg-muted/50 p-3 rounded-md text-center">
+                      <div className="bg-background/80 backdrop-blur-sm p-3 rounded-md text-center shadow-sm">
                         <div className="text-sm text-muted-foreground">Status</div>
                         <div className="flex justify-center mt-1">
                           {getStatusBadge(execution.status)}
@@ -358,38 +388,67 @@ const TestExecutionDetails = () => {
                     </div>
                     
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-md text-center">
+                      <div className="bg-green-50/80 backdrop-blur-sm dark:bg-green-900/20 p-3 rounded-md text-center shadow-sm">
                         <div className="text-sm text-green-600 dark:text-green-400">Passed</div>
                         <div className="text-xl font-bold mt-1 text-green-700 dark:text-green-300">
                           {executionSteps.filter(step => step.status === "passed").length}
                         </div>
                       </div>
-                      <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-md text-center">
+                      <div className="bg-red-50/80 backdrop-blur-sm dark:bg-red-900/20 p-3 rounded-md text-center shadow-sm">
                         <div className="text-sm text-red-600 dark:text-red-400">Failed</div>
                         <div className="text-xl font-bold mt-1 text-red-700 dark:text-red-300">
                           {executionSteps.filter(step => step.status === "failed").length}
                         </div>
                       </div>
-                      <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-md text-center">
+                      <div className="bg-amber-50/80 backdrop-blur-sm dark:bg-amber-900/20 p-3 rounded-md text-center shadow-sm">
                         <div className="text-sm text-amber-600 dark:text-amber-400">Blocked</div>
                         <div className="text-xl font-bold mt-1 text-amber-700 dark:text-amber-300">
                           {executionSteps.filter(step => step.status === "blocked").length}
                         </div>
                       </div>
                     </div>
+
+                    <div className="bg-background/80 backdrop-blur-sm p-4 rounded-md shadow-sm mt-4">
+                      <h3 className="text-sm font-medium mb-2">Pass Rate</h3>
+                      <div className="h-3 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-green-400 to-green-600" 
+                          style={{ 
+                            width: `${executionSteps.length 
+                              ? Math.round((executionSteps.filter(step => step.status === "passed").length / executionSteps.length) * 100) 
+                              : 0}%` 
+                          }}
+                        ></div>
+                      </div>
+                      <div className="text-right text-sm mt-1">
+                        {executionSteps.length 
+                          ? Math.round((executionSteps.filter(step => step.status === "passed").length / executionSteps.length) * 100) 
+                          : 0}%
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className="bg-gradient-to-br from-background to-muted/40 border-none shadow-md">
                 <CardHeader>
-                  <CardTitle>Test Case Info</CardTitle>
+                  <CardTitle className="flex items-center">
+                    <FileText className="h-5 w-5 mr-2 text-primary" />
+                    Test Case Info
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div>
                       <div className="text-sm text-muted-foreground">Priority</div>
-                      <div className="font-medium mt-0.5 capitalize">{execution.testCase.priority}</div>
+                      <div className="font-medium mt-0.5 capitalize flex items-center">
+                        {execution.testCase.priority === "critical" ? (
+                          <span className="flex items-center text-red-600">
+                            <Zap className="h-4 w-4 mr-1.5" fill="currentColor" />
+                            Critical
+                          </span>
+                        ) : execution.testCase.priority}
+                      </div>
                     </div>
                     <div>
                       <div className="text-sm text-muted-foreground">Author</div>
@@ -410,8 +469,13 @@ const TestExecutionDetails = () => {
                     {execution.testCase.automated !== undefined && (
                       <div>
                         <div className="text-sm text-muted-foreground">Automation</div>
-                        <div className="font-medium mt-0.5">
-                          {execution.testCase.automated ? "Automated" : "Manual"}
+                        <div className="font-medium mt-0.5 flex items-center">
+                          {execution.testCase.automated ? (
+                            <span className="flex items-center text-blue-600">
+                              <Zap className="h-3.5 w-3.5 mr-1.5" />
+                              Automated
+                            </span>
+                          ) : "Manual"}
                         </div>
                       </div>
                     )}
@@ -420,7 +484,7 @@ const TestExecutionDetails = () => {
                 <CardFooter>
                   <Button 
                     variant="outline" 
-                    className="w-full"
+                    className="w-full hover:bg-primary hover:text-primary-foreground transition-all"
                     onClick={() => navigate(`/test-cases/${execution.testCaseId}`)}
                   >
                     View Test Case
