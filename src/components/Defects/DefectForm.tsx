@@ -25,11 +25,14 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
+const severityEnum = ['low', 'medium', 'high', 'critical'] as const;
+const statusEnum = ['open', 'in-progress', 'resolved', 'closed', 'reopened'] as const;
+
 const defectFormSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  status: z.enum(['open', 'in-progress', 'resolved', 'closed', 'reopened']),
-  severity: z.enum(['low', 'medium', 'high', 'critical']),
+  status: z.enum(statusEnum),
+  severity: z.enum(severityEnum),
   reporter: z.string().min(1, 'Reporter is required'),
   assignee: z.string().optional(),
   project_id: z.string().min(1, 'Project is required'),
@@ -62,7 +65,7 @@ export const DefectForm: React.FC<DefectFormProps> = ({
           title: defect.title,
           description: defect.description || '',
           status: defect.status,
-          severity: defect.severity,
+          severity: defect.severity as (typeof severityEnum)[number],
           reporter: defect.reporter,
           assignee: defect.assignee || '',
           project_id: defect.project_id,

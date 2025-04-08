@@ -29,10 +29,10 @@ export enum TestCasePriority {
 }
 
 // Status et Priority types based on enums
-export type Status = keyof typeof TestCaseStatus | string;
-export type Priority = keyof typeof TestCasePriority | string;
+export type Status = keyof typeof TestCaseStatus;
+export type Priority = keyof typeof TestCasePriority;
 
-// Base test case type without children relationship to avoid circular references
+// Base test case type without children relationship
 export interface BaseTestCase {
   id: string;
   title: string;
@@ -57,7 +57,7 @@ export interface BaseTestCase {
 
 // Complete TestCase type with optional children array
 export type TestCase = BaseTestCase & {
-  // Children are optional and stored as string IDs
+  // Children are stored as string IDs to prevent circular reference
   children?: string[];
 };
 
@@ -103,7 +103,7 @@ export const normalizeStatus = (status: string): Status => {
     case "passed":
     case "failed":
     case "pending":
-      return normalizedStatus;
+      return normalizedStatus as Status;
     default:
       return "pending"; // Default status
   }
@@ -118,7 +118,7 @@ export const normalizePriority = (priority: string): Priority => {
     case "medium":
     case "high":
     case "critical":
-      return normalizedPriority;
+      return normalizedPriority as Priority;
     default:
       return "medium"; // Default priority
   }

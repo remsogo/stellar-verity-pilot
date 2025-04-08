@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { DbTestExecution, TestExecution, Status } from "@/types";
 import { mapDbTestCaseToTestCase } from "./testCaseMappers";
@@ -12,7 +11,7 @@ const mapDbExecutionToExecution = (dbExecution: DbTestExecution): TestExecution 
       id: '',
       title: '',
       description: '',
-      status: 'pending' as Status,
+      status: 'pending',
       priority: 'medium',
       author: '',
       project_id: '',
