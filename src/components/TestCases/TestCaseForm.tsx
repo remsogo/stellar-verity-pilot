@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,6 +24,7 @@ interface TestCaseFormProps {
 
 export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [detectedParameters, setDetectedParameters] = useState<string[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { selectedProjectId } = useSelectedProject();
@@ -65,11 +65,9 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
         setValue("expected_result", "");
       }
       
-      // Convert priority to UI format (capitalize first letter)
       const formattedPriority = testCase.priority.charAt(0).toUpperCase() + testCase.priority.slice(1);
       setValue("priority", formattedPriority as "High" | "Medium" | "Low");
       
-      // Convert status to UI format
       let formattedStatus: "Draft" | "Ready" | "Blocked";
       const lowerStatus = testCase.status.toLowerCase();
       if (lowerStatus === "draft") {
@@ -83,15 +81,12 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
       }
       setValue("status", formattedStatus);
       
-      // Set data-driven fields
       setValue("data_driven", testCase.data_driven || false);
       
-      // Set parameters if they exist
       if (testCase.parameters) {
         setValue("parameters", JSON.stringify(testCase.parameters, null, 2));
       }
       
-      // Set tags
       setValue("tags", testCase.tags || []);
       
     } catch (error: any) {
@@ -103,6 +98,10 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleParametersDetected = (parameters: string[]) => {
+    setDetectedParameters(parameters);
   };
 
   const onSubmit = async (data: TestCaseFormValues) => {
@@ -117,9 +116,18 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
 
     setIsLoading(true);
     try {
-      // Convert form values to API types
       const priorityValue: Priority = convertFormPriorityToApiPriority(data.priority);
       const statusValue: Status = convertFormStatusToApiStatus(data.status);
+      
+      let parsedParameters = parseParameters(data.parameters);
+      if (!parsedParameters && detectedParameters.length > 0) {
+        parsedParameters = detectedParameters.map(param => ({
+          name: param,
+          type: "string",
+          description: `Parameter ${param}`,
+          defaultValue: ""
+        }));
+      }
       
       const testCaseData = {
         title: data.title,
@@ -130,8 +138,8 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
         author: "Current User",
         project_id: selectedProjectId,
         tags: data.tags || [],
-        data_driven: data.data_driven,
-        parameters: parseParameters(data.parameters)
+        data_driven: Boolean(detectedParameters.length > 0 || data.data_driven),
+        parameters: parsedParameters
       };
       
       if (id) {
@@ -185,12 +193,14 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
           <TestCaseSteps 
             control={control} 
             errors={errors} 
-            isLoading={isLoading} 
+            isLoading={isLoading}
+            onParametersDetected={handleParametersDetected}
           />
 
           <TestCaseParameters
             control={control}
             isLoading={isLoading}
+            detectedParameters={detectedParameters}
           />
 
           <TestCaseMetadata 

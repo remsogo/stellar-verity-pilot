@@ -52,3 +52,20 @@ export const mapDbTestCaseToTestCase = (dbTestCase: DbTestCase): TestCase => {
     steps: dbTestCase.steps ? dbTestCase.steps.map(mapDbTestStepToTestStep) : undefined,
   };
 };
+
+/**
+ * Extracts parameter names from text by finding words that start with $
+ * @param text The text containing parameters
+ * @returns Array of parameter names without the $ prefix
+ */
+export const extractParametersFromText = (text: string): string[] => {
+  if (!text) return [];
+  
+  const paramRegex = /\$([a-zA-Z0-9_]+)/g;
+  const matches = text.match(paramRegex);
+  
+  if (!matches) return [];
+  
+  // Remove $ prefix and return unique parameter names
+  return [...new Set(matches.map(match => match.substring(1)))];
+};
