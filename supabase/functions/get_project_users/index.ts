@@ -25,20 +25,35 @@ serve(async (req) => {
     
     console.log(`Fetching users for project: ${projectId || 'all projects'}`);
     
-    // Call the database function with the project_id if it exists
-    const { data, error } = await supabase.rpc('get_project_users', {
-      p_project_id: projectId
-    });
+    // Query the project_users table directly with a join to user_profiles
+    const { data, error } = await supabase
+      .from('project_users')
+      .select(`
+        id, 
+        user_id, 
+        role,
+        user_profiles:user_id(email, full_name)
+      `)
+      .eq('project_id', projectId);
     
     if (error) {
       console.error(`Error fetching project users: ${error.message}`);
       throw error;
     }
 
-    console.log(`Successfully fetched ${data?.length || 0} project users`);
+    // Transform the data to the expected format
+    const transformedData = data.map(item => ({
+      id: item.id,
+      user_id: item.user_id,
+      email: item.user_profiles?.email || '',
+      full_name: item.user_profiles?.full_name || null,
+      role: item.role
+    }));
+    
+    console.log(`Successfully fetched ${transformedData.length} project users`);
     
     return new Response(
-      JSON.stringify({ success: true, data }),
+      JSON.stringify({ success: true, data: transformedData }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

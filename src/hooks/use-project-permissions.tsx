@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useUser } from './use-user';
 import { supabase } from '@/integrations/supabase/client';
@@ -60,8 +59,8 @@ export const useProjectPermissions = (projectId?: string) => {
           // Convert the raw data to ProjectMember format
           const membersList: ProjectMember[] = membersData.map((member) => ({
             id: member.id,
-            email: member.email as string,
-            name: member.full_name as string || undefined,
+            email: member.email || "",
+            name: member.full_name || undefined,
             role: member.role as ProjectRole,
           }));
           

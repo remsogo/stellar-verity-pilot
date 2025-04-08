@@ -1,21 +1,40 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectRole } from '@/integrations/supabase/project-types';
+
+interface ProjectUserData {
+  id: string;
+  user_id: string;
+  email: string;
+  full_name: string;
+  role: string;
+}
 
 /**
  * Retrieves all users for a specific project
  */
 export async function getProjectUsers(projectId: string) {
   try {
-    // Use the database function to get project users with their profiles
     const { data, error } = await supabase
-      .rpc('get_project_users', {
-        p_project_id: projectId
-      });
+      .from('project_users')
+      .select(`
+        id, 
+        user_id, 
+        role,
+        user_profiles:user_id(email, full_name)
+      `)
+      .eq('project_id', projectId);
     
     if (error) throw error;
     
-    return data || [];
+    const transformedData = data?.map(item => ({
+      id: item.id,
+      user_id: item.user_id,
+      email: item.user_profiles?.email || '',
+      full_name: item.user_profiles?.full_name || null,
+      role: item.role
+    })) || [];
+    
+    return transformedData;
   } catch (error: any) {
     console.error('Error fetching project users:', error);
     throw error;
@@ -35,7 +54,6 @@ export async function addUserToProject(projectId: string, email: string, role: P
     
     if (userError) throw userError;
     
-    // If user profile not found, create a placeholder with the email
     const userId = userProfile?.auth_id || email;
     
     const { data, error } = await supabase
