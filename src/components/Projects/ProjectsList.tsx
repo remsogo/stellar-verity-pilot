@@ -61,9 +61,9 @@ export const ProjectsList: React.FC<ProjectsListProps> = ({ projects, onDelete }
         description: `Selected project: ${projects.find(p => p.id === id)?.name}`,
       });
       
-      // Wait a moment for localStorage to update before navigating
+      // Navigate to home page after selection
       setTimeout(() => {
-        navigate('/');
+        navigate('/', { replace: true });
         setSelectionInProgress(false);
       }, 300);
     } catch (error) {

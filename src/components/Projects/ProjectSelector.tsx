@@ -14,12 +14,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 export const ProjectSelector = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const { selectedProjectId, selectProject } = useSelectedProject();
+  const { selectedProjectId, selectProject, refreshProjectSelection } = useSelectedProject();
   
-  const { data: projects, isLoading } = useQuery({
+  const { data: projects, isLoading, refetch } = useQuery({
     queryKey: ['projects'],
     queryFn: getProjects
   });
+  
+  // Whenever the component mounts, refresh project selection
+  useEffect(() => {
+    refreshProjectSelection();
+  }, [refreshProjectSelection]);
   
   const selectedProject = projects?.find(project => project.id === selectedProjectId);
   
@@ -63,8 +68,8 @@ export const ProjectSelector = () => {
                 <CommandItem
                   key={project.id}
                   value={project.id}
-                  onSelect={() => {
-                    selectProject(project.id);
+                  onSelect={(value) => {
+                    selectProject(value);
                     setOpen(false);
                   }}
                 >

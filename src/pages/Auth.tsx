@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,8 +18,8 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ThemeToggle } from "@/components/UI/ThemeToggle";
+import { useSelectedProject } from "@/hooks/use-selected-project";
 
-// Define schemas outside the component to avoid recreation on each render
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
@@ -39,7 +38,6 @@ const signupSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 type SignupFormValues = z.infer<typeof signupSchema>;
 
-// Create separate login form component to isolate form hooks
 const LoginForm = ({ onSubmit, isLoading }: { onSubmit: (values: LoginFormValues) => void, isLoading: boolean }) => {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -108,7 +106,6 @@ const LoginForm = ({ onSubmit, isLoading }: { onSubmit: (values: LoginFormValues
   );
 };
 
-// Create separate signup form component to isolate form hooks
 const SignupForm = ({ onSubmit, isLoading }: { onSubmit: (values: SignupFormValues) => void, isLoading: boolean }) => {
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -214,8 +211,8 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const [checkingSession, setCheckingSession] = useState(true);
+  const { refreshProjectSelection } = useSelectedProject();
 
-  // Check if already logged in - only once on component mount
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -228,7 +225,6 @@ const Auth = () => {
     checkSession();
   }, [navigate]);
 
-  // Don't render the form while checking the session
   if (checkingSession) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center">
@@ -250,6 +246,9 @@ const Auth = () => {
       }
 
       toast.success("Successfully logged in");
+      
+      await refreshProjectSelection();
+      
       navigate("/", { replace: true });
     } catch (error: any) {
       console.error("Login error:", error);
@@ -276,7 +275,6 @@ const Auth = () => {
         throw signUpError;
       }
 
-      // Create user profile
       if (data?.user) {
         await supabase.from("user_profiles").insert({
           auth_id: data.user.id,

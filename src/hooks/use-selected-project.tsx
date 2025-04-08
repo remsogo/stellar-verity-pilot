@@ -36,11 +36,11 @@ export const useSelectedProject = () => {
         // If we don't have a selected project, check if there are any projects
         if (!selectedProjectId) {
           const projects = await getProjects();
-          console.log('Projects fetched:', projects);
+          console.log('Projects fetched for auto-selection:', projects);
           
-          if (projects.length === 1) {
-            // If only one project, select it automatically
-            console.log('Auto-selecting the only project', projects[0].id);
+          if (projects.length > 0) {
+            // Auto-select the first project (usually the most recent)
+            console.log('Auto-selecting the first project', projects[0].id);
             setSelectedProjectId(projects[0].id);
           }
         }
@@ -60,6 +60,13 @@ export const useSelectedProject = () => {
     checkSelectedProject();
   }, [selectedProjectId, hasChecked]);
 
+  // Function to force a project check
+  const refreshProjectSelection = useCallback(async () => {
+    console.log('Forcing project refresh');
+    initialCheckPerformed.current = false;
+    setHasChecked(false);
+  }, []);
+
   // Use callbacks for functions to prevent recreating them
   const selectProject = useCallback((projectId: string) => {
     console.log('Selecting project', projectId);
@@ -75,6 +82,7 @@ export const useSelectedProject = () => {
     selectedProjectId,
     selectProject,
     clearSelectedProject,
+    refreshProjectSelection,
     isLoading,
     hasChecked
   };
