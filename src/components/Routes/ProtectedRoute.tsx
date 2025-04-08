@@ -74,9 +74,15 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/auth" replace />;
   }
 
-  // FIXED: Only redirect to /projects if we're not already on an exempt path
-  // AND we don't have a selected project AND we're done loading project data
-  if (!isExemptPath && !selectedProjectId && !isProjectLoading) {
+  // FIX: Let the children render if we're still loading project data
+  // or if we're on an exempt path
+  if (isExemptPath || isProjectLoading) {
+    return <>{children}</>;
+  }
+
+  // Only redirect to /projects if we're on a non-exempt path,
+  // not loading project data, and have no selected project
+  if (!selectedProjectId) {
     console.log('Redirecting to projects page because no project is selected');
     return <Navigate to="/projects" replace />;
   }
