@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { TestCase } from "@/types";
+import { TestCase, DbTestCase } from "@/types";
 import { mapDbTestCaseToTestCase } from "@/lib/api/testCaseMappers";
 
 /**
@@ -17,5 +17,6 @@ export const getChildTestCases = async (parentId: string): Promise<TestCase[]> =
   }
 
   // Use the mapper to convert database objects to properly typed TestCase objects
-  return (data || []).map(testCase => mapDbTestCaseToTestCase(testCase));
+  // Explicitly type the data as DbTestCase[] to avoid deep type inference
+  return (data as DbTestCase[] || []).map(testCase => mapDbTestCaseToTestCase(testCase));
 };

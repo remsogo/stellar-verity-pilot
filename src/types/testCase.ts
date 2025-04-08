@@ -39,7 +39,6 @@ export type TestCaseReference = {
   description?: string;
   status: Status;
   priority: Priority;
-  children_ids?: string[];
 };
 
 // Base test case type without children relationship
@@ -69,7 +68,8 @@ export interface BaseTestCase {
 export type TestCase = BaseTestCase & {
   // Using TestCaseReference type for children to avoid circular references
   children?: TestCaseReference[];
-  children_ids?: string[]; // Using children_ids to store references
+  // For storing children IDs separately to avoid circular references
+  children_ids?: string[];
 };
 
 // Type pour la base de données

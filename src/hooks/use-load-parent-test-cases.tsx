@@ -26,6 +26,7 @@ export const useLoadParentTestCases = (projectId: string | undefined) => {
   const fetchParentTestCases = async () => {
     setIsLoading(true);
     try {
+      // Explicitly specify the return type
       const { data, error } = await supabase
         .from("test_cases")
         .select("id, title")
@@ -36,8 +37,9 @@ export const useLoadParentTestCases = (projectId: string | undefined) => {
         throw error;
       }
 
+      // Explicitly cast the data to avoid deep type inference
       if (data) {
-        setParentTestCases(data);
+        setParentTestCases(data as ParentTestCase[]);
       }
     } catch (error: any) {
       toast({
