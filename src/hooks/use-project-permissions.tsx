@@ -42,16 +42,19 @@ export const useProjectPermissions = (projectId?: string) => {
       try {
         setIsLoading(true);
         setError(null);
+        console.log("Fetching project permissions for project:", projectId);
 
         // Get all project members
         const membersData = await getProjectUsers(projectId);
+        console.log("Project members data:", membersData);
 
         if (membersData && Array.isArray(membersData)) {
           // Find current user's role
           const currentUserData = membersData.find(
-            (member) => member.user_id === user.id
+            (member) => member.email === user.email
           );
           
+          console.log("Current user data:", currentUserData);
           setUserRole(currentUserData?.role as ProjectRole || null);
 
           // Convert the raw data to ProjectMember format

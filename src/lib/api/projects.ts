@@ -109,35 +109,20 @@ export async function deleteProject(id: string) {
 
 export async function getProjectUsers(projectId: string) {
   try {
-    // Fetch project users with user profile data
+    // Use a direct RPC call to the security definer function to avoid RLS recursion
     const { data, error } = await supabase
-      .from('project_users')
-      .select(`
-        id,
-        user_id,
-        role,
-        user_profiles:user_id (
-          email,
-          full_name
-        )
-      `)
-      .eq('project_id', projectId);
+      .rpc('get_project_users', { p_project_id: projectId });
     
     if (error) throw error;
     
     // Format the response to a consistent structure
     if (Array.isArray(data)) {
       return data.map(item => {
-        // Handle possible null/undefined user_profiles safely
-        const userProfile = item.user_profiles || {};
-        // Use type assertion to inform TypeScript about the structure
-        const profile = userProfile as { email?: string; full_name?: string };
-        
         return {
           id: item.id,
           user_id: item.user_id,
-          email: profile.email || item.user_id.toString(),
-          full_name: profile.full_name || null,
+          email: item.email || item.user_id.toString(),
+          full_name: item.full_name || null,
           role: item.role
         };
       });
@@ -193,13 +178,13 @@ export async function addUserToProject(projectId: string, email: string, role: P
 
 export async function updateUserRole(projectId: string, userId: string, role: ProjectRole) {
   try {
+    // Use RPC to call the security definer function
     const { data, error } = await supabase
-      .from('project_users')
-      .update({ role })
-      .eq('project_id', projectId)
-      .eq('id', userId)
-      .select()
-      .single();
+      .rpc('update_user_role', { 
+        p_project_id: projectId, 
+        p_user_id: userId, 
+        p_role: role 
+      });
     
     if (error) throw error;
     
@@ -212,11 +197,12 @@ export async function updateUserRole(projectId: string, userId: string, role: Pr
 
 export async function removeUserFromProject(projectId: string, userId: string) {
   try {
-    const { error } = await supabase
-      .from('project_users')
-      .delete()
-      .eq('project_id', projectId)
-      .eq('id', userId);
+    // Use RPC to call the security definer function
+    const { data, error } = await supabase
+      .rpc('remove_user_from_project', { 
+        p_project_id: projectId, 
+        p_user_id: userId 
+      });
     
     if (error) throw error;
     
