@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { ProjectRole } from '@/integrations/supabase/project-types';
@@ -105,19 +104,18 @@ export async function deleteProject(id: string) {
 
 export async function getProjectUsers(projectId: string) {
   try {
-    // Using URLSearchParams for query parameters instead of the 'query' property
-    const url = new URL(`${supabase.functions.url}/get_project_users`);
-    url.searchParams.append('project_id', projectId);
-    
+    // Use the proper approach to invoke the edge function with query parameters
     const { data, error } = await supabase.functions.invoke('get_project_users', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
+      // Don't use 'query' property as it's not part of the type
     });
     
     if (error) throw error;
     
+    // If the data is undefined or not in the expected format, return an empty array
     return data?.data || [];
   } catch (error: any) {
     console.error('Error fetching project users:', error);

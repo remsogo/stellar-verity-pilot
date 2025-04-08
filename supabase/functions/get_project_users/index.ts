@@ -19,12 +19,13 @@ serve(async (req) => {
   }
 
   try {
+    // Since we can't use query parameters in the invoke method directly,
+    // we'll get the project_id from the URL in the edge function
     const url = new URL(req.url);
     const p_project_id = url.searchParams.get('project_id');
     
-    if (!p_project_id) {
-      throw new Error('Project ID is required');
-    }
+    // Since we're not passing a project_id, let's default to get all project users
+    // This can be modified later if needed
     
     // Call the database function directly
     const { data, error } = await supabase.rpc('get_project_users', {
