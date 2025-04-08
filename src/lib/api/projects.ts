@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { ProjectRole } from '@/integrations/supabase/project-types';
@@ -104,13 +105,15 @@ export async function deleteProject(id: string) {
 
 export async function getProjectUsers(projectId: string) {
   try {
-    // Use the proper approach to invoke the edge function with query parameters
+    // Use URL parameters to pass the project_id to the edge function
     const { data, error } = await supabase.functions.invoke('get_project_users', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-      // Don't use 'query' property as it's not part of the type
+      queryParams: {
+        project_id: projectId
+      }
     });
     
     if (error) throw error;

@@ -19,28 +19,36 @@ serve(async (req) => {
   }
 
   try {
-    // Since we can't use query parameters in the invoke method directly,
-    // we'll get the project_id from the URL in the edge function
+    // Extract project_id from URL query parameters
     const url = new URL(req.url);
-    const p_project_id = url.searchParams.get('project_id');
+    const projectId = url.searchParams.get('project_id');
     
-    // Since we're not passing a project_id, let's default to get all project users
-    // This can be modified later if needed
+    console.log(`Fetching users for project: ${projectId || 'all projects'}`);
     
-    // Call the database function directly
+    // Call the database function with the project_id if it exists
     const { data, error } = await supabase.rpc('get_project_users', {
-      p_project_id
+      p_project_id: projectId
     });
     
-    if (error) throw error;
+    if (error) {
+      console.error(`Error fetching project users: ${error.message}`);
+      throw error;
+    }
 
+    console.log(`Successfully fetched ${data?.length || 0} project users`);
+    
     return new Response(
       JSON.stringify({ success: true, data }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
+    console.error(`Error in get_project_users function: ${error.message}`);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ 
+        success: false, 
+        error: error.message,
+        details: 'Failed to retrieve project users'
+      }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
