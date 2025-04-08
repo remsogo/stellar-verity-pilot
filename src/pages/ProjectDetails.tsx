@@ -13,10 +13,13 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { Pencil, Trash2, UserPlus, ArrowLeft } from 'lucide-react';
+import { Pencil, Trash2, UserPlus, ArrowLeft, Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { InviteUserModal } from '@/components/Projects/InviteUserModal';
+import { ProjectUsersTable } from '@/components/Projects/ProjectUsersTable';
+import { useProjectPermissions } from '@/hooks/use-project-permissions';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,20 +30,45 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { toast } from '@/components/ui/use-toast';
 
 const ProjectDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { canEdit, canDelete, canManageUsers } = useProjectPermissions(id);
   
-  const { data: project, isLoading } = useQuery({
+  const { data: project, isLoading, refetch } = useQuery({
     queryKey: ['project', id],
     queryFn: () => getProject(id!),
+    enabled: !!id
   });
 
   const handleDelete = async () => {
-    await deleteProject(id!);
-    navigate('/projects');
+    if (!canDelete) {
+      toast({
+        title: "Permission denied",
+        description: "You don't have permission to delete this project.",
+        variant: "destructive"
+      });
+      setIsDeleteDialogOpen(false);
+      return;
+    }
+
+    try {
+      await deleteProject(id!);
+      toast({
+        title: "Project deleted",
+        description: "The project has been successfully deleted.",
+      });
+      navigate('/projects');
+    } catch (error: any) {
+      toast({
+        title: "Error deleting project",
+        description: error.message || "There was a problem deleting the project.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (isLoading) {
@@ -98,62 +126,108 @@ const ProjectDetails = () => {
             </Link>
           </Button>
           <div className="flex gap-2">
-            <InviteUserModal
-              projectId={id!}
-              trigger={
-                <Button variant="outline">
-                  <UserPlus className="mr-2 h-4 w-4" /> Invite User
-                </Button>
-              }
-            />
-            <Button variant="outline" asChild>
-              <Link to={`/projects/${id}/edit`}>
-                <Pencil className="mr-2 h-4 w-4" /> Edit
-              </Link>
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={() => setIsDeleteDialogOpen(true)}
-            >
-              <Trash2 className="mr-2 h-4 w-4" /> Delete
-            </Button>
+            {canManageUsers && (
+              <InviteUserModal
+                projectId={id!}
+                trigger={
+                  <Button variant="outline">
+                    <UserPlus className="mr-2 h-4 w-4" /> Invite User
+                  </Button>
+                }
+                onInvited={() => refetch()}
+              />
+            )}
+            {canEdit && (
+              <Button variant="outline" asChild>
+                <Link to={`/projects/${id}/edit`}>
+                  <Pencil className="mr-2 h-4 w-4" /> Edit
+                </Link>
+              </Button>
+            )}
+            {canDelete && (
+              <Button 
+                variant="destructive" 
+                onClick={() => setIsDeleteDialogOpen(true)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" /> Delete
+              </Button>
+            )}
           </div>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">{project.name}</CardTitle>
-            <CardDescription>
-              Created on {format(new Date(project.created_at), 'MMMM d, yyyy')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <h3 className="text-lg font-medium mb-2">Description</h3>
-            <p className="text-muted-foreground whitespace-pre-line">
-              {project.description || 'No description provided.'}
-            </p>
-          </CardContent>
-          <CardFooter className="flex flex-col items-start gap-4 border-t pt-6">
-            <h3 className="text-lg font-medium">Project Resources</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link to={`/test-cases?project=${id}`}>
-                  Test Cases
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link to={`/test-executions?project=${id}`}>
-                  Test Executions
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link to={`/defects?project=${id}`}>
-                  Defects
-                </Link>
-              </Button>
-            </div>
-          </CardFooter>
-        </Card>
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="members">
+              <Users className="h-4 w-4 mr-2" />
+              Team Members
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overview" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-2xl">{project.name}</CardTitle>
+                <CardDescription>
+                  Created on {format(new Date(project.created_at), 'MMMM d, yyyy')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <h3 className="text-lg font-medium mb-2">Description</h3>
+                <p className="text-muted-foreground whitespace-pre-line">
+                  {project.description || 'No description provided.'}
+                </p>
+              </CardContent>
+              <CardFooter className="flex flex-col items-start gap-4 border-t pt-6">
+                <h3 className="text-lg font-medium">Project Resources</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <Link to={`/test-cases?project=${id}`}>
+                      Test Cases
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <Link to={`/test-executions?project=${id}`}>
+                      Test Executions
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <Link to={`/defects?project=${id}`}>
+                      Defects
+                    </Link>
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="members">
+            <Card>
+              <CardHeader>
+                <CardTitle>Team Members</CardTitle>
+                <CardDescription>
+                  Manage users who have access to this project
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ProjectUsersTable projectId={id!} />
+              </CardContent>
+              {canManageUsers && (
+                <CardFooter className="border-t pt-6">
+                  <InviteUserModal
+                    projectId={id!}
+                    trigger={
+                      <Button>
+                        <UserPlus className="mr-2 h-4 w-4" /> Invite New User
+                      </Button>
+                    }
+                    onInvited={() => refetch()}
+                  />
+                </CardFooter>
+              )}
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <AlertDialog 

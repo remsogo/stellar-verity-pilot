@@ -7,24 +7,49 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getProjects } from '@/lib/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSidebar } from '@/components/ui/sidebar';
+import { useUser } from '@/hooks/use-user';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const Projects = () => {
   const queryClient = useQueryClient();
   const { open } = useSidebar();
+  const { user, loading: userLoading } = useUser();
+  const navigate = useNavigate();
   
   const { data: projects, isLoading } = useQuery({
     queryKey: ['projects'],
-    queryFn: getProjects
+    queryFn: getProjects,
+    enabled: !!user
   });
 
   const handleProjectDelete = () => {
     queryClient.invalidateQueries({ queryKey: ['projects'] });
   };
+  
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (!userLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, userLoading, navigate]);
 
   // Adding a console log to track renders
   useEffect(() => {
-    console.log("Projects component rendered");
-  }, []);
+    console.log("Projects component rendered", { user, projects });
+  }, [user, projects]);
+
+  if (userLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect in useEffect
+  }
 
   return (
     <div className="flex h-screen overflow-hidden w-full bg-gradient-to-br from-background to-background/80">

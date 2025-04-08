@@ -19,7 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { inviteUserToProject } from '@/lib/api';
+import { toast } from '@/components/ui/use-toast';
+import { ProjectRole, useProjectPermissions } from '@/hooks/use-project-permissions';
 
 interface InviteUserModalProps {
   projectId: string;
@@ -33,27 +34,49 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
   onInvited,
 }) => {
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('viewer');
+  const [role, setRole] = useState<ProjectRole>('viewer');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
+  const { addUserToProject, canManageUsers } = useProjectPermissions(projectId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+    if (!canManageUsers) {
+      toast({
+        title: "Permission denied",
+        description: "You don't have permission to invite users to this project.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      await inviteUserToProject(projectId, email, role);
+      await addUserToProject(email, role);
+      toast({
+        title: "User invited",
+        description: `Successfully added ${email} to the project as ${role}.`,
+      });
       setEmail('');
       setRole('viewer');
       setOpen(false);
       if (onInvited) onInvited();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error inviting user:', error);
+      toast({
+        title: "Failed to invite user",
+        description: error.message || "There was a problem inviting the user. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (!canManageUsers) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -85,7 +108,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
               <Label htmlFor="role" className="text-right">
                 Role
               </Label>
-              <Select value={role} onValueChange={setRole}>
+              <Select value={role} onValueChange={(value) => setRole(value as ProjectRole)}>
                 <SelectTrigger id="role" className="col-span-3">
                   <SelectValue placeholder="Select a role" />
                 </SelectTrigger>
@@ -93,6 +116,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
                   <SelectItem value="viewer">Viewer</SelectItem>
                   <SelectItem value="editor">Editor</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="owner">Owner</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -4,6 +4,7 @@ import { toast } from '@/components/ui/use-toast';
 
 export async function getProjects() {
   try {
+    // This will only return projects the user has access to thanks to RLS
     const { data, error } = await supabase
       .from('projects')
       .select('*')
@@ -24,6 +25,7 @@ export async function getProjects() {
 
 export async function getProject(id: string) {
   try {
+    // This will only return the project if the user has access to it
     const { data, error } = await supabase
       .from('projects')
       .select('*')
@@ -71,6 +73,7 @@ export async function createProject(name: string, description?: string) {
 
 export async function updateProject(id: string, updates: { name?: string; description?: string }) {
   try {
+    // RLS policies will ensure the user has permission to update this project
     const { data, error } = await supabase
       .from('projects')
       .update(updates)
@@ -89,6 +92,7 @@ export async function updateProject(id: string, updates: { name?: string; descri
 
 export async function deleteProject(id: string) {
   try {
+    // RLS policies will ensure the user has permission to delete this project
     const { error } = await supabase
       .from('projects')
       .delete()
@@ -103,18 +107,71 @@ export async function deleteProject(id: string) {
   }
 }
 
-export async function inviteUserToProject(projectId: string, email: string, role: string = 'viewer') {
+export async function getProjectUsers(projectId: string) {
   try {
-    // This is a mock function since we don't have a proper invite system yet
-    // In a real app, this would create an invitation record and send an email
-    toast({
-      title: 'Invitation sent',
-      description: `An invitation has been sent to ${email}.`,
-    });
+    const { data, error } = await supabase
+      .from('project_users')
+      .select('*, user_id')
+      .eq('project_id', projectId);
     
-    return { success: true, email, projectId, role };
+    if (error) throw error;
+    
+    return data || [];
   } catch (error: any) {
-    console.error('Error inviting user:', error);
-    throw error; // We rethrow to let the component handle the error
+    console.error('Error fetching project users:', error);
+    throw error;
+  }
+}
+
+export async function addUserToProject(projectId: string, userId: string, role: string) {
+  try {
+    const { data, error } = await supabase
+      .from('project_users')
+      .insert({ project_id: projectId, user_id: userId, role })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return data;
+  } catch (error: any) {
+    console.error('Error adding user to project:', error);
+    throw error;
+  }
+}
+
+export async function updateUserRole(projectId: string, userId: string, role: string) {
+  try {
+    const { data, error } = await supabase
+      .from('project_users')
+      .update({ role })
+      .eq('project_id', projectId)
+      .eq('user_id', userId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return data;
+  } catch (error: any) {
+    console.error('Error updating user role:', error);
+    throw error;
+  }
+}
+
+export async function removeUserFromProject(projectId: string, userId: string) {
+  try {
+    const { error } = await supabase
+      .from('project_users')
+      .delete()
+      .eq('project_id', projectId)
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+    
+    return true;
+  } catch (error: any) {
+    console.error('Error removing user from project:', error);
+    throw error;
   }
 }

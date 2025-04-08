@@ -4,7 +4,6 @@ import { ProjectCard } from './ProjectCard';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { InviteUserModal } from './InviteUserModal';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,9 +39,22 @@ export const ProjectsList: React.FC<ProjectsListProps> = ({ projects, onDelete }
   const handleDelete = async () => {
     if (!projectToDelete) return;
     
-    await deleteProject(projectToDelete);
-    setProjectToDelete(null);
-    onDelete();
+    try {
+      await deleteProject(projectToDelete);
+      setProjectToDelete(null);
+      toast({
+        title: "Project deleted",
+        description: "The project has been successfully deleted.",
+      });
+      onDelete();
+    } catch (error: any) {
+      console.error('Error deleting project:', error);
+      toast({
+        title: "Error deleting project",
+        description: error.message || "There was a problem deleting the project. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleSelectProject = async (id: string) => {
@@ -111,9 +123,6 @@ export const ProjectsList: React.FC<ProjectsListProps> = ({ projects, onDelete }
               isSelected={selectedProjectId === project.id}
               onSelect={handleSelectProject}
               onDelete={(id) => setProjectToDelete(id)}
-              onInvite={(id) => {
-                // This will be handled by the InviteUserModal trigger
-              }}
             />
           ))}
         </div>
