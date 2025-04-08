@@ -61,64 +61,74 @@ export async function getProject(id: string): Promise<Project | null> {
 
 /**
  * Creates a new project and adds current user as an owner
- * Uses a two-step process to avoid infinite recursion issues with RLS
+ * Uses a simpler approach without RLS complications
  */
 export async function createProject(name: string, description?: string): Promise<Project | null> {
+  console.log('Starting project creation with:', { name, description });
+  
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { user } } = await supabase.auth.getUser();
     
-    if (!session) {
+    if (!user) {
       throw new Error('Authentication required to create a project');
     }
     
-    // First insert the project record
+    console.log('Authenticated user:', user.id);
+    
+    // Step 1: Insert the project
     const { data: projectData, error: projectError } = await supabase
       .from('projects')
-      .insert([{ name, description }])
-      .select()
+      .insert([{ 
+        name, 
+        description 
+      }])
+      .select('*')
       .single();
     
     if (projectError) {
-      console.error('Error creating project:', projectError);
+      console.error('Error inserting project:', projectError);
       throw projectError;
     }
     
     if (!projectData) {
+      console.error('No project data returned after insert');
       throw new Error('Failed to create project');
     }
     
     console.log('Project created successfully:', projectData);
     
-    try {
-      // Now use the add_project_owner function to bypass RLS
-      const { error: ownerError } = await supabase
-        .rpc('add_project_owner', { 
-          project_id: projectData.id,
-          owner_id: session.user.id 
-        });
-      
-      if (ownerError) {
-        console.error('Failed to add project owner:', ownerError);
-        throw ownerError;
-      }
-      
-      console.log('Owner added successfully to project:', projectData.id);
-      return projectData as Project;
-      
-    } catch (ownerError: any) {
-      // Clean up if adding the owner failed
+    // Step 2: Add the current user as project owner using the security definer function
+    const { error: ownerError } = await supabase
+      .rpc('add_project_owner', { 
+        project_id: projectData.id,
+        owner_id: user.id 
+      });
+    
+    if (ownerError) {
       console.error('Error adding project owner:', ownerError);
       
+      // Cleanup: Delete the project if we couldn't add the owner
       try {
-        // Attempt to delete the project since owner association failed
-        await supabase.from('projects').delete().eq('id', projectData.id);
-        console.log('Project deleted after owner association failed');
-      } catch (deleteError) {
-        console.error('Error deleting project after failed owner association:', deleteError);
+        const { error: deleteError } = await supabase
+          .from('projects')
+          .delete()
+          .eq('id', projectData.id);
+        
+        if (deleteError) {
+          console.error('Error cleaning up project after owner addition failed:', deleteError);
+        } else {
+          console.log('Project cleaned up after owner addition failed');
+        }
+      } catch (cleanupError) {
+        console.error('Exception during project cleanup:', cleanupError);
       }
       
       throw new Error(`Failed to add you as project owner: ${ownerError.message}`);
     }
+    
+    console.log('Owner added successfully to project:', projectData.id);
+    return projectData as Project;
+    
   } catch (error: any) {
     console.error('Error in createProject flow:', error);
     throw error;

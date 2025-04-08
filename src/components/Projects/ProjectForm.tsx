@@ -69,12 +69,11 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
         });
         navigate(`/projects/${projectId}`);
       } else {
-        // Add debug logging
-        console.log('Starting project creation:', { name, description });
+        console.log('Creating project with:', { name, description });
         
         const project = await createProject(name, description);
         
-        console.log('Project creation completed:', project);
+        console.log('Create project result:', project);
         
         if (project) {
           toast({
@@ -87,18 +86,15 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
           
           // Navigate to the project page
           navigate(`/projects/${project.id}`);
+        } else {
+          throw new Error('Failed to create project - no project returned');
         }
       }
-    } catch (error: any) {
-      console.error('Error submitting project:', error);
+    } catch (err: any) {
+      console.error('Error submitting project:', err);
       
       // Format a more user-friendly error message
-      let errorMessage = error.message || 'An unexpected error occurred';
-      
-      // Handle specific error types for better UX
-      if (errorMessage.includes('infinite recursion')) {
-        errorMessage = 'There was a database policy error. Please try again later or contact support.';
-      }
+      let errorMessage = err.message || 'An unexpected error occurred';
       
       setError(errorMessage);
       
