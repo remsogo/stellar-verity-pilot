@@ -18,7 +18,7 @@ interface TestCaseFormProps {
 }
 
 export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
-  const { selectedProjectId } = useSelectedProject();
+  const { selectedProjectId, isLoading: projectLoading } = useSelectedProject();
   const navigate = useNavigate();
 
   const {
@@ -30,6 +30,18 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
     detectedParameters,
     handleParametersDetected
   } = useTestCaseForm(id);
+
+  // Show loading state while project data is loading
+  if (projectLoading) {
+    return (
+      <Card className="w-full glass-card">
+        <CardContent className="text-center py-10">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4">Loading project data...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // If no project is selected, show a message and redirect button
   if (!selectedProjectId) {

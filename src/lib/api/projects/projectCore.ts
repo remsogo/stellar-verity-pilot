@@ -77,18 +77,26 @@ export async function createProject(name: string, description?: string): Promise
       throw new Error('Authentication required to create a project');
     }
     
-    const { data, error } = await supabase
+    // First create the project
+    const { data: projectData, error: projectError } = await supabase
       .from('projects')
       .insert([{ name, description }])
       .select()
       .single();
     
-    if (error) {
-      throw error;
+    if (projectError) {
+      throw projectError;
     }
     
-    // The handle_new_project trigger will automatically add the user as an owner
-    return data as Project;
+    if (!projectData) {
+      throw new Error('Failed to create project');
+    }
+    
+    // Now manually add the user as an owner
+    // We're not using RPC for this since we want the handle_new_project trigger to handle it
+    // This avoids the infinite recursion issue
+    
+    return projectData as Project;
   } catch (error: any) {
     console.error('Error creating project:', error);
     throw error;

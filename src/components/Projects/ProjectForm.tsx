@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { createProject, updateProject } from '@/lib/api/projects';
 import { useUser } from '@/hooks/use-user';
 import { AlertCircle } from 'lucide-react';
+import { useSelectedProject } from '@/hooks/use-selected-project';
 
 interface ProjectFormProps {
   projectId?: string;
@@ -31,6 +32,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   const [error, setError] = React.useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useUser();
+  const { refreshProjectSelection } = useSelectedProject();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +78,11 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
             title: 'Project created',
             description: `Project "${name}" has been created successfully.`,
           });
+          
+          // Refresh project selection to include the new project
+          await refreshProjectSelection();
+          
+          // Navigate to the project page
           navigate(`/projects/${project.id}`);
         } else {
           throw new Error('Failed to create project. No project data returned.');
@@ -83,10 +90,17 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
       }
     } catch (error: any) {
       console.error('Error submitting project:', error);
-      setError(error.message || 'An unexpected error occurred');
+      const errorMessage = error.message || 'An unexpected error occurred';
+      setError(errorMessage);
+      
+      // More specific error message for recursion issues
+      if (errorMessage.includes('infinite recursion')) {
+        setError('There was a database policy error. Please try again or contact support.');
+      }
+      
       toast({
         title: `Error ${isEditing ? 'updating' : 'creating'} project`,
-        description: error.message || 'An unexpected error occurred',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

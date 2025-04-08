@@ -26,7 +26,9 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     '/test-cases/',
     '/test-execution/',
     '/defects/',
-    '/parameters'
+    '/parameters',
+    '/test-plans',
+    '/test-executions'
   ];
 
   const requiresProject = projectRequiredPaths.some(path => 
@@ -99,7 +101,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   // Allow access while project data is still loading
   if (isProjectLoading) {
-    return <>{children}</>;
+    return <div className="flex items-center justify-center h-screen">Loading project data...</div>;
   }
 
   // Redirect to projects page if no project is selected and we're on a path that requires a project
