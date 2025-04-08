@@ -78,6 +78,21 @@ export type ExecutionStep = {
   expected_result: string;
 };
 
+// Defect type
+export type Defect = {
+  id: string;
+  title: string;
+  description?: string;
+  status: 'open' | 'in-progress' | 'resolved' | 'closed' | 'reopened';
+  severity: Priority;
+  reporter: string;
+  assignee?: string;
+  project_id: string;
+  test_execution_id?: string;
+  created_at: string;
+  updated_at: string;
+};
+
 // Database models that map directly to Supabase tables
 export type DbTestCase = {
   id: string;

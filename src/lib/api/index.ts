@@ -6,3 +6,10 @@ export {
   createTestExecution, 
   updateTestExecution 
 } from './testExecutions';
+export {
+  getDefects,
+  getDefect,
+  createDefect,
+  updateDefect,
+  deleteDefect
+} from './defects';

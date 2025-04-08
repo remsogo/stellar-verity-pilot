@@ -1,16 +1,20 @@
 
 import React from 'react';
 import { NavigateFunction } from 'react-router-dom';
-import { ExecutionStep, TestExecution } from '@/types';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, User, Tag, FileText, Zap } from "lucide-react";
-import { ExecutionStatusBadge } from './ExecutionStatusBadge';
+import { TestExecution, ExecutionStep } from '@/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { ArrowLeft, AlertTriangle, Check, Clock } from 'lucide-react';
+import { TestCaseInfoCard } from './TestCaseInfoCard';
 import { ExecutionStepCard } from './ExecutionStepCard';
 import { ExecutionSummaryCard } from './ExecutionSummaryCard';
-import { TestCaseInfoCard } from './TestCaseInfoCard';
+import { ExecutionNotes } from './ExecutionNotes';
+import { ExecutionHeader } from './ExecutionHeader';
+import { CreateDefectFromExecution } from '@/components/Defects/CreateDefectFromExecution';
+import { DefectsTable } from '@/components/Defects/DefectsTable';
+import { useQuery } from '@tanstack/react-query';
+import { getDefects } from '@/lib/api/defects';
 
 interface ExecutionDetailsContentProps {
   execution: TestExecution;
@@ -20,117 +24,119 @@ interface ExecutionDetailsContentProps {
 
 export const ExecutionDetailsContent: React.FC<ExecutionDetailsContentProps> = ({ 
   execution, 
-  executionSteps, 
-  navigate 
+  executionSteps,
+  navigate
 }) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+  // Fetch defects linked to this execution
+  const { data: allDefects, isLoading: isLoadingDefects } = useQuery({
+    queryKey: ['defects'],
+    queryFn: getDefects,
+  });
+
+  const linkedDefects = allDefects?.filter(defect => 
+    defect.test_execution_id === execution.id
+  ) || [];
+
+  const renderStepCountByStatus = () => {
+    const counts = {
+      passed: executionSteps.filter(step => step.status === 'passed').length,
+      failed: executionSteps.filter(step => step.status === 'failed').length,
+      pending: executionSteps.filter(step => step.status === 'pending').length,
+      blocked: executionSteps.filter(step => step.status === 'blocked').length,
+    };
+
+    return (
+      <div className="flex gap-2 mt-2">
+        <div className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+          <Check size={12} /> {counts.passed} passed
+        </div>
+        <div className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+          <AlertTriangle size={12} /> {counts.failed} failed
+        </div>
+        <div className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+          <Clock size={12} /> {counts.pending} pending
+        </div>
+      </div>
+    );
   };
 
-  // Calculate execution time in minutes
-  const executionTimeMinutes = execution.endTime && execution.startTime 
-    ? Math.round((new Date(execution.endTime).getTime() - new Date(execution.startTime).getTime()) / 60000) 
-    : 0;
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <Card className="md:col-span-2 backdrop-blur-sm border border-muted/40 shadow-lg">
-        <CardHeader>
-          <CardTitle>{execution.testCase.title}</CardTitle>
-          <div className="flex flex-wrap gap-2 mt-2">
-            <ExecutionStatusBadge status={execution.status} />
-            <Badge variant="outline" className="flex items-center">
-              <Clock className="h-3.5 w-3.5 mr-1.5" />
-              {executionTimeMinutes} min
-            </Badge>
-            <Badge variant="outline" className="flex items-center">
-              <Calendar className="h-3.5 w-3.5 mr-1.5" />
-              {new Date(execution.startTime).toLocaleDateString()}
-            </Badge>
-            <Badge variant="outline" className="flex items-center">
-              <User className="h-3.5 w-3.5 mr-1.5" />
-              {execution.executor}
-            </Badge>
-            {execution.testCase.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="flex items-center">
-                <Tag className="h-3 w-3 mr-1" />
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">Test Case Description</h3>
-              <p className="text-sm">{execution.testCase.description || "No description provided."}</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Environment</h3>
-                <p className="text-sm flex items-center">
-                  {execution.environment}
-                </p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Execution Date</h3>
-                <p className="text-sm flex items-center">
-                  {formatDate(execution.startTime)}
-                </p>
-              </div>
-            </div>
+    <div className="grid gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="w-fit"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        
+        <CreateDefectFromExecution 
+          testExecutionId={execution.id}
+          testCaseTitle={execution.testCase.title}
+          projectId={execution.testCase.project_id}
+          onDefectCreated={() => {
+            // Refetch defects after creating a new one
+          }}
+        />
+      </div>
 
-            {execution.notes && (
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Execution Notes</h3>
-                <div className="bg-muted/50 p-3 rounded-md text-sm">
-                  {execution.notes}
-                </div>
+      <ExecutionHeader execution={execution} />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-6">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-xl flex justify-between">
+                <span>Test Steps {renderStepCountByStatus()}</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {executionSteps.length > 0 ? (
+                  executionSteps.map((step, index) => (
+                    <ExecutionStepCard key={step.id} step={step} stepNumber={index + 1} />
+                  ))
+                ) : (
+                  <div className="text-center p-6 text-muted-foreground">
+                    <p>No test steps available for this execution.</p>
+                  </div>
+                )}
               </div>
-            )}
-
-            <Separator />
-
-            <div>
-              <h3 className="font-medium mb-3">Test Steps</h3>
-              {executionSteps.length === 0 ? (
-                <p className="text-muted-foreground italic">No test steps recorded.</p>
+            </CardContent>
+          </Card>
+          
+          <ExecutionNotes execution={execution} />
+          
+          {/* Linked Defects Section */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-xl">Linked Defects</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {linkedDefects.length > 0 ? (
+                <DefectsTable 
+                  defects={linkedDefects} 
+                  isLoading={isLoadingDefects} 
+                />
               ) : (
-                <div className="space-y-6">
-                  {executionSteps.map((step) => (
-                    <ExecutionStepCard key={step.id} step={step} />
-                  ))}
+                <div className="text-center p-4 text-muted-foreground">
+                  <p className="mb-2">No defects linked to this execution.</p>
+                  <p className="text-sm">
+                    Click the "Report Defect" button above to create one.
+                  </p>
                 </div>
               )}
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter className="justify-between pt-0">
-          <Button 
-            variant="outline"
-            onClick={() => navigate(`/test-cases/${execution.testCaseId}`)}
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            View Test Case
-          </Button>
-          <Button 
-            className="bg-primary flex items-center"
-            onClick={() => navigate(`/test-execution/${execution.testCaseId}`)}
-          >
-            <Zap className="h-4 w-4 mr-2" />
-            Run Test Again
-          </Button>
-        </CardFooter>
-      </Card>
-      
-      <div className="space-y-6">
-        <ExecutionSummaryCard 
-          status={execution.status} 
-          steps={executionSteps} 
-        />
-        
-        <TestCaseInfoCard testCase={execution.testCase} />
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <TestCaseInfoCard testCase={execution.testCase} />
+          <ExecutionSummaryCard execution={execution} />
+        </div>
       </div>
     </div>
   );

@@ -15,6 +15,9 @@ import TestCaseForm from "./pages/TestCaseForm";
 import TestExecution from "./pages/TestExecution";
 import TestExecutions from "./pages/TestExecutions";
 import TestExecutionDetails from "./pages/TestExecutionDetails";
+import Defects from "./pages/Defects";
+import DefectForm from "./pages/DefectForm";
+import DefectDetails from "./pages/DefectDetails";
 
 const queryClient = new QueryClient();
 
@@ -114,6 +117,39 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <TestExecutionDetails />
+                  </ProtectedRoute>
+                } 
+              />
+              {/* Defect Management Routes */}
+              <Route 
+                path="/defects" 
+                element={
+                  <ProtectedRoute>
+                    <Defects />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/defects/new" 
+                element={
+                  <ProtectedRoute>
+                    <DefectForm />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/defects/:id" 
+                element={
+                  <ProtectedRoute>
+                    <DefectDetails />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/defects/:id/edit" 
+                element={
+                  <ProtectedRoute>
+                    <DefectForm />
                   </ProtectedRoute>
                 } 
               />
