@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,7 +66,7 @@ const TestExecution = () => {
           title: testCaseData.title,
           description: testCaseData.description,
           status: testCaseData.status as Status,
-          priority: testCaseData.priority as Priority, // Fixed from Status to Priority
+          priority: testCaseData.priority as Priority,
           author: testCaseData.author,
           project_id: testCaseData.project_id,
           estimate_time: testCaseData.estimate_time,
@@ -185,10 +184,23 @@ const TestExecution = () => {
       const newExecutionId = executionData[0].id;
       setExecutionId(newExecutionId);
       
-      // Since there's no execution_steps table in the database schema,
-      // we'll create a new SQL migration to handle this properly
-      // For now, we'll just log the step results
-      console.log("Steps to save:", testSteps);
+      // Save step results to the execution_steps table
+      const executionSteps = testSteps.map(step => ({
+        execution_id: newExecutionId,
+        test_step_id: step.id,
+        actual_result: step.actualResult,
+        status: step.status,
+        step_order: step.order
+      }));
+      
+      const { error: stepsError } = await supabase
+        .from("execution_steps")
+        .insert(executionSteps);
+        
+      if (stepsError) {
+        console.error("Error saving step results:", stepsError);
+        toast.error("Failed to save step results");
+      }
       
       // Update test case status based on execution
       await supabase
@@ -315,13 +327,13 @@ const TestExecution = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <Card className="md:col-span-2">
               <CardHeader className="pb-3">
-                <CardTitle>Test Case: {testCase.title}</CardTitle>
+                <CardTitle>Test Case: {testCase?.title}</CardTitle>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <Badge variant="outline">{testCase.priority}</Badge>
-                  {testCase.automated && (
+                  <Badge variant="outline">{testCase?.priority}</Badge>
+                  {testCase?.automated && (
                     <Badge variant="outline" className="bg-blue-100 text-blue-800">Automated</Badge>
                   )}
-                  {testCase.tags?.map((tag) => (
+                  {testCase?.tags?.map((tag) => (
                     <Badge key={tag} variant="secondary">
                       {tag}
                     </Badge>
@@ -332,13 +344,13 @@ const TestExecution = () => {
                 <div className="space-y-4">
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground mb-1">Description</h3>
-                    <p className="text-sm">{testCase.description || "No description provided."}</p>
+                    <p className="text-sm">{testCase?.description || "No description provided."}</p>
                   </div>
 
-                  {testCase.preconditions && (
+                  {testCase?.preconditions && (
                     <div>
                       <h3 className="text-sm font-medium text-muted-foreground mb-1">Preconditions</h3>
-                      <p className="text-sm">{testCase.preconditions}</p>
+                      <p className="text-sm">{testCase?.preconditions}</p>
                     </div>
                   )}
 

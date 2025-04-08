@@ -1,175 +1,175 @@
 
-import {
-  BarChart,
-  CheckCircle2,
-  ClipboardList,
-  Files,
-  FolderTree,
-  Home,
-  LayoutDashboard,
-  LogOut,
-  Settings,
-  User2,
-} from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "./ThemeToggle";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Sidebar } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
-
-const navItems = [
-  { name: "Dashboard", icon: LayoutDashboard, path: "/" },
-  { name: "Test Cases", icon: ClipboardList, path: "/test-cases" },
-  { name: "Test Execution", icon: CheckCircle2, path: "/executions" },
-  { name: "Test Suites", icon: FolderTree, path: "/suites" },
-  { name: "Reports", icon: BarChart, path: "/reports" },
-  { name: "Test Files", icon: Files, path: "/files" },
-];
+  CircleUserRound,
+  Home,
+  FileText,
+  Settings,
+  ListChecks,
+  BarChart2,
+  PlayCircle,
+  LogOut,
+  BugPlay,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { SearchBar } from "./SearchBar";
+import { ThemeToggle } from "./ThemeToggle";
 
 export const CustomSidebar = () => {
-  const location = useLocation();
+  const [activeItem, setActiveItem] = useState<string>("");
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const navigate = useNavigate();
-  const [collapsed, setCollapsed] = useState(false);
-  const [user, setUser] = useState<{ fullName: string; email: string } | null>(null);
+  const location = useLocation();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const getUserProfile = async () => {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      
-      if (authUser) {
-        const { data: profileData } = await supabase
-          .from("user_profiles")
-          .select("full_name, email")
-          .eq("auth_id", authUser.id)
-          .single();
-          
-        if (profileData) {
-          setUser({
-            fullName: profileData.full_name,
-            email: profileData.email
-          });
-        } else {
-          setUser({
-            fullName: authUser.user_metadata?.full_name || "User",
-            email: authUser.email || ""
-          });
-        }
-      }
-    };
-    
-    getUserProfile();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      getUserProfile();
-    });
-    
-    return () => subscription.unsubscribe();
-  }, []);
+    const path = location.pathname.split("/")[1] || "dashboard";
+    setActiveItem(path);
+  }, [location]);
+
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  };
 
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      toast.success("Signed out successfully");
+      toast({
+        title: "Signed out successfully",
+        description: "You have been logged out of your account.",
+      });
       navigate("/auth");
     } catch (error) {
-      console.error("Error signing out:", error);
-      toast.error("Failed to sign out");
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
+  const menuItems = [
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: <Home className="h-4 w-4" />,
+      onClick: () => navigate("/"),
+    },
+    {
+      id: "test-cases",
+      label: "Test Cases",
+      icon: <FileText className="h-4 w-4" />,
+      onClick: () => navigate("/test-cases"),
+    },
+    {
+      id: "test-executions",
+      label: "Executions",
+      icon: <PlayCircle className="h-4 w-4" />,
+      onClick: () => navigate("/test-executions"),
+    },
+    {
+      id: "defects",
+      label: "Defects",
+      icon: <BugPlay className="h-4 w-4" />,
+      onClick: () => navigate("/defects"),
+    },
+    {
+      id: "requirements",
+      label: "Requirements",
+      icon: <ListChecks className="h-4 w-4" />,
+      onClick: () => navigate("/requirements"),
+    },
+    {
+      id: "reports",
+      label: "Reports",
+      icon: <BarChart2 className="h-4 w-4" />,
+      onClick: () => navigate("/reports"),
+    },
+  ];
+
   return (
-    <Sidebar collapsible={collapsed ? "icon" : "none"}>
-      <SidebarHeader>
-        <div className="flex items-center p-2">
-          {!collapsed && (
-            <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              TestNexus
-            </h1>
-          )}
-          {collapsed && <Home className="w-6 h-6 mx-auto text-primary" />}
+    <Sidebar
+      id="sidebar"
+      className="border-r h-screen w-64 flex flex-col justify-between"
+      togglable={true}
+    >
+      <div className="flex flex-col h-full">
+        <div className="p-4 pt-6 pb-6 flex items-center gap-2">
+          <div>
+            <div className="font-semibold text-lg">TestMaster</div>
+            <div className="text-xs opacity-50">Test Management System</div>
+          </div>
         </div>
-      </SidebarHeader>
-      
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.name}>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={location.pathname === item.path}
-                    tooltip={item.name}
-                  >
-                    <Link to={item.path}>
-                      <item.icon />
-                      <span>{item.name}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      
-      <SidebarFooter>
-        <div className="p-2">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-                <User2 className="h-4 w-4" />
-              </div>
-              <div className="ml-2">
-                <p className="text-sm font-medium">{user?.fullName || "User"}</p>
-                <p className="text-xs text-muted-foreground">{user?.email || ""}</p>
+
+        <div className="px-2 mb-4">
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={toggleModal}
+          >
+            <Search className="h-4 w-4 mr-2" />
+            Search...
+          </Button>
+        </div>
+
+        <div className="space-y-1 px-2">
+          {menuItems.map((item) => (
+            <Button
+              key={item.id}
+              variant={activeItem === item.id ? "default" : "ghost"}
+              className="w-full justify-start"
+              onClick={item.onClick}
+              data-testid={`sidebar-${item.id}`}
+            >
+              {item.icon}
+              <span className="ml-2">{item.label}</span>
+            </Button>
+          ))}
+        </div>
+
+        <div className="mt-auto">
+          <div className="space-y-1 px-2 pb-4">
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={() => navigate("/settings")}
+            >
+              <Settings className="h-4 w-4" />
+              <span className="ml-2">Settings</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/20"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="ml-2">Logout</span>
+            </Button>
+            <div className="flex justify-center my-2">
+              <ThemeToggle />
+            </div>
+          </div>
+          <div className="p-4 border-t">
+            <div className="flex items-center gap-3">
+              <CircleUserRound className="h-8 w-8 text-muted-foreground" />
+              <div>
+                <div className="font-medium text-sm">User Profile</div>
+                <div className="text-xs text-muted-foreground">
+                  user@testmaster.app
+                </div>
               </div>
             </div>
           </div>
-          
-          <div className="flex justify-between items-center">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setCollapsed(!collapsed)}
-              className="w-8 h-8"
-            >
-              {collapsed ? (
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m15 6 6 6-6 6"></path><path d="M21 12H9"></path><path d="M3 12h.01"></path>
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 6 3 12l6 6"></path><path d="M3 12h18"></path>
-                </svg>
-              )}
-            </Button>
-            <ThemeToggle />
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={handleSignOut}
-              title="Sign out"
-            >
-              <LogOut size={18} />
-            </Button>
-          </div>
         </div>
-      </SidebarFooter>
+      </div>
+      {isModalOpen && (
+        <SearchBar isOpen={isModalOpen} onClose={toggleModal} />
+      )}
     </Sidebar>
   );
 };

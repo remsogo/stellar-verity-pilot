@@ -102,6 +102,54 @@ export type Database = {
           },
         ]
       }
+      execution_steps: {
+        Row: {
+          actual_result: string | null
+          created_at: string
+          execution_id: string
+          id: string
+          status: string
+          step_order: number
+          test_step_id: string
+          updated_at: string
+        }
+        Insert: {
+          actual_result?: string | null
+          created_at?: string
+          execution_id: string
+          id?: string
+          status: string
+          step_order: number
+          test_step_id: string
+          updated_at?: string
+        }
+        Update: {
+          actual_result?: string | null
+          created_at?: string
+          execution_id?: string
+          id?: string
+          status?: string
+          step_order?: number
+          test_step_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "execution_steps_execution_id_fkey"
+            columns: ["execution_id"]
+            isOneToOne: false
+            referencedRelation: "test_executions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "execution_steps_test_step_id_fkey"
+            columns: ["test_step_id"]
+            isOneToOne: false
+            referencedRelation: "test_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           created_at: string

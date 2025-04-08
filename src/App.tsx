@@ -13,6 +13,8 @@ import Auth from "./pages/Auth";
 import TestCases from "./pages/TestCases";
 import TestCaseForm from "./pages/TestCaseForm";
 import TestExecution from "./pages/TestExecution";
+import TestExecutions from "./pages/TestExecutions";
+import TestExecutionDetails from "./pages/TestExecutionDetails";
 
 const queryClient = new QueryClient();
 
@@ -96,6 +98,22 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <TestExecution />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/test-executions" 
+                element={
+                  <ProtectedRoute>
+                    <TestExecutions />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/test-execution-details/:id" 
+                element={
+                  <ProtectedRoute>
+                    <TestExecutionDetails />
                   </ProtectedRoute>
                 } 
               />
