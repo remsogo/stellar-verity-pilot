@@ -62,7 +62,7 @@ export const TestPlansList = ({ testPlans }: TestPlansListProps) => {
                         variant={
                           testPlan.status === "active" ? "default" :
                           testPlan.status === "draft" ? "secondary" :
-                          testPlan.status === "completed" ? "success" :
+                          testPlan.status === "completed" ? "outline" :
                           "outline"
                         }
                       >

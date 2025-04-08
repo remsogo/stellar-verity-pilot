@@ -63,12 +63,12 @@ export const updateTestCase = async (testCase: Partial<TestCase> & { id: string 
 
 export const createTestCase = async (testCase: Partial<TestCase>): Promise<TestCase> => {
   // Convert frontend model to DB model for creation
-  const dbTestCase: Partial<DbTestCase> = {
+  const dbTestCase = {
     title: testCase.title || "New Test Case",
     description: testCase.description,
-    status: testCase.status || "draft",
+    status: testCase.status || "pending",
     priority: testCase.priority || "medium",
-    author: testCase.author || "Unknown",
+    author: testCase.author,
     project_id: testCase.project_id,
     estimate_time: testCase.estimate_time,
     automated: testCase.automated || false,

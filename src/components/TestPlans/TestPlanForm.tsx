@@ -104,8 +104,10 @@ export const TestPlanForm = ({ testPlan, onSubmit, isLoading = false }: TestPlan
                 id="title"
                 placeholder="Test Plan Title"
                 {...register("title", { required: "Title is required" })}
-                error={errors.title?.message}
               />
+              {errors.title && (
+                <p className="text-sm text-destructive">{errors.title.message}</p>
+              )}
             </div>
             
             <div className="space-y-2">

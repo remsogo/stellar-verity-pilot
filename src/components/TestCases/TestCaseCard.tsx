@@ -35,8 +35,8 @@ export const TestCaseCard = ({ testCase, isChild = false, showBadge = false }: T
         <div className="flex items-center gap-2">
           <Badge
             variant={
-              testCase.status === "ready" ? "default" :
-              testCase.status === "draft" ? "secondary" :
+              testCase.status === "passed" ? "default" :
+              testCase.status === "pending" ? "secondary" :
               "destructive"
             }
           >

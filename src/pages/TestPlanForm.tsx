@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { MainLayout } from "@/components/Layout/MainLayout";
 import { TestPlanForm } from "@/components/TestPlans/TestPlanForm";
 import { TestPlan } from "@/types/testPlan";
-import { getTestPlan, createTestPlan, updateTestPlan } from "@/lib/api/testPlans";
+import { getTestPlan, createTestPlan, updateTestPlan } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 const TestPlanFormPage = () => {
