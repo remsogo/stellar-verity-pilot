@@ -11,18 +11,20 @@ export const useSelectedProject = () => {
   const [hasChecked, setHasChecked] = useState(false);
   const initialCheckPerformed = useRef(false);
 
-  // Use localStorage effect with a dependency on selectedProjectId
+  // Separate effect for localStorage updates
   useEffect(() => {
     if (selectedProjectId) {
+      console.log('Storing project ID in localStorage:', selectedProjectId);
       localStorage.setItem('selectedProjectId', selectedProjectId);
     } else if (selectedProjectId === null) {
+      console.log('Removing project ID from localStorage');
       localStorage.removeItem('selectedProjectId');
     }
   }, [selectedProjectId]);
 
-  // Check if the user has a selected project - only runs once
+  // Initial project check - only runs once
   useEffect(() => {
-    // Prevent multiple executions of the effect
+    // Guard against multiple executions
     if (initialCheckPerformed.current || hasChecked) return;
     initialCheckPerformed.current = true;
     
@@ -58,7 +60,7 @@ export const useSelectedProject = () => {
     checkSelectedProject();
   }, [selectedProjectId, hasChecked]);
 
-  // Use callbacks for functions to prevent recreating them on each render
+  // Use callbacks for functions to prevent recreating them
   const selectProject = useCallback((projectId: string) => {
     console.log('Selecting project', projectId);
     setSelectedProjectId(projectId);

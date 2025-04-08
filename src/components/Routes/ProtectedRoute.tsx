@@ -66,26 +66,32 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
+  // Show loading state while authentication is being checked
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
+  // Redirect to auth if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
   }
 
-  // FIX: Let the children render if we're still loading project data
-  // or if we're on an exempt path
-  if (isExemptPath || isProjectLoading) {
+  // Allow access to exempt paths without a selected project
+  if (isExemptPath) {
     return <>{children}</>;
   }
 
-  // Only redirect to /projects if we're on a non-exempt path,
-  // not loading project data, and have no selected project
+  // Allow access while project data is still loading
+  if (isProjectLoading) {
+    return <>{children}</>;
+  }
+
+  // Redirect to projects page if no project is selected and we're on a protected path
   if (!selectedProjectId) {
     console.log('Redirecting to projects page because no project is selected');
     return <Navigate to="/projects" replace />;
   }
 
+  // All checks passed, render the children
   return <>{children}</>;
 };

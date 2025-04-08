@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ProjectCard } from './ProjectCard';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { deleteProject } from '@/lib/api';
 import { useSelectedProject } from '@/hooks/use-selected-project';
+import { toast } from '@/components/ui/use-toast';
 
 interface Project {
   id: string;
@@ -32,8 +33,9 @@ interface ProjectsListProps {
 
 export const ProjectsList: React.FC<ProjectsListProps> = ({ projects, onDelete }) => {
   const navigate = useNavigate();
-  const [projectToDelete, setProjectToDelete] = React.useState<string | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const { selectedProjectId, selectProject } = useSelectedProject();
+  const [selectionInProgress, setSelectionInProgress] = useState(false);
 
   const handleDelete = async () => {
     if (!projectToDelete) return;
@@ -43,9 +45,36 @@ export const ProjectsList: React.FC<ProjectsListProps> = ({ projects, onDelete }
     onDelete();
   };
 
-  const handleSelectProject = (id: string) => {
-    selectProject(id);
-    navigate('/');
+  const handleSelectProject = async (id: string) => {
+    // Prevent multiple selections at once
+    if (selectionInProgress) return;
+    
+    try {
+      setSelectionInProgress(true);
+      
+      // Select the project
+      selectProject(id);
+      
+      // Show a toast notification to confirm selection
+      toast({
+        title: "Project selected",
+        description: `Selected project: ${projects.find(p => p.id === id)?.name}`,
+      });
+      
+      // Wait a moment for localStorage to update before navigating
+      setTimeout(() => {
+        navigate('/');
+        setSelectionInProgress(false);
+      }, 300);
+    } catch (error) {
+      console.error('Error selecting project:', error);
+      setSelectionInProgress(false);
+      toast({
+        title: "Error",
+        description: "Failed to select project. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
