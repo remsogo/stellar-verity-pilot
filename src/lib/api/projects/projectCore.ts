@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { Project } from '@/types/project';
@@ -86,6 +87,7 @@ export async function createProject(name: string, description?: string): Promise
       throw error;
     }
     
+    // The handle_new_project trigger will automatically add the user as an owner
     return data as Project;
   } catch (error: any) {
     console.error('Error creating project:', error);
@@ -131,4 +133,12 @@ export async function deleteProject(id: string): Promise<boolean> {
     console.error('Error deleting project:', error);
     throw error;
   }
+}
+
+/**
+ * Get the current authenticated user
+ */
+export async function getCurrentUser() {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
 }

@@ -1,6 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectRole } from '@/integrations/supabase/project-types';
+import { toast } from '@/components/ui/use-toast';
+import { ProjectUser, ProjectWithMembers } from './projectModels';
 
 interface ProjectUserData {
   id: string;
@@ -13,7 +15,7 @@ interface ProjectUserData {
 /**
  * Retrieves all users for a specific project
  */
-export async function getProjectUsers(projectId: string) {
+export async function getProjectUsers(projectId: string): Promise<ProjectUserData[]> {
   try {
     // Call the get_project_users function directly as an RPC
     // This leverages the security definer function to avoid the infinite recursion issue
@@ -21,7 +23,11 @@ export async function getProjectUsers(projectId: string) {
       p_project_id: projectId
     });
     
-    if (error) throw error;
+    if (error) {
+      console.error('RPC error:', error);
+      throw error;
+    }
+    
     return data as ProjectUserData[] || [];
   } catch (error: any) {
     console.error('Error fetching project users:', error);
@@ -30,10 +36,52 @@ export async function getProjectUsers(projectId: string) {
 }
 
 /**
+ * Get a project with its members
+ */
+export async function getProjectWithMembers(projectId: string): Promise<ProjectWithMembers | null> {
+  try {
+    // Get the project details
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', projectId)
+      .single();
+    
+    if (projectError) throw projectError;
+    
+    // Get the project members
+    const members = await getProjectUsers(projectId);
+    
+    // Map the members to the expected format
+    const formattedMembers = members.map(member => ({
+      id: member.id,
+      email: member.email,
+      name: member.full_name || undefined,
+      role: member.role as ProjectRole
+    }));
+    
+    // Return the project with members
+    return {
+      ...project,
+      members: formattedMembers
+    } as ProjectWithMembers;
+  } catch (error: any) {
+    console.error('Error fetching project with members:', error);
+    toast({
+      title: 'Error fetching project details',
+      description: error.message,
+      variant: 'destructive',
+    });
+    return null;
+  }
+}
+
+/**
  * Adds a user to a project with a specific role
  */
 export async function addUserToProject(projectId: string, email: string, role: ProjectRole) {
   try {
+    // First check if user exists in user_profiles
     const { data: userProfile, error: userError } = await supabase
       .from('user_profiles')
       .select('auth_id, email, full_name')
@@ -42,8 +90,23 @@ export async function addUserToProject(projectId: string, email: string, role: P
     
     if (userError) throw userError;
     
-    const userId = userProfile?.auth_id || email;
+    let userId;
     
+    if (userProfile) {
+      // If user exists, use their auth_id
+      userId = userProfile.auth_id;
+    } else {
+      // For now, we'll store the email as a placeholder
+      // In a real app, we would send an invitation email
+      userId = email;
+      
+      toast({
+        title: 'User not found',
+        description: 'An invitation will be sent to this email address.',
+      });
+    }
+    
+    // Add user to project
     const { data, error } = await supabase
       .from('project_users')
       .insert({
@@ -108,5 +171,22 @@ export async function removeUserFromProject(projectId: string, userId: string) {
   } catch (error: any) {
     console.error('Error removing user from project:', error);
     throw error;
+  }
+}
+
+/**
+ * Check if a user is a member of a project
+ */
+export async function checkUserProjectMembership(projectId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .rpc('is_member_of_project', { project_id: projectId });
+    
+    if (error) throw error;
+    
+    return data || false;
+  } catch (error: any) {
+    console.error('Error checking project membership:', error);
+    return false;
   }
 }

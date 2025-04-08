@@ -12,6 +12,16 @@ export interface CustomFunctions {
     Args: { project_id: string };
     Returns: boolean;
   };
+  get_project_users: {
+    Args: { p_project_id: string };
+    Returns: {
+      id: string;
+      user_id: string;
+      email: string;
+      full_name: string | null;
+      role: string;
+    }[];
+  };
 }
 
 // This will be used to extend the Database type with our custom functions

@@ -38,3 +38,14 @@ export interface ProjectInvitation {
   created_at: string;
   expires_at: string;
 }
+
+/**
+ * Project user data returned from get_project_users RPC
+ */
+export interface ProjectUserData {
+  id: string;
+  user_id: string;
+  email: string;
+  full_name: string | null;
+  role: ProjectRole;
+}

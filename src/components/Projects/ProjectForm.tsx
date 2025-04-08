@@ -67,13 +67,18 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
         });
         navigate(`/projects/${projectId}`);
       } else {
+        console.log('Creating new project:', { name, description });
         const project = await createProject(name, description);
+        console.log('Project created response:', project);
+        
         if (project) {
           toast({
             title: 'Project created',
             description: `Project "${name}" has been created successfully.`,
           });
           navigate(`/projects/${project.id}`);
+        } else {
+          throw new Error('Failed to create project. No project data returned.');
         }
       }
     } catch (error: any) {
