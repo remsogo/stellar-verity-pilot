@@ -32,6 +32,16 @@ export enum TestCasePriority {
 export type Status = "passed" | "failed" | "pending" | "blocked" | "ready" | "draft";
 export type Priority = "low" | "medium" | "high" | "critical";
 
+// Simple reference type for children to avoid circular references
+export type TestCaseReference = {
+  id: string;
+  title: string;
+  description?: string;
+  status: Status;
+  priority: Priority;
+  children_ids?: string[];
+};
+
 // Base test case type without children relationship
 export interface BaseTestCase {
   id: string;
@@ -55,10 +65,10 @@ export interface BaseTestCase {
   steps?: TestStep[];
 }
 
-// Complete TestCase type with optional children array
+// Complete TestCase type with proper children array that won't cause circular references
 export type TestCase = BaseTestCase & {
-  // Using a non-generic type for children to avoid circular references
-  children?: Array<BaseTestCase & { children_ids?: string[] }>;
+  // Using TestCaseReference type for children to avoid circular references
+  children?: TestCaseReference[];
   children_ids?: string[]; // Using children_ids to store references
 };
 
