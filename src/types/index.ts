@@ -1,5 +1,5 @@
 
-export type Status = 'passed' | 'failed' | 'pending' | 'blocked';
+export type Status = 'passed' | 'failed' | 'pending' | 'blocked' | 'Ready' | 'Draft';
 
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
 

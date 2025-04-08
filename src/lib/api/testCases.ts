@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { DbTestCase, TestCase, TestStep } from "@/types";
+import { DbTestCase, TestCase } from "@/types";
 import { mapDbTestCaseToTestCase } from "./testCaseMappers";
 
 export const getTestCase = async (id: string): Promise<TestCase> => {
@@ -14,7 +13,7 @@ export const getTestCase = async (id: string): Promise<TestCase> => {
     throw new Error(`Error fetching test case: ${error.message}`);
   }
 
-  return mapDbTestCaseToTestCase(data as DbTestCase);
+  return mapDbTestCaseToTestCase(data as unknown as DbTestCase);
 };
 
 export const getChildTestCases = async (parentId: string): Promise<TestCase[]> => {

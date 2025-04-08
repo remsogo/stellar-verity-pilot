@@ -18,7 +18,6 @@ export const mapDbTestPlanToTestPlan = (dbTestPlan: DbTestPlan): TestPlan => {
 };
 
 export const getTestPlans = async (projectId: string): Promise<TestPlan[]> => {
-  // Use type assertion to let TypeScript know we're using the correct table
   const { data, error } = await supabase
     .from("test_plans")
     .select("*")
@@ -28,7 +27,6 @@ export const getTestPlans = async (projectId: string): Promise<TestPlan[]> => {
     throw new Error(`Error fetching test plans: ${error.message}`);
   }
 
-  // Use type assertion to safely convert the returned data
   return (data as unknown as DbTestPlan[]).map(mapDbTestPlanToTestPlan);
 };
 
@@ -58,7 +56,7 @@ export const createTestPlan = async (testPlan: Partial<TestPlan>): Promise<TestP
 
   const { data, error } = await supabase
     .from("test_plans")
-    .insert([dbTestPlan]) // Wrap in array for insert
+    .insert([dbTestPlan])
     .select()
     .single();
 

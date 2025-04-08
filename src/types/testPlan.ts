@@ -1,17 +1,21 @@
 
-export type TestPlan = {
+import { TestCase } from ".";
+
+export type TestPlanStatus = 'draft' | 'active' | 'completed' | 'archived';
+
+export interface TestPlan {
   id: string;
   title: string;
   description?: string;
   project_id: string;
-  status: 'draft' | 'active' | 'completed' | 'archived';
+  status: TestPlanStatus;
   test_cases: string[];
   created_by: string;
-  created_at?: string;
-  updated_at?: string;
-};
+  created_at: string;
+  updated_at: string;
+}
 
-export type DbTestPlan = {
+export interface DbTestPlan {
   id: string;
   title: string;
   description?: string;
@@ -21,4 +25,4 @@ export type DbTestPlan = {
   created_by: string;
   created_at: string;
   updated_at: string;
-};
+}

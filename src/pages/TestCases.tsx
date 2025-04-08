@@ -46,15 +46,12 @@ const TestCases = () => {
       }
 
       if (data) {
-        // Cast data to TestCase[] to ensure proper typing
         const typedData = data as unknown as TestCase[];
         
-        // Organize test cases into parent-child structure
         const parents: TestCase[] = [];
         const childrenMap: Record<string, TestCase[]> = {};
         const orphans: TestCase[] = [];
 
-        // First pass - categorize all tests
         typedData.forEach((tc: TestCase) => {
           if (tc.is_parent) {
             parents.push({...tc, children: []});
@@ -68,14 +65,12 @@ const TestCases = () => {
           }
         });
 
-        // Second pass - assign children to parents
         parents.forEach(parent => {
           if (childrenMap[parent.id]) {
             parent.children = childrenMap[parent.id];
           }
         });
 
-        // Combine parents and orphans for the final list
         setTestCasesList([...parents, ...orphans]);
       }
     } catch (error: any) {
@@ -93,10 +88,8 @@ const TestCases = () => {
   };
 
   const handleSearch = () => {
-    // Filtering happens automatically in the render logic
   };
 
-  // Filter test cases based on search query
   const filteredTestCases = testCasesList.filter(testCase => 
     testCase.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (testCase.children && testCase.children.some(child => 
@@ -199,8 +192,8 @@ const TestCases = () => {
                         <TableCell>
                           <Badge
                             variant={
-                              testCase.status === "Ready" ? "default" :
-                              testCase.status === "Draft" ? "secondary" :
+                              testCase.status === "Ready" || testCase.status === "passed" ? "default" :
+                              testCase.status === "Draft" || testCase.status === "pending" ? "secondary" :
                               "destructive"
                             }
                           >
@@ -215,7 +208,6 @@ const TestCases = () => {
                           </Link>
                         </TableCell>
                       </TableRow>
-                      {/* Render children if parent is expanded */}
                       {testCase.is_parent && expandedParents[testCase.id] && testCase.children && 
                         testCase.children.map(child => (
                           <TableRow key={`child-${child.id}`} className="bg-muted/10">
@@ -234,8 +226,8 @@ const TestCases = () => {
                             <TableCell>
                               <Badge
                                 variant={
-                                  child.status === "Ready" ? "default" :
-                                  child.status === "Draft" ? "secondary" :
+                                  child.status === "Ready" || child.status === "passed" ? "default" :
+                                  child.status === "Draft" || child.status === "pending" ? "secondary" :
                                   "destructive"
                                 }
                               >

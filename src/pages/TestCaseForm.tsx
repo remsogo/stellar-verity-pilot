@@ -118,8 +118,15 @@ const TestCaseForm = () => {
         setValue("status", data.status === "Draft" || data.status === "Ready" || data.status === "Blocked" 
           ? data.status 
           : "Draft");
-        setValue("is_parent", data.is_parent || false);
-        setValue("parent_id", data.parent_id || null);
+        
+        // Check if is_parent and parent_id exist before setting them
+        if ('is_parent' in data) {
+          setValue("is_parent", data.is_parent || false);
+        }
+        
+        if ('parent_id' in data) {
+          setValue("parent_id", data.parent_id || null);
+        }
       }
     } catch (error: any) {
       toast({
