@@ -7,3 +7,4 @@ export * from './testExecutions';
 export * from './testPlans';
 export * from './testCycles';
 export * from './requirements';
+export * from './testCollections';

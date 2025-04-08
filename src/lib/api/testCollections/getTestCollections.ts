@@ -20,7 +20,7 @@ export const getTestCollections = async (projectId: string): Promise<TestCollect
     name: collection.name,
     description: collection.description,
     isSmartCollection: collection.is_smart_collection,
-    criteria: collection.criteria,
+    criteria: collection.criteria as Record<string, any> | null,
     testCaseIds: collection.test_case_ids || [],
     project_id: collection.project_id,
     created_at: collection.created_at,

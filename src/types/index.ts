@@ -1,4 +1,3 @@
-
 // Réexportation des types depuis les fichiers modulaires
 export * from './testCase';
 export * from './testExecution';
@@ -74,4 +73,17 @@ export type TestFolder = {
   created_at: string;
   updated_at: string;
   items: Array<TestFolder | { id: string; title: string; type: 'test_case' }>;
+};
+
+// Type for the test collections
+export type TestCollection = {
+  id: string;
+  name: string;
+  description: string;
+  isSmartCollection: boolean;
+  criteria: Record<string, any> | null;
+  testCaseIds: string[];
+  project_id: string;
+  created_at: string;
+  updated_at: string;
 };
