@@ -10,7 +10,10 @@ import { useSidebar } from '@/components/ui/sidebar';
 
 const Projects = () => {
   const queryClient = useQueryClient();
-  const { isSidebarOpen } = useSidebar();
+  // The error is here - `isSidebarOpen` property doesn't exist on SidebarContext
+  // Let's check what properties are available in the useSidebar hook
+  // Based on src/components/ui/sidebar.tsx, we should use `state` or `open` property
+  const { open } = useSidebar();
   
   const { data: projects, isLoading } = useQuery({
     queryKey: ['projects'],
