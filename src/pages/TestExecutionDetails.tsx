@@ -96,32 +96,33 @@ const TestExecutionDetails = () => {
 
         setExecution(executionObj);
 
-        // Fetch execution steps with test step details using the stored procedure
-        // We use a type assertion for the parameters to avoid the 'never' type error
-        const { data, error: stepsError } = await supabase
-          .rpc('get_execution_steps_with_details', { 
-            execution_id_param: id as string 
-          });
+        // Fetch execution steps with test step details
+        if (id) {
+          const { data, error: stepsError } = await supabase
+            .rpc<ExecutionStepWithDetails[]>('get_execution_steps_with_details', { 
+              execution_id_param: id 
+            });
 
-        if (stepsError) {
-          console.error("Error fetching steps:", stepsError);
-          toast.error("Could not load execution step details");
-        } else if (data) {
-          // Ensure data is an array before proceeding
-          const stepsArray = Array.isArray(data) ? data : [];
-          if (stepsArray.length > 0) {
-            const formattedSteps: ExecutionStep[] = stepsArray.map((step: ExecutionStepWithDetails) => ({
-              id: step.id,
-              test_step_id: step.test_step_id,
-              execution_id: step.execution_id,
-              status: step.status as Status,
-              actual_result: step.actual_result,
-              step_order: step.step_order,
-              description: step.description || "No description",
-              expected_result: step.expected_result || "No expected result"
-            }));
-            
-            setExecutionSteps(formattedSteps);
+          if (stepsError) {
+            console.error("Error fetching steps:", stepsError);
+            toast.error("Could not load execution step details");
+          } else if (data) {
+            // Ensure data is an array before proceeding
+            const stepsArray = Array.isArray(data) ? data : [];
+            if (stepsArray.length > 0) {
+              const formattedSteps: ExecutionStep[] = stepsArray.map((step: ExecutionStepWithDetails) => ({
+                id: step.id,
+                test_step_id: step.test_step_id,
+                execution_id: step.execution_id,
+                status: step.status as Status,
+                actual_result: step.actual_result,
+                step_order: step.step_order,
+                description: step.description || "No description",
+                expected_result: step.expected_result || "No expected result"
+              }));
+              
+              setExecutionSteps(formattedSteps);
+            }
           }
         }
       } catch (error) {
