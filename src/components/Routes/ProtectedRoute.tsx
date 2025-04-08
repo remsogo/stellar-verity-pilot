@@ -1,15 +1,13 @@
 
 import { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSelectedProject } from "@/hooks/use-selected-project";
-import { useNavigate, useLocation } from "react-router-dom";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { selectedProjectId, isLoading: isProjectLoading, clearSelectedProject } = useSelectedProject();
-  const navigate = useNavigate();
   const location = useLocation();
 
   // Exempt paths that don't require project selection
@@ -21,27 +19,52 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   const isExemptPath = exemptPaths.some(path => location.pathname.startsWith(path));
 
+  // Add console logs to help debug
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    console.log('ProtectedRoute rendered', { 
+      isAuthenticated, 
+      isLoading, 
+      selectedProjectId, 
+      isProjectLoading,
+      path: location.pathname,
+      isExemptPath
+    });
+  }, [isAuthenticated, isLoading, selectedProjectId, isProjectLoading, location.pathname, isExemptPath]);
 
-      if (session) {
-        setIsAuthenticated(true);
-      } else {
-        setIsAuthenticated(false);
+  useEffect(() => {
+    let mounted = true;
+    
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (mounted) {
+          setIsAuthenticated(!!session);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+        if (mounted) {
+          setIsAuthenticated(false);
+          setIsLoading(false);
+        }
       }
-      setIsLoading(false);
     };
 
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-      setIsLoading(false);
+      if (mounted) {
+        setIsAuthenticated(!!session);
+        setIsLoading(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
@@ -51,10 +74,9 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/auth" replace />;
   }
 
-  // If on projects page but getting stuck, clear the selected project
-  if (location.pathname === '/projects' && isProjectLoading) {
-    clearSelectedProject();
-    return <div className="flex items-center justify-center h-screen">Loading projects...</div>;
+  // On projects page, don't check for project selection
+  if (location.pathname === '/projects') {
+    return <>{children}</>;
   }
 
   // Only check for selectedProjectId when on non-exempt paths and not loading project data

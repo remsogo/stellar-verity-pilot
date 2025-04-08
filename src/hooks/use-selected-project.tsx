@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getProjects } from '@/lib/api';
 import { toast } from '@/components/ui/use-toast';
 
@@ -10,16 +10,16 @@ export const useSelectedProject = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasChecked, setHasChecked] = useState(false);
 
-  // Save to localStorage whenever selectedProjectId changes
+  // Use localStorage effect with a dependency on selectedProjectId
   useEffect(() => {
     if (selectedProjectId) {
       localStorage.setItem('selectedProjectId', selectedProjectId);
-    } else {
+    } else if (selectedProjectId === null) {
       localStorage.removeItem('selectedProjectId');
     }
   }, [selectedProjectId]);
 
-  // Check if the user has a selected project
+  // Check if the user has a selected project - only runs once
   useEffect(() => {
     const checkSelectedProject = async () => {
       if (hasChecked) return; // Avoid running multiple times
@@ -48,16 +48,20 @@ export const useSelectedProject = () => {
       }
     };
 
-    checkSelectedProject();
+    // Only run once
+    if (!hasChecked) {
+      checkSelectedProject();
+    }
   }, [selectedProjectId, hasChecked]);
 
-  const selectProject = (projectId: string) => {
+  // Use callbacks for functions to prevent recreating them on each render
+  const selectProject = useCallback((projectId: string) => {
     setSelectedProjectId(projectId);
-  };
+  }, []);
 
-  const clearSelectedProject = () => {
+  const clearSelectedProject = useCallback(() => {
     setSelectedProjectId(null);
-  };
+  }, []);
 
   return {
     selectedProjectId,

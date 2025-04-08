@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navbar } from '@/components/Navigation/Navbar';
 import { CustomSidebar } from '@/components/UI/CustomSidebar';
 import { ProjectsList } from '@/components/Projects/ProjectsList';
@@ -10,9 +10,6 @@ import { useSidebar } from '@/components/ui/sidebar';
 
 const Projects = () => {
   const queryClient = useQueryClient();
-  // The error is here - `isSidebarOpen` property doesn't exist on SidebarContext
-  // Let's check what properties are available in the useSidebar hook
-  // Based on src/components/ui/sidebar.tsx, we should use `state` or `open` property
   const { open } = useSidebar();
   
   const { data: projects, isLoading } = useQuery({
@@ -23,6 +20,11 @@ const Projects = () => {
   const handleProjectDelete = () => {
     queryClient.invalidateQueries({ queryKey: ['projects'] });
   };
+
+  // Adding a console log to track renders
+  useEffect(() => {
+    console.log("Projects component rendered");
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden w-full bg-gradient-to-br from-background to-background/80">
