@@ -7,21 +7,31 @@ import { ProjectRole } from '@/integrations/supabase/project-types';
  */
 export async function getProjectUsers(projectId: string) {
   try {
-    // Build the URL with the query parameter
-    const functionUrl = `get_project_users?project_id=${encodeURIComponent(projectId)}`;
-    
-    // Invoke the edge function with the URL
-    const { data, error } = await supabase.functions.invoke(functionUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
+    const { data, error } = await supabase
+      .from('project_users')
+      .select(`
+        id,
+        user_id,
+        role,
+        user_profiles:user_id (
+          email,
+          full_name
+        )
+      `)
+      .eq('project_id', projectId);
     
     if (error) throw error;
     
-    // If the data is undefined or not in the expected format, return an empty array
-    return data?.data || [];
+    // Transform the data to a more usable format
+    const users = data?.map(user => ({
+      id: user.id,
+      user_id: user.user_id,
+      email: user.user_profiles?.email || '',
+      full_name: user.user_profiles?.full_name || null,
+      role: user.role
+    })) || [];
+    
+    return users;
   } catch (error: any) {
     console.error('Error fetching project users:', error);
     throw error;
@@ -39,6 +49,9 @@ export async function addUserToProject(projectId: string, email: string, role: P
       .eq('email', email)
       .maybeSingle();
     
+    if (userError) throw userError;
+    
+    // If user profile not found, create a placeholder with the email
     const userId = userProfile?.auth_id || email;
     
     const { data, error } = await supabase
@@ -73,18 +86,17 @@ export async function addUserToProject(projectId: string, email: string, role: P
  */
 export async function updateUserRole(projectId: string, userId: string, role: ProjectRole) {
   try {
-    const { data, error } = await supabase.functions.invoke('update_user_role', {
-      method: 'POST',
-      body: { 
-        p_project_id: projectId, 
-        p_user_id: userId, 
-        p_role: role 
-      }
-    });
+    const { data, error } = await supabase
+      .from('project_users')
+      .update({ role })
+      .eq('project_id', projectId)
+      .eq('id', userId)
+      .select()
+      .single();
     
     if (error) throw error;
     
-    return data?.data;
+    return data;
   } catch (error: any) {
     console.error('Error updating user role:', error);
     throw error;
@@ -96,13 +108,11 @@ export async function updateUserRole(projectId: string, userId: string, role: Pr
  */
 export async function removeUserFromProject(projectId: string, userId: string) {
   try {
-    const { data, error } = await supabase.functions.invoke('remove_user_from_project', {
-      method: 'POST',
-      body: { 
-        p_project_id: projectId, 
-        p_user_id: userId
-      }
-    });
+    const { error } = await supabase
+      .from('project_users')
+      .delete()
+      .eq('project_id', projectId)
+      .eq('id', userId);
     
     if (error) throw error;
     

@@ -748,6 +748,10 @@ export type Database = {
         Args: { p_cycle_id: string }
         Returns: Json
       }
+      is_member_of_project: {
+        Args: { project_id: string }
+        Returns: boolean
+      }
       is_project_admin: {
         Args: { project_id: string; user_id: string }
         Returns: boolean
