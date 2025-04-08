@@ -105,14 +105,14 @@ export async function deleteProject(id: string) {
 
 export async function getProjectUsers(projectId: string) {
   try {
-    // Use URL parameters to pass the project_id to the edge function
-    const { data, error } = await supabase.functions.invoke('get_project_users', {
+    // Build the URL with the query parameter
+    const functionUrl = `get_project_users?project_id=${encodeURIComponent(projectId)}`;
+    
+    // Invoke the edge function with the URL
+    const { data, error } = await supabase.functions.invoke(functionUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-      },
-      queryParams: {
-        project_id: projectId
       }
     });
     
