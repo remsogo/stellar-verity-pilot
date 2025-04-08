@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 /**
  * Extracts parameters from text by finding words that start with $
  * @param text The text to extract parameters from
