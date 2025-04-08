@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 const Projects = () => {
   const queryClient = useQueryClient();
@@ -20,16 +20,12 @@ const Projects = () => {
   const { user, loading: userLoading } = useUser();
   const navigate = useNavigate();
   
-  const { data: projects, isLoading, error } = useQuery({
+  const { data: projects, isLoading, error, refetch } = useQuery({
     queryKey: ['projects'],
     queryFn: getProjects,
     enabled: !!user,
     retry: 1, // Only retry once to avoid excessive retries on policy errors
-    meta: {
-      onError: (error: any) => {
-        console.error('Error fetching projects:', error);
-      }
-    }
+    refetchOnWindowFocus: false,
   });
 
   const handleProjectDelete = () => {
@@ -42,23 +38,6 @@ const Projects = () => {
       navigate('/auth');
     }
   }, [user, userLoading, navigate]);
-
-  // Adding a console log to track renders
-  useEffect(() => {
-    console.log("Projects component rendered", { user, projects, error });
-  }, [user, projects, error]);
-
-  if (userLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null; // Will redirect in useEffect
-  }
 
   return (
     <div className="flex h-screen overflow-hidden w-full bg-gradient-to-br from-background to-background/80">
@@ -104,10 +83,18 @@ const Projects = () => {
                       {error instanceof Error ? error.message : "There was a problem loading your projects."}
                     </p>
                     <Button 
-                      onClick={() => queryClient.invalidateQueries({ queryKey: ['projects'] })}
+                      onClick={() => refetch()}
                       variant="outline"
+                      className="mr-2"
                     >
+                      <RefreshCw className="h-4 w-4 mr-2" />
                       Try Again
+                    </Button>
+                    <Button 
+                      onClick={() => navigate('/projects/new')}
+                      variant="default"
+                    >
+                      Create New Project
                     </Button>
                   </CardContent>
                 </Card>

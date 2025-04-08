@@ -7,9 +7,9 @@ import { toast } from '@/components/ui/use-toast';
  */
 export async function getProjects() {
   try {
+    // Use the RPC function to avoid infinite recursion
     const { data, error } = await supabase
-      .from('projects')
-      .select('*')
+      .rpc('get_user_projects')
       .order('created_at', { ascending: false });
     
     if (error) throw error;
@@ -30,6 +30,16 @@ export async function getProjects() {
  */
 export async function getProject(id: string) {
   try {
+    // Check if user has access to this project first
+    const { data: projectAccess, error: accessError } = await supabase
+      .rpc('is_member_of_project', { project_id: id });
+    
+    if (accessError) throw accessError;
+    
+    if (!projectAccess) {
+      throw new Error('You do not have access to this project');
+    }
+    
     const { data, error } = await supabase
       .from('projects')
       .select('*')

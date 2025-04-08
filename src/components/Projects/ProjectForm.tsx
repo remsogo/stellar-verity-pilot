@@ -9,6 +9,7 @@ import { toast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { createProject, updateProject } from '@/lib/api/projects';
 import { useUser } from '@/hooks/use-user';
+import { AlertCircle } from 'lucide-react';
 
 interface ProjectFormProps {
   projectId?: string;
@@ -27,11 +28,13 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   const [name, setName] = React.useState(initialData?.name || '');
   const [description, setDescription] = React.useState(initialData?.description || '');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useUser();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     
     if (!name.trim()) {
       toast({
@@ -75,6 +78,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
       }
     } catch (error: any) {
       console.error('Error submitting project:', error);
+      setError(error.message || 'An unexpected error occurred');
       toast({
         title: `Error ${isEditing ? 'updating' : 'creating'} project`,
         description: error.message || 'An unexpected error occurred',
@@ -97,6 +101,15 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {error && (
+            <div className="bg-destructive/10 p-3 rounded-md flex items-start gap-2 mb-4">
+              <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
+              <div>
+                <p className="font-medium text-destructive">Error</p>
+                <p className="text-sm text-muted-foreground">{error}</p>
+              </div>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="name">Project Name</Label>
             <Input
