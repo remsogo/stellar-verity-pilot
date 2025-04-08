@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useSelectedProject } from "@/hooks/use-selected-project";
 
 const testCaseSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
@@ -23,6 +24,8 @@ const testCaseSchema = z.object({
   expected_result: z.string().min(5, { message: "Expected result must be at least 5 characters." }),
   priority: z.enum(["High", "Medium", "Low"]).default("Medium"),
   status: z.enum(["Draft", "Ready", "Blocked"]).default("Draft"),
+  parent_id: z.string().nullable().optional(),
+  is_parent: z.boolean().default(false),
 });
 
 type TestCaseSchema = z.infer<typeof testCaseSchema>;
@@ -30,22 +33,56 @@ type TestCaseSchema = z.infer<typeof testCaseSchema>;
 const TestCaseForm = () => {
   const { id } = useParams<{ id: string }>();
   const [isLoading, setIsLoading] = useState(false);
+  const [parentTestCases, setParentTestCases] = useState<Array<{ id: string; title: string }>>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { selectedProjectId } = useSelectedProject();
 
-  const { control, handleSubmit, setValue, formState: { errors } } = useForm<TestCaseSchema>({
+  const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<TestCaseSchema>({
     resolver: zodResolver(testCaseSchema),
     defaultValues: {
       priority: "Medium",
       status: "Draft",
+      is_parent: false,
+      parent_id: null,
     },
   });
+
+  const isParent = watch("is_parent");
+  const parentId = watch("parent_id");
 
   useEffect(() => {
     if (id) {
       fetchTestCase(id);
     }
-  }, [id]);
+    if (selectedProjectId) {
+      fetchParentTestCases();
+    }
+  }, [id, selectedProjectId]);
+
+  const fetchParentTestCases = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("test_cases")
+        .select("id, title")
+        .eq("project_id", selectedProjectId)
+        .eq("is_parent", true);
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        setParentTestCases(data);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error fetching parent test cases",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   const fetchTestCase = async (testCaseId: string) => {
     setIsLoading(true);
@@ -81,6 +118,8 @@ const TestCaseForm = () => {
         setValue("status", data.status === "Draft" || data.status === "Ready" || data.status === "Blocked" 
           ? data.status 
           : "Draft");
+        setValue("is_parent", data.is_parent || false);
+        setValue("parent_id", data.parent_id || null);
       }
     } catch (error: any) {
       toast({
@@ -94,8 +133,22 @@ const TestCaseForm = () => {
   };
 
   const onSubmit = async (data: TestCaseSchema) => {
+    if (!selectedProjectId) {
+      toast({
+        title: "Error",
+        description: "You must select a project first",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
+      // If it's a parent test, remove any parent_id
+      if (data.is_parent) {
+        data.parent_id = null;
+      }
+      
       const testCaseData = {
         title: data.title,
         description: data.description,
@@ -103,7 +156,9 @@ const TestCaseForm = () => {
         priority: data.priority.toLowerCase(),
         status: data.status,
         author: "Current User", // This would be the actual user in a real application
-        project_id: "default-project", // This would be selected from a dropdown in a real application
+        project_id: selectedProjectId,
+        is_parent: data.is_parent,
+        parent_id: data.parent_id,
         tags: []
       };
       
@@ -189,6 +244,59 @@ const TestCaseForm = () => {
                 )}
               />
               {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
+            </div>
+
+            {/* Test Case Relationship Section */}
+            <div className="bg-muted/50 p-4 rounded-md space-y-4">
+              <h3 className="text-md font-medium">Test Case Relationship</h3>
+              
+              <div className="flex items-center space-x-2">
+                <Controller
+                  name="is_parent"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="flex items-center space-x-2">
+                      <input 
+                        type="checkbox" 
+                        id="is_parent" 
+                        checked={field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <Label htmlFor="is_parent">This is a parent test case</Label>
+                    </div>
+                  )}
+                />
+              </div>
+              
+              {!isParent && (
+                <div>
+                  <Label htmlFor="parent_id">Parent Test Case (optional)</Label>
+                  <Controller
+                    name="parent_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value || undefined}
+                        disabled={isLoading || parentTestCases.length === 0}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a parent test case" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {parentTestCases.map((testCase) => (
+                            <SelectItem key={testCase.id} value={testCase.id}>
+                              {testCase.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+              )}
             </div>
 
             <div>
