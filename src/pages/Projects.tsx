@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useUser } from '@/hooks/use-user';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 
 const Projects = () => {

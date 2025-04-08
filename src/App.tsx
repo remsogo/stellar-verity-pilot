@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +24,7 @@ import Parameters from "./pages/Parameters";
 import TestPlans from "./pages/TestPlans";
 import TestPlanForm from "./pages/TestPlanForm";
 import TestPlanDetails from "./pages/TestPlanDetails";
+import FixPolicies from "./pages/FixPolicies";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +43,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <Index />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/fix-policies" 
+                element={
+                  <ProtectedRoute>
+                    <FixPolicies />
                   </ProtectedRoute>
                 } 
               />
