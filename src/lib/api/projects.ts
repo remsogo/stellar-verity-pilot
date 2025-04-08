@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { ProjectRole } from '@/integrations/supabase/project-types';
@@ -104,9 +105,15 @@ export async function deleteProject(id: string) {
 
 export async function getProjectUsers(projectId: string) {
   try {
+    // Using URLSearchParams for query parameters instead of the 'query' property
+    const url = new URL(`${supabase.functions.url}/get_project_users`);
+    url.searchParams.append('project_id', projectId);
+    
     const { data, error } = await supabase.functions.invoke('get_project_users', {
       method: 'GET',
-      query: { p_project_id: projectId }
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
     
     if (error) throw error;
