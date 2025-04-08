@@ -15,25 +15,35 @@ interface ProjectUserData {
  */
 export async function getProjectUsers(projectId: string) {
   try {
-    const { data, error } = await supabase
+    // First, fetch the project users
+    const { data: projectUsers, error: projectUsersError } = await supabase
       .from('project_users')
-      .select(`
-        id, 
-        user_id, 
-        role,
-        user_profiles!user_id(email, full_name)
-      `)
+      .select('id, user_id, role')
       .eq('project_id', projectId);
     
-    if (error) throw error;
+    if (projectUsersError) throw projectUsersError;
+    if (!projectUsers || projectUsers.length === 0) return [];
+
+    // Then, fetch the user profiles for those users
+    const userIds = projectUsers.map(user => user.user_id);
+    const { data: userProfiles, error: profilesError } = await supabase
+      .from('user_profiles')
+      .select('auth_id, email, full_name')
+      .in('auth_id', userIds);
     
-    const transformedData = data?.map(item => ({
-      id: item.id,
-      user_id: item.user_id,
-      email: item.user_profiles?.email || '',
-      full_name: item.user_profiles?.full_name || null,
-      role: item.role
-    })) || [];
+    if (profilesError) throw profilesError;
+    
+    // Combine the data
+    const transformedData = projectUsers.map(user => {
+      const profile = userProfiles?.find(profile => profile.auth_id === user.user_id);
+      return {
+        id: user.id,
+        user_id: user.user_id,
+        email: profile?.email || '',
+        full_name: profile?.full_name || null,
+        role: user.role
+      };
+    });
     
     return transformedData;
   } catch (error: any) {

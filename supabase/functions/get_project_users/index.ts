@@ -25,30 +25,46 @@ serve(async (req) => {
     
     console.log(`Fetching users for project: ${projectId || 'all projects'}`);
     
-    // Query the project_users table directly with a join to user_profiles
-    const { data, error } = await supabase
+    if (!projectId) {
+      throw new Error('Project ID is required');
+    }
+    
+    // First, fetch the project users
+    const { data: projectUsers, error: projectUsersError } = await supabase
       .from('project_users')
-      .select(`
-        id, 
-        user_id, 
-        role,
-        user_profiles!user_id(email, full_name)
-      `)
+      .select('id, user_id, role')
       .eq('project_id', projectId);
     
-    if (error) {
-      console.error(`Error fetching project users: ${error.message}`);
-      throw error;
+    if (projectUsersError) throw projectUsersError;
+    
+    // If no users, return empty array
+    if (!projectUsers || projectUsers.length === 0) {
+      return new Response(
+        JSON.stringify({ success: true, data: [] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
-
-    // Transform the data to the expected format
-    const transformedData = data.map(item => ({
-      id: item.id,
-      user_id: item.user_id,
-      email: item.user_profiles?.email || '',
-      full_name: item.user_profiles?.full_name || null,
-      role: item.role
-    }));
+    
+    // Then, fetch the user profiles for those users
+    const userIds = projectUsers.map(user => user.user_id);
+    const { data: userProfiles, error: profilesError } = await supabase
+      .from('user_profiles')
+      .select('auth_id, email, full_name')
+      .in('auth_id', userIds);
+    
+    if (profilesError) throw profilesError;
+    
+    // Combine the data
+    const transformedData = projectUsers.map(user => {
+      const profile = userProfiles?.find(profile => profile.auth_id === user.user_id);
+      return {
+        id: user.id,
+        user_id: user.user_id,
+        email: profile?.email || '',
+        full_name: profile?.full_name || null,
+        role: user.role
+      };
+    });
     
     console.log(`Successfully fetched ${transformedData.length} project users`);
     
