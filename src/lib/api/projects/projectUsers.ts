@@ -7,29 +7,38 @@ import { ProjectRole } from '@/integrations/supabase/project-types';
  */
 export async function getProjectUsers(projectId: string) {
   try {
-    const { data, error } = await supabase
+    // First get the project users
+    const { data: projectUsers, error: projectUsersError } = await supabase
       .from('project_users')
-      .select(`
-        id,
-        user_id,
-        role,
-        user_profiles:user_id (
-          email,
-          full_name
-        )
-      `)
+      .select('id, user_id, role')
       .eq('project_id', projectId);
     
-    if (error) throw error;
+    if (projectUsersError) throw projectUsersError;
     
-    // Transform the data to a more usable format
-    const users = data?.map(user => ({
-      id: user.id,
-      user_id: user.user_id,
-      email: user.user_profiles?.email || '',
-      full_name: user.user_profiles?.full_name || null,
-      role: user.role
-    })) || [];
+    if (!projectUsers || projectUsers.length === 0) {
+      return [];
+    }
+    
+    // Then get the user profiles separately
+    const userIds = projectUsers.map(user => user.user_id);
+    const { data: userProfiles, error: profilesError } = await supabase
+      .from('user_profiles')
+      .select('auth_id, email, full_name')
+      .in('auth_id', userIds);
+    
+    if (profilesError) throw profilesError;
+    
+    // Now combine the data
+    const users = projectUsers.map(user => {
+      const profile = userProfiles?.find(profile => profile.auth_id === user.user_id);
+      return {
+        id: user.id,
+        user_id: user.user_id,
+        email: profile?.email || '',
+        full_name: profile?.full_name || null,
+        role: user.role as ProjectRole
+      };
+    });
     
     return users;
   } catch (error: any) {
