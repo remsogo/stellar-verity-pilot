@@ -7,40 +7,15 @@ import { ProjectRole } from '@/integrations/supabase/project-types';
  */
 export async function getProjectUsers(projectId: string) {
   try {
-    // First get the project users
-    const { data: projectUsers, error: projectUsersError } = await supabase
-      .from('project_users')
-      .select('id, user_id, role')
-      .eq('project_id', projectId);
+    // Use the database function to get project users with their profiles
+    const { data, error } = await supabase
+      .rpc('get_project_users', {
+        p_project_id: projectId
+      });
     
-    if (projectUsersError) throw projectUsersError;
+    if (error) throw error;
     
-    if (!projectUsers || projectUsers.length === 0) {
-      return [];
-    }
-    
-    // Then get the user profiles separately
-    const userIds = projectUsers.map(user => user.user_id);
-    const { data: userProfiles, error: profilesError } = await supabase
-      .from('user_profiles')
-      .select('auth_id, email, full_name')
-      .in('auth_id', userIds);
-    
-    if (profilesError) throw profilesError;
-    
-    // Now combine the data
-    const users = projectUsers.map(user => {
-      const profile = userProfiles?.find(profile => profile.auth_id === user.user_id);
-      return {
-        id: user.id,
-        user_id: user.user_id,
-        email: profile?.email || '',
-        full_name: profile?.full_name || null,
-        role: user.role as ProjectRole
-      };
-    });
-    
-    return users;
+    return data || [];
   } catch (error: any) {
     console.error('Error fetching project users:', error);
     throw error;
@@ -75,13 +50,11 @@ export async function addUserToProject(projectId: string, email: string, role: P
     
     if (error) throw error;
     
-    const profileData = userProfile as { email?: string; full_name?: string } || {};
-    
     return {
       id: data.id,
       user_id: data.user_id,
-      email: profileData.email || email,
-      full_name: profileData.full_name || null,
+      email: userProfile?.email || email,
+      full_name: userProfile?.full_name || null,
       role: data.role
     };
   } catch (error: any) {

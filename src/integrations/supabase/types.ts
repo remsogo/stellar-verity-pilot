@@ -726,6 +726,16 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_project_users: {
+        Args: { p_project_id: string }
+        Returns: {
+          id: string
+          user_id: string
+          email: string
+          full_name: string
+          role: string
+        }[]
+      }
       get_test_cycle_by_id: {
         Args: { p_cycle_id: string }
         Returns: {
