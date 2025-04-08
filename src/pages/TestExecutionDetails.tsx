@@ -31,7 +31,7 @@ interface ExecutionStepWithDetails {
 }
 
 const TestExecutionDetails = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [execution, setExecution] = useState<TestExecution | null>(null);
   const [executionSteps, setExecutionSteps] = useState<ExecutionStep[]>([]);
@@ -97,26 +97,32 @@ const TestExecutionDetails = () => {
         setExecution(executionObj);
 
         // Fetch execution steps with test step details using the stored procedure
+        // We use a type assertion for the parameters to avoid the 'never' type error
         const { data, error: stepsError } = await supabase
-          .rpc('get_execution_steps_with_details', { execution_id_param: id });
+          .rpc('get_execution_steps_with_details', { 
+            execution_id_param: id as string 
+          });
 
         if (stepsError) {
           console.error("Error fetching steps:", stepsError);
           toast.error("Could not load execution step details");
-        } else if (data && Array.isArray(data) && data.length > 0) {
-          const stepsData = data as ExecutionStepWithDetails[];
-          const formattedSteps: ExecutionStep[] = stepsData.map((step) => ({
-            id: step.id,
-            test_step_id: step.test_step_id,
-            execution_id: step.execution_id,
-            status: step.status as Status,
-            actual_result: step.actual_result,
-            step_order: step.step_order,
-            description: step.description || "No description",
-            expected_result: step.expected_result || "No expected result"
-          }));
-          
-          setExecutionSteps(formattedSteps);
+        } else if (data) {
+          // Ensure data is an array before proceeding
+          const stepsArray = Array.isArray(data) ? data : [];
+          if (stepsArray.length > 0) {
+            const formattedSteps: ExecutionStep[] = stepsArray.map((step: ExecutionStepWithDetails) => ({
+              id: step.id,
+              test_step_id: step.test_step_id,
+              execution_id: step.execution_id,
+              status: step.status as Status,
+              actual_result: step.actual_result,
+              step_order: step.step_order,
+              description: step.description || "No description",
+              expected_result: step.expected_result || "No expected result"
+            }));
+            
+            setExecutionSteps(formattedSteps);
+          }
         }
       } catch (error) {
         console.error("Error fetching execution details:", error);
