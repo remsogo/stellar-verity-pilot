@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSelectedProject } from "@/hooks/use-selected-project";
+import { toast } from "@/components/ui/use-toast";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -19,6 +20,19 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   const isExemptPath = exemptPaths.some(path => location.pathname.startsWith(path));
 
+  // Paths that require a selected project
+  const projectRequiredPaths = [
+    '/test-cases/new',
+    '/test-cases/',
+    '/test-execution/',
+    '/defects/',
+    '/parameters'
+  ];
+
+  const requiresProject = projectRequiredPaths.some(path => 
+    location.pathname.startsWith(path) || location.pathname === '/'
+  );
+
   // Add console logs to help debug
   useEffect(() => {
     console.log('ProtectedRoute rendered', { 
@@ -27,9 +41,10 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       selectedProjectId, 
       isProjectLoading,
       path: location.pathname,
-      isExemptPath
+      isExemptPath,
+      requiresProject
     });
-  }, [isAuthenticated, isLoading, selectedProjectId, isProjectLoading, location.pathname, isExemptPath]);
+  }, [isAuthenticated, isLoading, selectedProjectId, isProjectLoading, location.pathname, isExemptPath, requiresProject]);
 
   useEffect(() => {
     let mounted = true;
@@ -71,7 +86,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
-  // Redirect to auth if not authenticated - IMMEDIATE REDIRECT
+  // Redirect to auth if not authenticated
   if (!isAuthenticated) {
     console.log('User not authenticated, redirecting to /auth');
     return <Navigate to="/auth" replace />;
@@ -87,9 +102,14 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <>{children}</>;
   }
 
-  // Redirect to projects page if no project is selected and we're on a protected path
-  if (!selectedProjectId) {
+  // Redirect to projects page if no project is selected and we're on a path that requires a project
+  if (!selectedProjectId && requiresProject) {
     console.log('Redirecting to projects page because no project is selected');
+    toast({
+      title: "No Project Selected",
+      description: "Please select or create a project first.",
+      variant: "destructive",
+    });
     return <Navigate to="/projects" replace />;
   }
 

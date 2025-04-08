@@ -1,10 +1,21 @@
 
 import { MainLayout } from "@/components/Layout/MainLayout";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { TestCaseForm as TestCaseFormComponent } from "@/components/TestCases/TestCaseForm";
+import { useSelectedProject } from "@/hooks/use-selected-project";
+import { useEffect } from "react";
 
 const TestCaseFormPage = () => {
   const { id } = useParams<{ id: string }>();
+  const { selectedProjectId } = useSelectedProject();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Extra check to redirect if no project is selected
+    if (!selectedProjectId) {
+      navigate('/projects');
+    }
+  }, [selectedProjectId, navigate]);
 
   return (
     <MainLayout 

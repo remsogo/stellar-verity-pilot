@@ -30,15 +30,36 @@ export const useTestCaseForm = (id?: string) => {
 
   // Fetch test case details if ID is provided
   useEffect(() => {
-    if (id) {
+    if (id && selectedProjectId) {
       fetchTestCase(id);
     }
-  }, [id]);
+  }, [id, selectedProjectId]);
 
   const fetchTestCase = async (testCaseId: string) => {
+    if (!selectedProjectId) {
+      toast({
+        title: "No Project Selected",
+        description: "You must select a project to fetch test case details.",
+        variant: "destructive",
+      });
+      navigate('/projects');
+      return;
+    }
+
     setIsLoading(true);
     try {
       const testCase = await getTestCase(testCaseId);
+      
+      // Verify this test case belongs to the selected project
+      if (testCase.project_id !== selectedProjectId) {
+        toast({
+          title: "Access Error",
+          description: "This test case belongs to a different project.",
+          variant: "destructive",
+        });
+        navigate('/test-cases');
+        return;
+      }
       
       setValue("title", testCase.title);
       setValue("description", testCase.description || "");
@@ -96,10 +117,11 @@ export const useTestCaseForm = (id?: string) => {
   const onSubmit = async (data: TestCaseFormValues) => {
     if (!selectedProjectId) {
       toast({
-        title: "Error",
+        title: "No Project Selected",
         description: "You must select a project first",
         variant: "destructive",
       });
+      navigate('/projects');
       return;
     }
 
