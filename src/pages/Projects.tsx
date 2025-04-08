@@ -28,19 +28,6 @@ const Projects = () => {
     meta: {
       onError: (error: any) => {
         console.error('Error fetching projects:', error);
-        
-        const isRecursionError = error.message && 
-          error.message.includes('infinite recursion');
-        
-        toast({
-          title: isRecursionError 
-            ? "Database Policy Error" 
-            : "Error fetching projects",
-          description: isRecursionError
-            ? "There's a known issue with the database that needs to be fixed."
-            : error.message || "There was an error fetching your projects",
-          variant: "destructive"
-        });
       }
     }
   });
@@ -72,11 +59,6 @@ const Projects = () => {
   if (!user) {
     return null; // Will redirect in useEffect
   }
-
-  // Check if error is specifically the infinite recursion error
-  const isRecursionError = error && 
-    error instanceof Error && 
-    error.message.includes('infinite recursion');
 
   return (
     <div className="flex h-screen overflow-hidden w-full bg-gradient-to-br from-background to-background/80">
@@ -110,31 +92,25 @@ const Projects = () => {
                   ))}
                 </div>
               </div>
-            ) : isRecursionError ? (
-              <Card className="border-destructive bg-destructive/10 mb-4">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5 text-destructive" />
-                    <h3 className="text-lg font-medium text-destructive">Database Policy Error</h3>
-                  </div>
-                  <p className="text-muted-foreground mt-2 mb-4">
-                    There's an issue with the database policies causing infinite recursion errors.
-                    Please contact your administrator to fix this issue.
-                  </p>
-                </CardContent>
-              </Card>
             ) : error ? (
               <div className="text-center py-10">
-                <h3 className="text-lg font-medium text-destructive">Error loading projects</h3>
-                <p className="text-muted-foreground mt-2 mb-4">
-                  There was a problem loading your projects.
-                </p>
-                <Button 
-                  onClick={() => queryClient.invalidateQueries({ queryKey: ['projects'] })}
-                  variant="outline"
-                >
-                  Try Again
-                </Button>
+                <Card className="border-destructive bg-destructive/10 mb-4">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-5 w-5 text-destructive" />
+                      <h3 className="text-lg font-medium text-destructive">Error loading projects</h3>
+                    </div>
+                    <p className="text-muted-foreground mt-2 mb-4">
+                      {error instanceof Error ? error.message : "There was a problem loading your projects."}
+                    </p>
+                    <Button 
+                      onClick={() => queryClient.invalidateQueries({ queryKey: ['projects'] })}
+                      variant="outline"
+                    >
+                      Try Again
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
             ) : (
               <ProjectsList projects={projects || []} onDelete={handleProjectDelete} />

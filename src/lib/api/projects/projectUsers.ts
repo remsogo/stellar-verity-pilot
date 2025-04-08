@@ -16,6 +16,7 @@ interface ProjectUserData {
 export async function getProjectUsers(projectId: string) {
   try {
     // Call the get_project_users function directly as an RPC
+    // This leverages the security definer function to avoid the infinite recursion issue
     const { data, error } = await supabase.rpc('get_project_users', {
       p_project_id: projectId
     });

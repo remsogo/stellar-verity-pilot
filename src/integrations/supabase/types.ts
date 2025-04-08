@@ -686,6 +686,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_user_project_admin: {
+        Args: { user_uuid: string; project_uuid: string }
+        Returns: boolean
+      }
+      check_user_project_membership: {
+        Args: { user_uuid: string; project_uuid: string }
+        Returns: boolean
+      }
       create_test_cycle: {
         Args: { cycle_data: Json }
         Returns: {
