@@ -69,7 +69,12 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
         });
         navigate(`/projects/${projectId}`);
       } else {
+        // Add debug logging
+        console.log('Starting project creation:', { name, description });
+        
         const project = await createProject(name, description);
+        
+        console.log('Project creation completed:', project);
         
         if (project) {
           toast({
@@ -170,3 +175,5 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
     </form>
   );
 };
+
+export default ProjectForm;

@@ -61,6 +61,7 @@ export async function getProject(id: string): Promise<Project | null> {
 
 /**
  * Creates a new project and adds current user as an owner
+ * Uses a two-step process to avoid infinite recursion issues with RLS
  */
 export async function createProject(name: string, description?: string): Promise<Project | null> {
   try {
@@ -78,6 +79,7 @@ export async function createProject(name: string, description?: string): Promise
       .single();
     
     if (projectError) {
+      console.error('Error creating project:', projectError);
       throw projectError;
     }
     
@@ -85,23 +87,40 @@ export async function createProject(name: string, description?: string): Promise
       throw new Error('Failed to create project');
     }
     
-    // Now use our custom function to add the owner
-    const { error: ownerError } = await supabase
-      .rpc('add_project_owner', { 
-        project_id: projectData.id,
-        owner_id: session.user.id 
-      });
+    console.log('Project created successfully:', projectData);
     
-    if (ownerError) {
+    try {
+      // Now use the add_project_owner function to bypass RLS
+      const { error: ownerError } = await supabase
+        .rpc('add_project_owner', { 
+          project_id: projectData.id,
+          owner_id: session.user.id 
+        });
+      
+      if (ownerError) {
+        console.error('Failed to add project owner:', ownerError);
+        throw ownerError;
+      }
+      
+      console.log('Owner added successfully to project:', projectData.id);
+      return projectData as Project;
+      
+    } catch (ownerError: any) {
       // Clean up if adding the owner failed
-      console.error('Failed to add project owner:', ownerError);
-      await supabase.from('projects').delete().eq('id', projectData.id);
-      throw ownerError;
+      console.error('Error adding project owner:', ownerError);
+      
+      try {
+        // Attempt to delete the project since owner association failed
+        await supabase.from('projects').delete().eq('id', projectData.id);
+        console.log('Project deleted after owner association failed');
+      } catch (deleteError) {
+        console.error('Error deleting project after failed owner association:', deleteError);
+      }
+      
+      throw new Error(`Failed to add you as project owner: ${ownerError.message}`);
     }
-    
-    return projectData as Project;
   } catch (error: any) {
-    console.error('Error creating project:', error);
+    console.error('Error in createProject flow:', error);
     throw error;
   }
 }
