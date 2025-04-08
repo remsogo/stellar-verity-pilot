@@ -90,17 +90,11 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
       }
     } catch (error: any) {
       console.error('Error submitting project:', error);
-      const errorMessage = error.message || 'An unexpected error occurred';
-      setError(errorMessage);
-      
-      // More specific error message for recursion issues
-      if (errorMessage.includes('infinite recursion')) {
-        setError('There was a database policy error. Please try again or contact support.');
-      }
+      setError(error.message || 'An unexpected error occurred');
       
       toast({
         title: `Error ${isEditing ? 'updating' : 'creating'} project`,
-        description: errorMessage,
+        description: error.message,
         variant: 'destructive',
       });
     } finally {

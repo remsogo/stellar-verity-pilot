@@ -8,7 +8,7 @@ import { Project } from '@/types/project';
  */
 export async function getProjects(): Promise<Project[]> {
   try {
-    // Use the get_user_projects function we created
+    // Use the get_user_projects security definer function we created
     const { data, error } = await supabase
       .rpc('get_user_projects');
     
@@ -30,14 +30,7 @@ export async function getProjects(): Promise<Project[]> {
  */
 export async function getProject(id: string): Promise<Project | null> {
   try {
-    // Get the current user ID
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-    
-    // Use is_member_of_project function to check access
+    // Check if user is a member of the project first
     const { data: hasAccess, error: accessError } = await supabase
       .rpc('is_member_of_project', { project_id: id });
     
@@ -77,7 +70,7 @@ export async function createProject(name: string, description?: string): Promise
       throw new Error('Authentication required to create a project');
     }
     
-    // First create the project
+    // Create the project - our trigger will handle the owner assignment
     const { data: projectData, error: projectError } = await supabase
       .from('projects')
       .insert([{ name, description }])
@@ -87,14 +80,6 @@ export async function createProject(name: string, description?: string): Promise
     if (projectError) {
       throw projectError;
     }
-    
-    if (!projectData) {
-      throw new Error('Failed to create project');
-    }
-    
-    // Now manually add the user as an owner
-    // We're not using RPC for this since we want the handle_new_project trigger to handle it
-    // This avoids the infinite recursion issue
     
     return projectData as Project;
   } catch (error: any) {
@@ -141,12 +126,4 @@ export async function deleteProject(id: string): Promise<boolean> {
     console.error('Error deleting project:', error);
     throw error;
   }
-}
-
-/**
- * Get the current authenticated user
- */
-export async function getCurrentUser() {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
 }
