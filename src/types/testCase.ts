@@ -48,6 +48,9 @@ export interface TestCollection {
   isSmartCollection: boolean;
   criteria?: Record<string, any>; // For smart collections
   testCaseIds: string[];
+  project_id: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Complete TestCase type with tags for organization

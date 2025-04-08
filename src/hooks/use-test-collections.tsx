@@ -56,11 +56,23 @@ export const useTestCollections = (projectId: string | undefined) => {
     });
   };
 
+  // Create a new collection
+  const createCollection = async (collection: Partial<TestCollection>): Promise<void> => {
+    // This will be implemented when needed
+  };
+
+  // Add test case to collection
+  const addTestToCollection = async (collectionId: string, testCaseId: string): Promise<void> => {
+    // This will be implemented when needed
+  };
+
   return { 
     collections, 
     isLoading, 
     refreshCollections: fetchCollections,
     filterByTag,
-    filterByCriteria
+    filterByCriteria,
+    createCollection,
+    addTestToCollection
   };
 };

@@ -18,9 +18,7 @@ export const updateTestCase = async (testCase: Partial<TestCase> & { id: string 
     estimate_time: testCase.estimate_time,
     preconditions: testCase.preconditions,
     requirements: testCase.requirements,
-    tags: testCase.tags,
-    is_parent: testCase.is_parent,
-    parent_id: testCase.parent_id
+    tags: testCase.tags
   };
 
   const { data, error } = await supabase

@@ -1,4 +1,3 @@
-
 import { DashboardStat, TestCase, TestExecution, TestTrend } from "@/types";
 
 // Dashboard Stats
@@ -76,7 +75,6 @@ export const testCases: TestCase[] = [
       },
     ],
     tags: ["authentication", "security", "ui"],
-    children: [], // Ajout de la propriété children
   },
   {
     id: "tc-002",
@@ -112,7 +110,6 @@ export const testCases: TestCase[] = [
       },
     ],
     tags: ["registration", "user-management", "ui"],
-    children: [], // Ajout de la propriété children
   },
   {
     id: "tc-003",
@@ -148,7 +145,6 @@ export const testCases: TestCase[] = [
       },
     ],
     tags: ["password", "security", "user-management"],
-    children: [], // Ajout de la propriété children
   },
   {
     id: "tc-004",
@@ -184,7 +180,6 @@ export const testCases: TestCase[] = [
       },
     ],
     tags: ["data", "export", "reporting"],
-    children: [], // Ajout de la propriété children
   },
   {
     id: "tc-005",
@@ -220,7 +215,6 @@ export const testCases: TestCase[] = [
       },
     ],
     tags: ["user-management", "profile", "settings"],
-    children: [], // Ajout de la propriété children
   },
 ];
 

@@ -8,7 +8,6 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedProject } from "@/hooks/use-selected-project";
 import { TestCaseBasicInfo } from "./TestCaseBasicInfo";
-import { TestCaseRelationship } from "./TestCaseRelationship";
 import { TestCaseSteps } from "./TestCaseSteps";
 import { TestCaseMetadata } from "./TestCaseMetadata";
 import { TestCaseButtons } from "./TestCaseButtons";
@@ -16,8 +15,8 @@ import { TestCaseFormValues, testCaseSchema, convertFormPriorityToApiPriority, c
 import { getTestCase } from "@/lib/api/testCases/getTestCase";
 import { createTestCase } from "@/lib/api/testCases/createTestCase";
 import { updateTestCase } from "@/lib/api/testCases/updateTestCase";
-import { useLoadParentTestCases } from "@/hooks/use-load-parent-test-cases";
 import { Priority, Status } from "@/types";
+import { TestCaseTags } from "./TestCaseTags";
 
 interface TestCaseFormProps {
   id?: string;
@@ -28,15 +27,13 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { selectedProjectId } = useSelectedProject();
-  const { parentTestCases } = useLoadParentTestCases(selectedProjectId);
 
   const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<TestCaseFormValues>({
     resolver: zodResolver(testCaseSchema),
     defaultValues: {
       priority: "Medium",
       status: "Draft",
-      is_parent: false,
-      parent_id: null,
+      tags: []
     },
   });
 
@@ -84,8 +81,8 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
       }
       setValue("status", formattedStatus);
       
-      setValue("is_parent", Boolean(testCase.is_parent));
-      setValue("parent_id", testCase.parent_id || null);
+      // Set tags
+      setValue("tags", testCase.tags || []);
       
     } catch (error: any) {
       toast({
@@ -110,10 +107,6 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
 
     setIsLoading(true);
     try {
-      if (data.is_parent) {
-        data.parent_id = null;
-      }
-      
       // Convert form values to API types
       const priorityValue: Priority = convertFormPriorityToApiPriority(data.priority);
       const statusValue: Status = convertFormStatusToApiStatus(data.status);
@@ -126,9 +119,7 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
         status: statusValue,
         author: "Current User",
         project_id: selectedProjectId,
-        is_parent: data.is_parent,
-        parent_id: data.parent_id,
-        tags: [] as string[]
+        tags: data.tags || []
       };
       
       if (id) {
@@ -174,11 +165,9 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
             isLoading={isLoading} 
           />
 
-          <TestCaseRelationship 
+          <TestCaseTags 
             control={control}
             isLoading={isLoading}
-            parentTestCases={parentTestCases}
-            watch={watch}
           />
 
           <TestCaseSteps 

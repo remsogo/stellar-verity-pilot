@@ -15,5 +15,15 @@ export const getTestCollections = async (projectId: string): Promise<TestCollect
     throw new Error(`Error fetching test collections: ${error.message}`);
   }
 
-  return data as TestCollection[] || [];
+  return (data || []).map(collection => ({
+    id: collection.id,
+    name: collection.name,
+    description: collection.description,
+    isSmartCollection: collection.is_smart_collection,
+    criteria: collection.criteria,
+    testCaseIds: collection.test_case_ids || [],
+    project_id: collection.project_id,
+    created_at: collection.created_at,
+    updated_at: collection.updated_at
+  }));
 };

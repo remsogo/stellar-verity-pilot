@@ -19,9 +19,7 @@ export const createTestCase = async (testCase: Partial<TestCase>): Promise<TestC
     automated: testCase.automated || false,
     preconditions: testCase.preconditions,
     requirements: testCase.requirements,
-    tags: testCase.tags || [],
-    is_parent: testCase.is_parent || false,
-    parent_id: testCase.parent_id
+    tags: testCase.tags || []
   };
 
   const { data, error } = await supabase

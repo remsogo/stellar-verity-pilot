@@ -10,8 +10,7 @@ export const testCaseSchema = z.object({
   expected_result: z.string().min(5, { message: "Expected result must be at least 5 characters." }),
   priority: z.enum(["High", "Medium", "Low"]).default("Medium"),
   status: z.enum(["Draft", "Ready", "Blocked"]).default("Draft"),
-  parent_id: z.string().nullable().optional(),
-  is_parent: z.boolean().default(false),
+  tags: z.array(z.string()).default([]),
 });
 
 export type TestCaseFormValues = z.infer<typeof testCaseSchema>;
