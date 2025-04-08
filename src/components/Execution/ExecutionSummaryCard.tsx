@@ -16,10 +16,10 @@ export const ExecutionSummaryCard: React.FC<ExecutionSummaryCardProps> = ({ exec
   };
 
   const calculateDuration = () => {
-    if (!execution.start_time || !execution.end_time) return 'In progress';
+    if (!execution.startTime || !execution.endTime) return 'In progress';
     
-    const start = new Date(execution.start_time);
-    const end = new Date(execution.end_time);
+    const start = new Date(execution.startTime);
+    const end = new Date(execution.endTime);
     const durationMs = end.getTime() - start.getTime();
     
     const minutes = Math.floor(durationMs / 60000);
@@ -52,20 +52,20 @@ export const ExecutionSummaryCard: React.FC<ExecutionSummaryCardProps> = ({ exec
           
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Build Version</span>
-            <span className="text-sm font-medium">{execution.build_version}</span>
+            <span className="text-sm font-medium">{execution.buildVersion || 'N/A'}</span>
           </div>
           
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Started</span>
             <span className="text-sm font-medium">
-              {execution.start_time ? formatDateTime(execution.start_time) : 'Not started'}
+              {execution.startTime ? formatDateTime(execution.startTime) : 'Not started'}
             </span>
           </div>
           
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Completed</span>
             <span className="text-sm font-medium">
-              {execution.end_time ? formatDateTime(execution.end_time) : 'In progress'}
+              {execution.endTime ? formatDateTime(execution.endTime) : 'In progress'}
             </span>
           </div>
           

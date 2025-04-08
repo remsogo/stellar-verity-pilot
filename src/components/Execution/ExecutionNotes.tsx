@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent } from 'react';
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { TestExecution } from "@/types";
@@ -7,16 +7,12 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
 interface ExecutionNotesProps {
-  execution: TestExecution;
+  notes: string;
+  onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
 }
 
-export const ExecutionNotes: React.FC<ExecutionNotesProps> = ({ execution }) => {
-  const [notes, setNotes] = useState(execution.notes || '');
+export const ExecutionNotes: React.FC<ExecutionNotesProps> = ({ notes, onChange }) => {
   const { toast } = useToast();
-  
-  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setNotes(e.target.value);
-  };
   
   const handleSaveNotes = () => {
     // In a real app, you would save the notes to the database
@@ -35,7 +31,7 @@ export const ExecutionNotes: React.FC<ExecutionNotesProps> = ({ execution }) => 
         <Textarea
           placeholder="Add notes about this execution..."
           value={notes}
-          onChange={handleNotesChange}
+          onChange={onChange}
           className="min-h-24 bg-background"
         />
         <div className="flex justify-end">

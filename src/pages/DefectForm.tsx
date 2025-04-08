@@ -78,10 +78,14 @@ const DefectFormPage = () => {
 
     // Ensure required fields are filled
     const formData = {
-      ...values,
       title: values.title || '',
       reporter: user?.email || values.reporter || '',
       project_id: values.project_id || projects[0].id,
+      description: values.description || '',
+      status: values.status || 'open', // Ensuring status is not optional
+      severity: values.severity || 'medium', // Ensuring severity is not optional
+      assignee: values.assignee,
+      test_execution_id: values.test_execution_id
     };
 
     if (id) {

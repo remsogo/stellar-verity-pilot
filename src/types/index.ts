@@ -41,6 +41,7 @@ export type TestExecution = {
   startTime: string;
   endTime?: string;
   environment: string;
+  buildVersion?: string;
   notes?: string;
   defects: string[];
 };

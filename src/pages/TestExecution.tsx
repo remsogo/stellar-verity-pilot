@@ -77,7 +77,18 @@ const TestExecution = () => {
     );
   }
 
-  const currentStep = testCase.steps?.[currentStepIndex];
+  // Create a mock execution for the ExecutionHeader component
+  const mockExecution = {
+    id: id || 'temp-id',
+    testCaseId: testCase.id,
+    testCase: testCase as TestCase,
+    executor: 'Current User',
+    status: 'pending',
+    startTime: new Date().toISOString(),
+    environment: 'Test',
+    notes: notes,
+    defects: []
+  };
 
   return (
     <MainLayout 
@@ -86,12 +97,12 @@ const TestExecution = () => {
     >
       <div className="space-y-4">
         <Card className="card-futuristic">
-          <ExecutionHeader testCase={testCase as TestCase} />
+          <ExecutionHeader execution={mockExecution} />
           
           <div className="p-6 pt-0">
-            {currentStep && (
+            {testCase.steps && testCase.steps[currentStepIndex] && (
               <TestExecutionStep
-                step={currentStep}
+                step={testCase.steps[currentStepIndex]}
                 stepNumber={currentStepIndex + 1}
                 totalSteps={testCase.steps?.length || 0}
                 onStepResult={handleStepResult}
