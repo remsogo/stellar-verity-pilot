@@ -150,6 +150,77 @@ export type Database = {
           },
         ]
       }
+      parameter_values: {
+        Row: {
+          context_type: string
+          created_at: string
+          entity_id: string
+          id: string
+          parameter_id: string
+          updated_at: string
+          value: Json | null
+        }
+        Insert: {
+          context_type: string
+          created_at?: string
+          entity_id: string
+          id?: string
+          parameter_id: string
+          updated_at?: string
+          value?: Json | null
+        }
+        Update: {
+          context_type?: string
+          created_at?: string
+          entity_id?: string
+          id?: string
+          parameter_id?: string
+          updated_at?: string
+          value?: Json | null
+        }
+        Relationships: []
+      }
+      project_parameters: {
+        Row: {
+          created_at: string
+          default_value: Json | null
+          description: string | null
+          id: string
+          name: string
+          param_type: string
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_value?: Json | null
+          description?: string | null
+          id?: string
+          name: string
+          param_type: string
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_value?: Json | null
+          description?: string | null
+          id?: string
+          name?: string
+          param_type?: string
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_parameters_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_users: {
         Row: {
           created_at: string
@@ -249,6 +320,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_parameters: {
+        Row: {
+          created_at: string
+          default_value: Json | null
+          description: string | null
+          id: string
+          name: string
+          param_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_value?: Json | null
+          description?: string | null
+          id?: string
+          name: string
+          param_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_value?: Json | null
+          description?: string | null
+          id?: string
+          name?: string
+          param_type?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       test_cases: {
         Row: {
@@ -669,7 +770,6 @@ export type Database = {
           email: string
           full_name: string
           id: string
-          role: string
           updated_at: string
         }
         Insert: {
@@ -679,7 +779,6 @@ export type Database = {
           email: string
           full_name: string
           id?: string
-          role: string
           updated_at?: string
         }
         Update: {
@@ -689,7 +788,6 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
-          role?: string
           updated_at?: string
         }
         Relationships: []
@@ -729,6 +827,19 @@ export type Database = {
         Args: { p_cycle_id: string }
         Returns: undefined
       }
+      get_project_parameters: {
+        Args: { p_project_id: string }
+        Returns: {
+          created_at: string
+          default_value: Json | null
+          description: string | null
+          id: string
+          name: string
+          param_type: string
+          project_id: string
+          updated_at: string
+        }[]
+      }
       get_project_test_cycles: {
         Args: { p_project_id: string }
         Returns: {
@@ -755,6 +866,18 @@ export type Database = {
           email: string
           full_name: string
           role: string
+        }[]
+      }
+      get_system_parameters: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          default_value: Json | null
+          description: string | null
+          id: string
+          name: string
+          param_type: string
+          updated_at: string
         }[]
       }
       get_test_cycle_by_id: {
@@ -801,6 +924,10 @@ export type Database = {
         Args: { project_id: string; user_id: string }
         Returns: boolean
       }
+      remove_user_from_project: {
+        Args: { p_project_id: string; p_user_id: string }
+        Returns: boolean
+      }
       update_test_cycle: {
         Args: { cycle_data: Json }
         Returns: {
@@ -818,6 +945,10 @@ export type Database = {
           test_plan_id: string
           updated_at: string
         }
+      }
+      update_user_role: {
+        Args: { p_project_id: string; p_user_id: string; p_role: string }
+        Returns: boolean
       }
     }
     Enums: {
