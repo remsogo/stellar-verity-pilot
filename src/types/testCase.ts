@@ -57,7 +57,8 @@ export interface BaseTestCase {
 
 // Complete TestCase type with optional children array
 export type TestCase = BaseTestCase & {
-  children?: TestCase[]; // Array of child test cases
+  // Using a non-generic type for children to avoid circular references
+  children?: Array<BaseTestCase & { children_ids?: string[] }>;
   children_ids?: string[]; // Using children_ids to store references
 };
 

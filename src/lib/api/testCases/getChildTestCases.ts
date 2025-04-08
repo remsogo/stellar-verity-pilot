@@ -1,12 +1,27 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { BaseTestCase } from "@/types/testCase";
 
 /**
- * Type definition for child test cases using BaseTestCase
- * to avoid circular reference issues
+ * Simplified type for child test cases to avoid circular references
  */
-export type ChildTestCase = BaseTestCase;
+export interface ChildTestCase {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  priority: string;
+  author: string;
+  project_id: string;
+  estimate_time?: number;
+  automated?: boolean;
+  preconditions?: string;
+  requirements?: string[];
+  tags: string[];
+  is_parent?: boolean;
+  parent_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
 
 /**
  * Fetches all child test cases for a given parent test case
