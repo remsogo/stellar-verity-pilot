@@ -12,6 +12,7 @@ import { ExecutionDetailsContent } from "@/components/Execution/ExecutionDetails
 import { TestExecution, ExecutionStep } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { getExecutionDetails } from "@/lib/api/testExecutions";
 
 const TestExecutionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,18 +24,7 @@ const TestExecutionDetails = () => {
     queryKey: ["execution", id],
     queryFn: async () => {
       if (!id) throw new Error("No execution ID provided");
-      
-      const { data, error } = await supabase
-        .from("test_executions")
-        .select(`
-          *,
-          testCase:test_cases(*)
-        `)
-        .eq("id", id)
-        .single();
-      
-      if (error) throw error;
-      return data as TestExecution;
+      return await getExecutionDetails(id);
     },
     enabled: !!id
   });
