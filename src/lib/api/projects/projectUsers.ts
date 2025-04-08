@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectRole } from '@/integrations/supabase/project-types';
 
@@ -5,7 +6,7 @@ interface ProjectUserData {
   id: string;
   user_id: string;
   email: string;
-  full_name: string;
+  full_name: string | null;
   role: string;
 }
 
@@ -20,7 +21,7 @@ export async function getProjectUsers(projectId: string) {
         id, 
         user_id, 
         role,
-        user_profiles:user_id(email, full_name)
+        user_profiles!user_id(email, full_name)
       `)
       .eq('project_id', projectId);
     

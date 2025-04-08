@@ -32,7 +32,7 @@ serve(async (req) => {
         id, 
         user_id, 
         role,
-        user_profiles:user_id(email, full_name)
+        user_profiles!user_id(email, full_name)
       `)
       .eq('project_id', projectId);
     
