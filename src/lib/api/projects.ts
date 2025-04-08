@@ -4,7 +4,6 @@ import { ProjectRole } from '@/integrations/supabase/project-types';
 
 export async function getProjects() {
   try {
-    // This will only return projects the user has access to thanks to RLS
     const { data, error } = await supabase
       .from('projects')
       .select('*')
@@ -25,7 +24,6 @@ export async function getProjects() {
 
 export async function getProject(id: string) {
   try {
-    // This will only return the project if the user has access to it
     const { data, error } = await supabase
       .from('projects')
       .select('*')
@@ -47,7 +45,6 @@ export async function getProject(id: string) {
 
 export async function createProject(name: string, description?: string) {
   try {
-    // Get the current authenticated user's session
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
@@ -67,13 +64,12 @@ export async function createProject(name: string, description?: string) {
     return data;
   } catch (error: any) {
     console.error('Error creating project:', error);
-    throw error; // We rethrow to let the component handle the error
+    throw error;
   }
 }
 
 export async function updateProject(id: string, updates: { name?: string; description?: string }) {
   try {
-    // RLS policies will ensure the user has permission to update this project
     const { data, error } = await supabase
       .from('projects')
       .update(updates)
@@ -86,13 +82,12 @@ export async function updateProject(id: string, updates: { name?: string; descri
     return data;
   } catch (error: any) {
     console.error('Error updating project:', error);
-    throw error; // We rethrow to let the component handle the error
+    throw error;
   }
 }
 
 export async function deleteProject(id: string) {
   try {
-    // RLS policies will ensure the user has permission to delete this project
     const { error } = await supabase
       .from('projects')
       .delete()
@@ -103,32 +98,20 @@ export async function deleteProject(id: string) {
     return true;
   } catch (error: any) {
     console.error('Error deleting project:', error);
-    throw error; // We rethrow to let the component handle the error
+    throw error;
   }
 }
 
 export async function getProjectUsers(projectId: string) {
   try {
-    // Use a direct RPC call to the security definer function to avoid RLS recursion
-    const { data, error } = await supabase
-      .rpc('get_project_users', { p_project_id: projectId });
+    const { data, error } = await supabase.functions.invoke('get_project_users', {
+      method: 'GET',
+      query: { p_project_id: projectId }
+    });
     
     if (error) throw error;
     
-    // Format the response to a consistent structure
-    if (Array.isArray(data)) {
-      return data.map(item => {
-        return {
-          id: item.id,
-          user_id: item.user_id,
-          email: item.email || item.user_id.toString(),
-          full_name: item.full_name || null,
-          role: item.role
-        };
-      });
-    }
-    
-    return [];
+    return data?.data || [];
   } catch (error: any) {
     console.error('Error fetching project users:', error);
     throw error;
@@ -137,17 +120,14 @@ export async function getProjectUsers(projectId: string) {
 
 export async function addUserToProject(projectId: string, email: string, role: ProjectRole) {
   try {
-    // First find the user by email to get their ID
     const { data: userProfile, error: userError } = await supabase
       .from('user_profiles')
       .select('auth_id, email, full_name')
       .eq('email', email)
       .maybeSingle();
     
-    // If user doesn't exist by email, use the email as ID (it will be resolved when they sign up)
     const userId = userProfile?.auth_id || email;
     
-    // Add user to project
     const { data, error } = await supabase
       .from('project_users')
       .insert({
@@ -160,7 +140,6 @@ export async function addUserToProject(projectId: string, email: string, role: P
     
     if (error) throw error;
     
-    // Safely extract user profile data with type assertions
     const profileData = userProfile as { email?: string; full_name?: string } || {};
     
     return {
@@ -178,17 +157,18 @@ export async function addUserToProject(projectId: string, email: string, role: P
 
 export async function updateUserRole(projectId: string, userId: string, role: ProjectRole) {
   try {
-    // Use RPC to call the security definer function
-    const { data, error } = await supabase
-      .rpc('update_user_role', { 
+    const { data, error } = await supabase.functions.invoke('update_user_role', {
+      method: 'POST',
+      body: { 
         p_project_id: projectId, 
         p_user_id: userId, 
         p_role: role 
-      });
+      }
+    });
     
     if (error) throw error;
     
-    return data;
+    return data?.data;
   } catch (error: any) {
     console.error('Error updating user role:', error);
     throw error;
@@ -197,12 +177,13 @@ export async function updateUserRole(projectId: string, userId: string, role: Pr
 
 export async function removeUserFromProject(projectId: string, userId: string) {
   try {
-    // Use RPC to call the security definer function
-    const { data, error } = await supabase
-      .rpc('remove_user_from_project', { 
+    const { data, error } = await supabase.functions.invoke('remove_user_from_project', {
+      method: 'POST',
+      body: { 
         p_project_id: projectId, 
-        p_user_id: userId 
-      });
+        p_user_id: userId
+      }
+    });
     
     if (error) throw error;
     
