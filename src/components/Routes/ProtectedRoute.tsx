@@ -88,10 +88,16 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
-  // Redirect to auth if not authenticated
+  // Redirect to auth if not authenticated - always redirect for all routes
   if (!isAuthenticated) {
     console.log('User not authenticated, redirecting to /auth');
-    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
+    return <Navigate to="/auth" state={{ from: location.pathname !== "/auth" ? location.pathname : "/projects" }} replace />;
+  }
+
+  // For authenticated users, if they're on the root path, redirect to projects
+  if (location.pathname === "/") {
+    console.log('Redirecting to projects page from root');
+    return <Navigate to="/projects" replace />;
   }
 
   // Allow access to exempt paths without a selected project

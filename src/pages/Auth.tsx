@@ -223,7 +223,7 @@ const Auth = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         console.log("User already authenticated, redirecting to:", from);
-        navigate(from, { replace: true });
+        navigate(from === "/auth" ? "/projects" : from, { replace: true });
       } else {
         console.log("No active session found, showing login form");
       }
@@ -259,8 +259,9 @@ const Auth = () => {
       console.log("Login successful, refreshing project selection");
       await refreshProjectSelection();
       
-      console.log("Redirecting to:", from);
-      navigate(from, { replace: true });
+      // Always redirect to projects after login
+      console.log("Redirecting to projects after login");
+      navigate("/projects", { replace: true });
     } catch (error: any) {
       console.error("Login error:", error);
       toast.error(error.message || "Failed to login");
