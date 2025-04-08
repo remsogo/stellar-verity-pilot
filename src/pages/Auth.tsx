@@ -1,211 +1,13 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { z } from "zod";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { ThemeToggle } from "@/components/UI/ThemeToggle";
 import { useSelectedProject } from "@/hooks/use-selected-project";
-
-const loginSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-});
-
-const signupSchema = z.object({
-  fullName: z.string().min(2, { message: "Full name must be at least 2 characters" }),
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-  confirmPassword: z.string().min(6, { message: "Confirm password must be at least 6 characters" }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
-type SignupFormValues = z.infer<typeof signupSchema>;
-
-const LoginForm = ({ onSubmit, isLoading }: { onSubmit: (values: LoginFormValues) => void, isLoading: boolean }) => {
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>
-            Enter your credentials to access your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="name@example.com" 
-                    type="email"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="••••••••" 
-                    type="password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </CardContent>
-        <CardFooter>
-          <Button 
-            type="submit" 
-            className="w-full"
-            disabled={isLoading}
-          >
-            {isLoading ? "Logging in..." : "Login"}
-          </Button>
-        </CardFooter>
-      </form>
-    </Form>
-  );
-};
-
-const SignupForm = ({ onSubmit, isLoading }: { onSubmit: (values: SignupFormValues) => void, isLoading: boolean }) => {
-  const form = useForm<SignupFormValues>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: {
-      fullName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <CardHeader>
-          <CardTitle>Create an account</CardTitle>
-          <CardDescription>
-            Enter your details to create a new account
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <FormField
-            control={form.control}
-            name="fullName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Full Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="name@example.com" 
-                    type="email"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="••••••••" 
-                    type="password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="••••••••" 
-                    type="password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </CardContent>
-        <CardFooter>
-          <Button 
-            type="submit" 
-            className="w-full"
-            disabled={isLoading}
-          >
-            {isLoading ? "Creating account..." : "Create account"}
-          </Button>
-        </CardFooter>
-      </form>
-    </Form>
-  );
-};
+import { LoginForm, LoginFormValues } from "@/components/Auth/LoginForm";
+import { SignupForm, SignupFormValues } from "@/components/Auth/SignupForm";
+import { checkAuthSession, loginUser, signupUser } from "@/components/Auth/AuthService";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -220,7 +22,7 @@ const Auth = () => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const session = await checkAuthSession();
       if (session) {
         console.log("User already authenticated, redirecting to:", from);
         navigate(from === "/auth" ? "/projects" : from, { replace: true });
@@ -244,17 +46,7 @@ const Auth = () => {
   const handleLogin = async (values: LoginFormValues) => {
     setIsLoading(true);
     try {
-      console.log("Attempting login with:", values.email);
-      const { error } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      toast.success("Successfully logged in");
+      await loginUser(values);
       
       console.log("Login successful, refreshing project selection");
       await refreshProjectSelection();
@@ -262,9 +54,8 @@ const Auth = () => {
       // Always redirect to projects after login
       console.log("Redirecting to projects after login");
       navigate("/projects", { replace: true });
-    } catch (error: any) {
-      console.error("Login error:", error);
-      toast.error(error.message || "Failed to login");
+    } catch (error) {
+      // Error is handled in the login service
     } finally {
       setIsLoading(false);
     }
@@ -273,34 +64,10 @@ const Auth = () => {
   const handleSignup = async (values: SignupFormValues) => {
     setIsLoading(true);
     try {
-      const { error: signUpError, data } = await supabase.auth.signUp({
-        email: values.email,
-        password: values.password,
-        options: {
-          data: {
-            full_name: values.fullName,
-          },
-        },
-      });
-
-      if (signUpError) {
-        throw signUpError;
-      }
-
-      if (data?.user) {
-        await supabase.from("user_profiles").insert({
-          auth_id: data.user.id,
-          full_name: values.fullName,
-          email: values.email,
-          role: "tester",
-        });
-      }
-
-      toast.success("Account created successfully. Please check your email to confirm your account.");
+      await signupUser(values);
       setActiveTab("login");
-    } catch (error: any) {
-      console.error("Signup error:", error);
-      toast.error(error.message || "Failed to create account");
+    } catch (error) {
+      // Error is handled in the signup service
     } finally {
       setIsLoading(false);
     }
