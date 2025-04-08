@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { deleteProject } from '@/lib/api';
+import { useSelectedProject } from '@/hooks/use-selected-project';
 
 interface Project {
   id: string;
@@ -32,6 +33,7 @@ interface ProjectsListProps {
 export const ProjectsList: React.FC<ProjectsListProps> = ({ projects, onDelete }) => {
   const navigate = useNavigate();
   const [projectToDelete, setProjectToDelete] = React.useState<string | null>(null);
+  const { selectedProjectId, selectProject } = useSelectedProject();
 
   const handleDelete = async () => {
     if (!projectToDelete) return;
@@ -39,6 +41,11 @@ export const ProjectsList: React.FC<ProjectsListProps> = ({ projects, onDelete }
     await deleteProject(projectToDelete);
     setProjectToDelete(null);
     onDelete();
+  };
+
+  const handleSelectProject = (id: string) => {
+    selectProject(id);
+    navigate('/');
   };
 
   return (
@@ -72,6 +79,8 @@ export const ProjectsList: React.FC<ProjectsListProps> = ({ projects, onDelete }
               name={project.name}
               description={project.description}
               createdAt={project.created_at}
+              isSelected={selectedProjectId === project.id}
+              onSelect={handleSelectProject}
               onDelete={(id) => setProjectToDelete(id)}
               onInvite={(id) => {
                 // This will be handled by the InviteUserModal trigger

@@ -5,6 +5,7 @@ import { CustomSidebar } from "@/components/UI/CustomSidebar";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { PanelLeft } from "lucide-react";
+import { ProjectSelector } from "@/components/Projects/ProjectSelector";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -25,25 +26,28 @@ export const MainLayout = ({
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
         <main className="flex-1 overflow-y-auto p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={toggleSidebar}
-                className="md:hidden rounded-full bg-card/80 backdrop-blur-sm border-primary/20 hover:bg-primary/10 hover:text-primary"
-                data-testid="sidebar-toggle"
-              >
-                <PanelLeft className="h-4 w-4" />
-                <span className="sr-only">Toggle Sidebar</span>
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight text-gradient">{pageTitle}</h1>
-                <p className="text-muted-foreground">
-                  {pageDescription}
-                </p>
+          <div className="flex flex-col space-y-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={toggleSidebar}
+                  className="md:hidden rounded-full bg-card/80 backdrop-blur-sm border-primary/20 hover:bg-primary/10 hover:text-primary"
+                  data-testid="sidebar-toggle"
+                >
+                  <PanelLeft className="h-4 w-4" />
+                  <span className="sr-only">Toggle Sidebar</span>
+                </Button>
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight text-gradient">{pageTitle}</h1>
+                  <p className="text-muted-foreground">
+                    {pageDescription}
+                  </p>
+                </div>
               </div>
             </div>
+            <ProjectSelector />
           </div>
           {children}
         </main>

@@ -3,10 +3,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { ProtectedRoute } from "@/components/Routes/ProtectedRoute";
+
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
@@ -24,44 +24,6 @@ import ProjectDetails from "./pages/ProjectDetails";
 import Parameters from "./pages/Parameters";
 
 const queryClient = new QueryClient();
-
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (session) {
-        setIsAuthenticated(true);
-      } else {
-        setIsAuthenticated(false);
-      }
-      setIsLoading(false);
-    };
-
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  return <>{children}</>;
-};
 
 const App = () => {
   return (
@@ -129,7 +91,6 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
-              {/* Defect Management Routes */}
               <Route 
                 path="/defects" 
                 element={
@@ -162,7 +123,6 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
-              {/* Project Management Routes */}
               <Route 
                 path="/projects" 
                 element={
@@ -195,7 +155,6 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
-              {/* Parameters Page */}
               <Route 
                 path="/parameters" 
                 element={
