@@ -43,7 +43,7 @@ export const TestCaseDataDriven: React.FC<TestCaseDataDrivenProps> = ({
           field.value && (
             <div className="space-y-2">
               <Label htmlFor="test_data">Test Data Sets (JSON format)</Label>
-              <Alert variant="outline" className="mb-2">
+              <Alert className="mb-2">
                 <InfoIcon className="h-4 w-4 mr-2" />
                 <AlertDescription>
                   Enter test data sets in JSON format. Each set should have an id, name, and values object.

@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { DbTestCase, TestCase } from "@/types";
 import { mapDbTestCaseToTestCase } from "../testCaseMappers";
 
 export const getTestCasesByProject = async (projectId: string) => {
@@ -15,5 +16,5 @@ export const getTestCasesByProject = async (projectId: string) => {
   }
 
   // Map the database results to the application model
-  return data.map(mapDbTestCaseToTestCase);
+  return data.map((item) => mapDbTestCaseToTestCase(item as DbTestCase));
 };

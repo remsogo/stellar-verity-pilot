@@ -95,7 +95,7 @@ export type DbTestCase = {
   estimate_time?: number;
   automated?: boolean;
   data_driven?: boolean;
-  test_data?: Record<string, any> | TestDataSet[];
+  test_data?: any; // Use 'any' for maximum compatibility with JSON data
   preconditions?: string;
   requirements?: string[];
   tags: string[];
