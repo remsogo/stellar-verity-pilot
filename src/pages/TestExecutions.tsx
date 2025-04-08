@@ -8,12 +8,12 @@ import { useSelectedProject } from '@/hooks/use-selected-project';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const TestExecutions = () => {
-  const { selectedProject } = useSelectedProject();
+  const { selectedProjectId } = useSelectedProject();
   
   const { data: executions, isLoading } = useQuery({
-    queryKey: ['testExecutions', selectedProject?.id],
-    queryFn: () => selectedProject ? getTestExecutions(selectedProject.id) : Promise.resolve([]),
-    enabled: !!selectedProject
+    queryKey: ['testExecutions', selectedProjectId],
+    queryFn: () => selectedProjectId ? getTestExecutions(selectedProjectId) : Promise.resolve([]),
+    enabled: !!selectedProjectId
   });
 
   return (

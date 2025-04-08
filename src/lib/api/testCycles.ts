@@ -26,12 +26,13 @@ export const mapDbTestCycleToTestCycle = async (dbTestCycle: DbTestCycle): Promi
     
     if (statsData && !statsError) {
       // Process the stats
+      const stats = statsData as any;
       progress = {
-        passed: statsData.passed || 0,
-        failed: statsData.failed || 0,
-        blocked: statsData.blocked || 0,
-        pending: statsData.pending || 0,
-        total: statsData.total || testPlan.test_cases.length
+        passed: stats.passed || 0,
+        failed: stats.failed || 0,
+        blocked: stats.blocked || 0,
+        pending: stats.pending || 0,
+        total: stats.total || testPlan.test_cases.length
       };
     }
   } catch (error) {

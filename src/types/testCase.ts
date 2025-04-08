@@ -56,9 +56,9 @@ export interface BaseTestCase {
 }
 
 // Complete TestCase type with optional children array
-// Using string[] for children IDs rather than recursive definition
 export type TestCase = BaseTestCase & {
-  children_ids?: string[]; // Using children_ids instead of children to avoid recursive type
+  children?: TestCase[]; // Array of child test cases
+  children_ids?: string[]; // Using children_ids to store references
 };
 
 // Type pour la base de données

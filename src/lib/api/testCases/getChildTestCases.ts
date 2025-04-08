@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BaseTestCase } from "@/types/testCase";
 
 /**
- * Type definition for child test cases, explicitly using BaseTestCase
+ * Type definition for child test cases using BaseTestCase
  * to avoid circular reference issues
  */
 export type ChildTestCase = BaseTestCase;
