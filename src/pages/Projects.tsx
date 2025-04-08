@@ -10,6 +10,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { useUser } from '@/hooks/use-user';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/components/ui/use-toast';
 
 const Projects = () => {
   const queryClient = useQueryClient();
@@ -17,10 +18,19 @@ const Projects = () => {
   const { user, loading: userLoading } = useUser();
   const navigate = useNavigate();
   
-  const { data: projects, isLoading } = useQuery({
+  const { data: projects, isLoading, error } = useQuery({
     queryKey: ['projects'],
     queryFn: getProjects,
-    enabled: !!user
+    enabled: !!user,
+    retry: 1, // Only retry once to avoid excessive retries on policy errors
+    onError: (error: any) => {
+      console.error('Error fetching projects:', error);
+      toast({
+        title: "Error fetching projects",
+        description: error.message || "There was an error fetching your projects",
+        variant: "destructive"
+      });
+    }
   });
 
   const handleProjectDelete = () => {
@@ -36,8 +46,8 @@ const Projects = () => {
 
   // Adding a console log to track renders
   useEffect(() => {
-    console.log("Projects component rendered", { user, projects });
-  }, [user, projects]);
+    console.log("Projects component rendered", { user, projects, error });
+  }, [user, projects, error]);
 
   if (userLoading) {
     return (
@@ -82,6 +92,19 @@ const Projects = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+            ) : error ? (
+              <div className="text-center py-10">
+                <h3 className="text-lg font-medium text-destructive">Error loading projects</h3>
+                <p className="text-muted-foreground mt-2 mb-4">
+                  There was a problem loading your projects.
+                </p>
+                <Button 
+                  onClick={() => queryClient.invalidateQueries({ queryKey: ['projects'] })}
+                  variant="outline"
+                >
+                  Try Again
+                </Button>
               </div>
             ) : (
               <ProjectsList projects={projects || []} onDelete={handleProjectDelete} />

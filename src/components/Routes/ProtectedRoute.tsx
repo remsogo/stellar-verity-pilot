@@ -71,8 +71,9 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
-  // Redirect to auth if not authenticated
+  // Redirect to auth if not authenticated - IMMEDIATE REDIRECT
   if (!isAuthenticated) {
+    console.log('User not authenticated, redirecting to /auth');
     return <Navigate to="/auth" replace />;
   }
 
