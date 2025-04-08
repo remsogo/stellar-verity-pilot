@@ -69,9 +69,13 @@ export async function createProject(name: string, description?: string): Promise
     // Get current user session
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (userError) throw userError;
+    if (userError) {
+      console.error('Error getting current user:', userError);
+      throw userError;
+    }
     
     if (!user) {
+      console.error('No authenticated user found');
       throw new Error('Authentication required to create a project');
     }
     
@@ -84,7 +88,7 @@ export async function createProject(name: string, description?: string): Promise
         name, 
         description 
       }])
-      .select('*')
+      .select()
       .single();
     
     if (projectError) {
@@ -99,18 +103,26 @@ export async function createProject(name: string, description?: string): Promise
     
     console.log('Project created successfully:', projectData);
     
-    // Step 2: Add the current user as project owner using the security definer function
-    const { error: ownerError } = await supabase
-      .rpc('add_project_owner', { 
-        project_id: projectData.id,
-        owner_id: user.id 
-      });
-    
-    if (ownerError) {
-      console.error('Error adding project owner:', ownerError);
+    // Step 2: Add the current user as project owner directly to avoid RLS issues
+    try {
+      const { error: ownerError } = await supabase
+        .rpc('add_project_owner', { 
+          project_id: projectData.id,
+          owner_id: user.id 
+        });
+      
+      if (ownerError) {
+        console.error('Error adding project owner:', ownerError);
+        throw ownerError;
+      }
+      
+      console.log('Owner added successfully to project:', projectData.id);
+    } catch (ownerError: any) {
+      console.error('Error in add_project_owner RPC call:', ownerError);
       
       // Cleanup: Delete the project if we couldn't add the owner
       try {
+        console.log('Attempting to clean up project:', projectData.id);
         const { error: deleteError } = await supabase
           .from('projects')
           .delete()
@@ -128,7 +140,6 @@ export async function createProject(name: string, description?: string): Promise
       throw new Error(`Failed to add you as project owner: ${ownerError.message}`);
     }
     
-    console.log('Owner added successfully to project:', projectData.id);
     return projectData as Project;
     
   } catch (error: any) {

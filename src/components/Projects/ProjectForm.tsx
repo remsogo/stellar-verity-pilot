@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -104,7 +103,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
       } else if (errorMessage.includes('permission denied')) {
         errorMessage = 'You do not have permission to perform this action.';
       } else if (errorMessage.includes('recursion')) {
-        errorMessage = 'Error with database policies. Please try again or contact support.';
+        errorMessage = 'Database error: Please try again later or contact support.';
       }
       
       setError(errorMessage);
