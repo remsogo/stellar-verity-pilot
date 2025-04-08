@@ -6,8 +6,13 @@ import { TestsChart } from "@/components/Dashboard/TestsChart";
 import { TestCaseList } from "@/components/TestCases/TestCaseList";
 import { ExecutionTable } from "@/components/Execution/ExecutionTable";
 import { dashboardStats, testCases, testExecutions, testTrends } from "@/data/mockData";
+import { Button } from "@/components/ui/button";
+import { PanelLeft } from "lucide-react";
+import { useSidebar } from "@/components/ui/sidebar";
 
 const Index = () => {
+  const { toggleSidebar } = useSidebar();
+
   return (
     <div className="flex h-screen overflow-hidden w-full">
       <CustomSidebar />
@@ -15,11 +20,23 @@ const Index = () => {
         <Navbar />
         <main className="flex-1 overflow-y-auto p-6">
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-              <p className="text-muted-foreground">
-                Welcome back! Here's what's happening with your tests.
-              </p>
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={toggleSidebar}
+                className="md:hidden"
+                data-testid="sidebar-toggle"
+              >
+                <PanelLeft className="h-4 w-4" />
+                <span className="sr-only">Toggle Sidebar</span>
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+                <p className="text-muted-foreground">
+                  Welcome back! Here's what's happening with your tests.
+                </p>
+              </div>
             </div>
           </div>
 
