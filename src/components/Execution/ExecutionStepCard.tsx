@@ -9,7 +9,7 @@ interface ExecutionStepCardProps {
 
 export const ExecutionStepCard = ({ step }: ExecutionStepCardProps) => {
   return (
-    <div className="border rounded-md p-4 transition-all hover:shadow-md hover:bg-muted/20 group">
+    <div className="border rounded-md p-4 transition-all hover:shadow-md hover:bg-muted/20 group backdrop-blur-sm">
       <div className="flex justify-between items-start mb-2">
         <h4 className="font-medium flex items-center">
           <span className="flex items-center justify-center bg-primary/10 w-6 h-6 rounded-full mr-2 text-xs font-bold text-primary">

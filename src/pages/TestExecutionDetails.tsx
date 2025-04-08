@@ -23,6 +23,7 @@ import { ExecutionStepCard } from "@/components/Execution/ExecutionStepCard";
 import { ExecutionSummaryCard } from "@/components/Execution/ExecutionSummaryCard";
 import { TestCaseInfoCard } from "@/components/Execution/TestCaseInfoCard";
 
+// Define the interface for the RPC function return type
 interface ExecutionStepWithDetails {
   id: string;
   test_step_id: string;
@@ -107,11 +108,12 @@ const TestExecutionDetails = () => {
 
         // Fetch execution steps with test step details
         if (id) {
-          // Fix the RPC typing by correctly specifying both generic type parameters
+          // This is the fixed line - correcting the generic types in the RPC call
           const { data, error: stepsError } = await supabase
-            .rpc<ExecutionStepWithDetails[], GetExecutionStepsParams>('get_execution_steps_with_details', { 
-              execution_id_param: id 
-            });
+            .rpc<ExecutionStepWithDetails[], GetExecutionStepsParams>(
+              'get_execution_steps_with_details', 
+              { execution_id_param: id }
+            );
 
           if (stepsError) {
             console.error("Error fetching steps:", stepsError);
