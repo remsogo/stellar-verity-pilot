@@ -1,5 +1,5 @@
 
-import { DbTestCase, DbTestStep, TestCase, TestStep, normalizeStatus } from "@/types";
+import { DbTestCase, DbTestStep, TestCase, TestStep, normalizeStatus, normalizePriority } from "@/types";
 
 /**
  * Convertit un DbTestStep en TestStep
@@ -22,8 +22,8 @@ export const mapDbTestCaseToTestCase = (dbTestCase: DbTestCase): TestCase => {
     id: dbTestCase.id,
     title: dbTestCase.title,
     description: dbTestCase.description,
-    status: normalizeStatus(dbTestCase.status), // Utilisation de la fonction normalizeStatus
-    priority: dbTestCase.priority as any, // Conversion de la priorité
+    status: normalizeStatus(dbTestCase.status),
+    priority: normalizePriority(dbTestCase.priority),
     author: dbTestCase.author,
     project_id: dbTestCase.project_id,
     estimate_time: dbTestCase.estimate_time,
@@ -35,9 +35,9 @@ export const mapDbTestCaseToTestCase = (dbTestCase: DbTestCase): TestCase => {
     parent_id: dbTestCase.parent_id,
     created_at: dbTestCase.created_at,
     updated_at: dbTestCase.updated_at,
-    // Conversion des étapes de test si elles existent
+    // Map steps if they exist
     steps: dbTestCase.steps ? dbTestCase.steps.map(mapDbTestStepToTestStep) : undefined,
-    // Initialize children as empty array (optional)
+    // Initialize empty children array
     children: [],
   };
 };

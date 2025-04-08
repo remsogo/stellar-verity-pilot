@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -39,14 +40,19 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
     },
   });
 
+  // Fetch parent test cases once when the component mounts and project ID is available
+  useEffect(() => {
+    if (selectedProjectId) {
+      fetchParentTestCases();
+    }
+  }, [selectedProjectId]);
+
+  // Fetch test case details if ID is provided
   useEffect(() => {
     if (id) {
       fetchTestCase(id);
     }
-    if (selectedProjectId) {
-      fetchParentTestCases();
-    }
-  }, [id, selectedProjectId]);
+  }, [id]);
 
   const fetchParentTestCases = async () => {
     try {
@@ -91,19 +97,25 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
         setValue("expected_result", "");
       }
       
+      // Convert priority to UI format (capitalize first letter)
       const formattedPriority = testCase.priority.charAt(0).toUpperCase() + testCase.priority.slice(1);
       setValue("priority", formattedPriority as "High" | "Medium" | "Low");
       
-      // Gérer les différentes valeurs possibles de status
-      const currentStatus = testCase.status.toLowerCase();
-      if (currentStatus === "draft" || currentStatus === "ready" || currentStatus === "blocked") {
-        setValue("status", currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1) as "Draft" | "Ready" | "Blocked");
+      // Convert status to UI format
+      let formattedStatus: "Draft" | "Ready" | "Blocked";
+      const lowerStatus = testCase.status.toLowerCase();
+      if (lowerStatus === "draft") {
+        formattedStatus = "Draft";
+      } else if (lowerStatus === "ready") {
+        formattedStatus = "Ready";
+      } else if (lowerStatus === "blocked") {
+        formattedStatus = "Blocked";
       } else {
-        setValue("status", "Draft");
+        formattedStatus = "Draft"; // Default fallback
       }
+      setValue("status", formattedStatus);
       
       setValue("is_parent", Boolean(testCase.is_parent));
-      
       setValue("parent_id", testCase.parent_id || null);
       
     } catch (error: any) {
@@ -138,7 +150,7 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
         description: data.description,
         preconditions: data.preconditions,
         priority: data.priority.toLowerCase() as any,
-        status: data.status.toLowerCase() as Status, // Convertir en minuscules pour correspondre au type Status
+        status: normalizeStatus(data.status.toLowerCase()), // Use normalizeStatus for consistency
         author: "Current User",
         project_id: selectedProjectId,
         is_parent: data.is_parent,
@@ -149,7 +161,7 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
       if (id) {
         await updateTestCase({
           ...testCaseData,
-          id // Passez l'id en tant que propriété de l'objet plutôt que comme paramètre séparé
+          id
         });
         
         toast({

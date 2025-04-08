@@ -10,7 +10,29 @@ export type TestStep = {
   order: number;
 };
 
-// Base type without circular references
+// Enum for status values to ensure consistency
+export enum TestCaseStatus {
+  PASSED = "passed",
+  FAILED = "failed",
+  PENDING = "pending",
+  BLOCKED = "blocked",
+  READY = "ready",
+  DRAFT = "draft"
+}
+
+// Enum for priority values
+export enum TestCasePriority {
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
+  CRITICAL = "critical"
+}
+
+// Status et Priority types based on enums
+export type Status = keyof typeof TestCaseStatus | string;
+export type Priority = keyof typeof TestCasePriority | string;
+
+// Base test case type without children relationship to avoid circular references
 export interface BaseTestCase {
   id: string;
   title: string;
@@ -33,9 +55,9 @@ export interface BaseTestCase {
   steps?: TestStep[];
 }
 
-// Type principal with children reference as string[] to avoid circular reference
+// Complete TestCase type with optional children array
 export type TestCase = BaseTestCase & {
-  // Store just the IDs of children to avoid circular reference
+  // Children are optional and stored as string IDs
   children?: string[];
 };
 
@@ -70,24 +92,34 @@ export type DbTestStep = {
   updated_at: string;
 };
 
-// Status et Priority
-export type Status = 'passed' | 'failed' | 'pending' | 'blocked' | 'ready' | 'draft' | 'blocked';
-export type Priority = 'low' | 'medium' | 'high' | 'critical';
-
-// Assurons-nous que les statuts correspondent à ceux utilisés dans l'application
+// Utility function to normalize status values
 export const normalizeStatus = (status: string): Status => {
-  // Mise en forme du statut pour être conforme au type Status
   const normalizedStatus = status.toLowerCase();
   
-  if (normalizedStatus === 'ready' || 
-      normalizedStatus === 'draft' || 
-      normalizedStatus === 'blocked' ||
-      normalizedStatus === 'passed' ||
-      normalizedStatus === 'failed' ||
-      normalizedStatus === 'pending') {
-    return normalizedStatus as Status;
+  switch(normalizedStatus) {
+    case "ready":
+    case "draft":
+    case "blocked":
+    case "passed":
+    case "failed":
+    case "pending":
+      return normalizedStatus;
+    default:
+      return "pending"; // Default status
   }
+};
+
+// Utility function to normalize priority values
+export const normalizePriority = (priority: string): Priority => {
+  const normalizedPriority = priority.toLowerCase();
   
-  // Statut par défaut si non reconnu
-  return 'pending';
+  switch(normalizedPriority) {
+    case "low":
+    case "medium":
+    case "high":
+    case "critical":
+      return normalizedPriority;
+    default:
+      return "medium"; // Default priority
+  }
 };

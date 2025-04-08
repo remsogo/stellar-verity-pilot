@@ -12,12 +12,12 @@ const mapDbExecutionToExecution = (dbExecution: DbTestExecution): TestExecution 
       id: '',
       title: '',
       description: '',
-      status: 'pending',
+      status: 'pending' as Status,
       priority: 'medium',
       author: '',
       project_id: '',
       tags: [],
-      children: [] // Ajout de la propriété children
+      children: []
     },
     executor: dbExecution.executor,
     status: dbExecution.status as Status,
