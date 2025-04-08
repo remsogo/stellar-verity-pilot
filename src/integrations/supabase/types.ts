@@ -797,6 +797,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_project_owner: {
+        Args: { project_id: string; owner_id: string }
+        Returns: undefined
+      }
       check_user_project_admin: {
         Args: { user_uuid: string; project_uuid: string }
         Returns: boolean
