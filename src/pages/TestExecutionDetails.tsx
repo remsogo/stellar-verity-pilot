@@ -6,7 +6,7 @@ import { Navbar } from "@/components/Navigation/Navbar";
 import { CustomSidebar } from "@/components/UI/CustomSidebar";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { Status, TestExecution, TestCase, ExecutionStep } from "@/types";
+import { Status, TestExecution, TestCase, ExecutionStep, Priority } from "@/types";
 import { toast } from "sonner";
 import { ExecutionDetailsContent } from "@/components/Execution/ExecutionDetailsContent";
 import { ExecutionDetailsLoadingState } from "@/components/Execution/ExecutionDetailsLoadingState";
@@ -67,7 +67,7 @@ const TestExecutionDetails = () => {
           title: testCaseData.title,
           description: testCaseData.description,
           status: testCaseData.status as Status,
-          priority: testCaseData.priority as Status,
+          priority: testCaseData.priority as Priority, // Fixed: Use Priority type here
           author: testCaseData.author,
           project_id: testCaseData.project_id,
           automated: testCaseData.automated,
@@ -97,14 +97,11 @@ const TestExecutionDetails = () => {
 
         // Fetch execution steps with test step details
         if (id) {
-          // Using type assertion to help TypeScript understand the return type
-          const { data, error: stepsError } = await supabase.rpc(
+          // Using proper type assertion for the RPC function
+          const { data, error: stepsError } = await supabase.rpc<ExecutionStepWithDetails[]>(
             'get_execution_steps_with_details', 
-            { execution_id_param: id }
-          ) as unknown as { 
-            data: ExecutionStepWithDetails[] | null; 
-            error: Error | null 
-          };
+            { execution_id_param: id } as GetExecutionStepsParams
+          );
 
           if (stepsError) {
             console.error("Error fetching steps:", stepsError);
