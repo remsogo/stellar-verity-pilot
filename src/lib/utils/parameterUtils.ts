@@ -32,7 +32,10 @@ export const highlightParameters = (text: string): React.ReactNode[] => {
   
   return parts.map((part, index) => {
     if (part.startsWith('$')) {
-      return <span key={index} className="bg-blue-100 text-blue-800 px-1 rounded">{part}</span>;
+      return React.createElement('span', { 
+        key: index, 
+        className: "bg-blue-100 text-blue-800 px-1 rounded" 
+      }, part);
     }
     return part;
   });
