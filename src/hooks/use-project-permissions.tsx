@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from './use-user';
-import { ProjectRole, ProjectMember } from '@/integrations/supabase/project-types';
+import type { ProjectRole, ProjectMember } from '@/integrations/supabase/project-types';
 
-export { ProjectRole, ProjectMember };
+export type { ProjectRole, ProjectMember };
 
 export const useProjectPermissions = (projectId?: string) => {
   const { user } = useUser();
@@ -31,12 +30,16 @@ export const useProjectPermissions = (projectId?: string) => {
         setError(null);
 
         // Get current user's role for this project with raw query
-        const { data: userRoleData, error: userRoleError } = await supabase
-          .from('project_users')
-          .select('role')
-          .eq('project_id', projectId)
-          .eq('user_id', user.id)
-          .maybeSingle();
+        const { data: userRoleData, error: userRoleError } = await supabase.rpc(
+          'get_project_users',
+          { p_project_id: projectId }
+        ).then(response => {
+          const userRecord = response.data?.find(record => record.user_id === user.id);
+          return { 
+            data: userRecord ? { role: userRecord.role } : null, 
+            error: response.error 
+          };
+        });
 
         if (userRoleError && userRoleError.code !== 'PGRST116') {
           // PGRST116 is "No rows returned" - we handle this case by setting userRole to null
@@ -49,31 +52,24 @@ export const useProjectPermissions = (projectId?: string) => {
 
         // Only fetch members if the user has access to the project
         if (userRoleData?.role) {
-          // Get all project members with raw query
-          const { data: membersData, error: membersError } = await supabase
-            .from('project_users')
-            .select('id, user_id, role')
-            .eq('project_id', projectId);
+          // Get all project members
+          const { data: membersData, error: membersError } = await supabase.rpc(
+            'get_project_users',
+            { p_project_id: projectId }
+          );
 
           if (membersError) {
             console.error('Error fetching project members:', membersError);
             setError('Failed to fetch project members.');
             setMembers([]);
           } else if (membersData) {
-            // Create an array to store the final members data with user info
-            const membersList: ProjectMember[] = [];
-            
-            // For each member, get the user details from the user profiles table
-            for (const member of membersData) {
-              // In a production app, you would have a user_profiles table or similar
-              // We're simplifying here by using email as the identifier
-              membersList.push({
-                id: member.id,
-                email: member.user_id, // Using user_id as email for simplicity
-                name: 'User', // Default name
-                role: member.role as ProjectRole,
-              });
-            }
+            // Convert the raw data to ProjectMember format
+            const membersList: ProjectMember[] = membersData.map(member => ({
+              id: member.id,
+              email: member.email || member.user_id,
+              name: member.full_name || 'User',
+              role: member.role as ProjectRole,
+            }));
             
             setMembers(membersList);
           }
@@ -94,23 +90,20 @@ export const useProjectPermissions = (projectId?: string) => {
     if (!projectId || !canManageUsers) return false;
 
     try {
-      // Add the user to the project using a direct SQL query approach
-      // This is a simplified version - in a real app, you'd first look up the user ID from the email
-      const userId = email; // In a real app, you'd get the user ID from the email
-      
-      const { error: insertError } = await supabase
-        .from('project_users')
-        .insert({
-          project_id: projectId,
-          user_id: userId,
-          role,
-        });
+      const { data, error } = await supabase.rpc(
+        'add_user_to_project',
+        {
+          p_project_id: projectId,
+          p_user_id: email,
+          p_role: role
+        }
+      );
 
-      if (insertError) {
-        if (insertError.code === '23505') { // Unique violation
+      if (error) {
+        if (error.code === '23505') { // Unique violation
           throw new Error('This user is already a member of this project.');
         }
-        console.error('Error adding user to project:', insertError);
+        console.error('Error adding user to project:', error);
         throw new Error('Failed to add user to project.');
       }
 
@@ -118,7 +111,7 @@ export const useProjectPermissions = (projectId?: string) => {
       setMembers(prev => [
         ...prev,
         {
-          id: Date.now().toString(), // Temporary ID until we refresh
+          id: data || Date.now().toString(), // Use the returned ID or a temporary one
           email: email,
           name: 'New User',
           role,
@@ -137,11 +130,19 @@ export const useProjectPermissions = (projectId?: string) => {
     if (!projectId || !canManageUsers) return false;
 
     try {
-      const { error } = await supabase
-        .from('project_users')
-        .update({ role: newRole })
-        .eq('id', memberId)
-        .eq('project_id', projectId);
+      const memberToUpdate = members.find(m => m.id === memberId);
+      if (!memberToUpdate) {
+        throw new Error('Member not found');
+      }
+
+      const { error } = await supabase.rpc(
+        'update_user_role',
+        {
+          p_project_id: projectId,
+          p_user_id: memberToUpdate.email,
+          p_role: newRole
+        }
+      );
 
       if (error) {
         console.error('Error updating user role:', error);
@@ -167,11 +168,18 @@ export const useProjectPermissions = (projectId?: string) => {
     if (!projectId || !canManageUsers) return false;
 
     try {
-      const { error } = await supabase
-        .from('project_users')
-        .delete()
-        .eq('id', memberId)
-        .eq('project_id', projectId);
+      const memberToRemove = members.find(m => m.id === memberId);
+      if (!memberToRemove) {
+        throw new Error('Member not found');
+      }
+
+      const { error } = await supabase.rpc(
+        'remove_user_from_project',
+        {
+          p_project_id: projectId,
+          p_user_id: memberToRemove.email
+        }
+      );
 
       if (error) {
         console.error('Error removing user from project:', error);
