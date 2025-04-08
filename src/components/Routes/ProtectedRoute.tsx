@@ -7,7 +7,7 @@ import { useSelectedProject } from "@/hooks/use-selected-project";
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { selectedProjectId, isLoading: isProjectLoading, clearSelectedProject } = useSelectedProject();
+  const { selectedProjectId, isLoading: isProjectLoading } = useSelectedProject();
   const location = useLocation();
 
   // Exempt paths that don't require project selection
@@ -74,13 +74,10 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/auth" replace />;
   }
 
-  // On projects page, don't check for project selection
-  if (location.pathname === '/projects') {
-    return <>{children}</>;
-  }
-
-  // Only check for selectedProjectId when on non-exempt paths and not loading project data
+  // FIXED: Only redirect to /projects if we're not already on an exempt path
+  // AND we don't have a selected project AND we're done loading project data
   if (!isExemptPath && !selectedProjectId && !isProjectLoading) {
+    console.log('Redirecting to projects page because no project is selected');
     return <Navigate to="/projects" replace />;
   }
 

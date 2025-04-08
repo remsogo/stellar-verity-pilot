@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getProjects } from '@/lib/api';
 import { toast } from '@/components/ui/use-toast';
 
@@ -9,6 +9,7 @@ export const useSelectedProject = () => {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [hasChecked, setHasChecked] = useState(false);
+  const initialCheckPerformed = useRef(false);
 
   // Use localStorage effect with a dependency on selectedProjectId
   useEffect(() => {
@@ -21,17 +22,23 @@ export const useSelectedProject = () => {
 
   // Check if the user has a selected project - only runs once
   useEffect(() => {
+    // Prevent multiple executions of the effect
+    if (initialCheckPerformed.current || hasChecked) return;
+    initialCheckPerformed.current = true;
+    
     const checkSelectedProject = async () => {
-      if (hasChecked) return; // Avoid running multiple times
-      
       try {
         setIsLoading(true);
+        console.log('Checking for selected project', { selectedProjectId });
+        
         // If we don't have a selected project, check if there are any projects
         if (!selectedProjectId) {
           const projects = await getProjects();
+          console.log('Projects fetched:', projects);
           
           if (projects.length === 1) {
             // If only one project, select it automatically
+            console.log('Auto-selecting the only project', projects[0].id);
             setSelectedProjectId(projects[0].id);
           }
         }
@@ -48,18 +55,17 @@ export const useSelectedProject = () => {
       }
     };
 
-    // Only run once
-    if (!hasChecked) {
-      checkSelectedProject();
-    }
+    checkSelectedProject();
   }, [selectedProjectId, hasChecked]);
 
   // Use callbacks for functions to prevent recreating them on each render
   const selectProject = useCallback((projectId: string) => {
+    console.log('Selecting project', projectId);
     setSelectedProjectId(projectId);
   }, []);
 
   const clearSelectedProject = useCallback(() => {
+    console.log('Clearing selected project');
     setSelectedProjectId(null);
   }, []);
 
