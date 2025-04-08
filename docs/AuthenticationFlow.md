@@ -13,6 +13,7 @@ The TestNexus application uses Supabase Authentication for user management. This
    - Provides global authentication state
    - Manages session information
    - Handles auth state changes
+   - Provides session refresh functionality
 
 2. **AuthService (`src/components/Auth/AuthService.ts`)**
    - Contains core authentication functions:
@@ -31,12 +32,17 @@ The TestNexus application uses Supabase Authentication for user management. This
    - Handles project selection requirements
    - Manages redirects for unauthorized access
 
+5. **useLogout Hook (`src/hooks/use-logout.ts`)**
+   - Provides a reusable logout function
+   - Handles cleanup of project selection
+   - Manages navigation after logout
+
 ## Authentication Flow
 
 1. **Initial App Load**
    - The `AuthProvider` checks for an existing session
    - If a session exists, the user is considered authenticated
-   - The session state is made available throughout the app
+   - The session state is made available throughout the app via the `useAuth` hook
 
 2. **Login Flow**
    - User enters credentials in the login form
@@ -60,8 +66,16 @@ The TestNexus application uses Supabase Authentication for user management. This
    - Handles project selection requirements for specific routes
 
 5. **Logout**
-   - `logoutUser` function terminates the session
-   - User is redirected to the authentication page
+   - `useLogout` hook provides a consistent logout experience
+   - Clears selected project
+   - Refreshes authentication session
+   - Redirects to authentication page
+
+## State Management
+
+- Authentication state is managed by the `AuthContext`
+- Project selection is managed by `useSelectedProject` (Zustand store)
+- These state providers are accessible throughout the application
 
 ## Security Considerations
 
@@ -75,3 +89,4 @@ The TestNexus application uses Supabase Authentication for user management. This
 - Console logs are added in key authentication points for debugging
 - Auth state changes are tracked and logged
 - Route protection logic includes detailed logging
+
