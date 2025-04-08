@@ -73,5 +73,5 @@ export type TestFolder = {
   project_id: string;
   created_at: string;
   updated_at: string;
-  items: (TestFolder | TestCase)[];
+  items: Array<TestFolder | { id: string; title: string; type: 'test_case' }>;
 };

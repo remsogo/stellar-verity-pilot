@@ -8,12 +8,9 @@ export const mapDbTestCycleToTestCycle = async (dbTestCycle: DbTestCycle): Promi
   // Get test plan details
   const testPlan = await getTestPlan(dbTestCycle.test_plan_id);
   
-  // Get execution stats
-  const { data: executionStats } = await supabase
-    .from("test_executions")
-    .select("status, count(*)")
-    .eq("test_cycle_id", dbTestCycle.id)
-    .group("status");
+  // Get execution stats - using aggregation functions instead of group
+  const { data: executionStats, error } = await supabase
+    .rpc('get_test_cycle_stats', { cycle_id: dbTestCycle.id });
   
   let progress = {
     passed: 0,
@@ -23,12 +20,13 @@ export const mapDbTestCycleToTestCycle = async (dbTestCycle: DbTestCycle): Promi
     total: testPlan.test_cases.length
   };
   
-  if (executionStats) {
+  if (executionStats && !error) {
+    // Assume we get an array with stats objects
     executionStats.forEach((stat: any) => {
-      if (stat.status === 'passed') progress.passed = stat.count;
-      if (stat.status === 'failed') progress.failed = stat.count;
-      if (stat.status === 'blocked') progress.blocked = stat.count;
-      if (stat.status === 'pending') progress.pending = stat.count;
+      if (stat.status === 'passed') progress.passed = stat.count || 0;
+      if (stat.status === 'failed') progress.failed = stat.count || 0;
+      if (stat.status === 'blocked') progress.blocked = stat.count || 0;
+      if (stat.status === 'pending') progress.pending = stat.count || 0;
     });
   }
   

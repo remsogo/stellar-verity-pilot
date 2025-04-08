@@ -3,8 +3,13 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/hooks/use-toast';
 
+type ParentTestCase = {
+  id: string;
+  title: string;
+};
+
 export const useLoadParentTestCases = (projectId: string | undefined) => {
-  const [parentTestCases, setParentTestCases] = useState<Array<{ id: string; title: string }>>([]);
+  const [parentTestCases, setParentTestCases] = useState<ParentTestCase[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
