@@ -119,12 +119,14 @@ const TestCaseForm = () => {
           ? data.status 
           : "Draft");
         
-        // Check if is_parent and parent_id exist before setting them
+        // Safely handle is_parent and parent_id with explicit type checking
         if ('is_parent' in data) {
-          setValue("is_parent", data.is_parent || false);
+          // Use Boolean() to ensure proper boolean type conversion
+          setValue("is_parent", Boolean(data.is_parent));
         }
         
         if ('parent_id' in data) {
+          // Only set parent_id if it exists and is not null
           setValue("parent_id", data.parent_id || null);
         }
       }

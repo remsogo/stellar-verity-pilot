@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { DbTestCase, TestCase } from "@/types";
 import { mapDbTestCaseToTestCase } from "./testCaseMappers";
@@ -13,7 +14,8 @@ export const getTestCase = async (id: string): Promise<TestCase> => {
     throw new Error(`Error fetching test case: ${error.message}`);
   }
 
-  return mapDbTestCaseToTestCase(data as unknown as DbTestCase);
+  // Use type assertion instead of unknown conversion
+  return mapDbTestCaseToTestCase(data as DbTestCase);
 };
 
 export const getChildTestCases = async (parentId: string): Promise<TestCase[]> => {
@@ -26,6 +28,7 @@ export const getChildTestCases = async (parentId: string): Promise<TestCase[]> =
     throw new Error(`Error fetching child test cases: ${error.message}`);
   }
 
+  // Use type assertion for the array
   return (data as DbTestCase[]).map(mapDbTestCaseToTestCase);
 };
 

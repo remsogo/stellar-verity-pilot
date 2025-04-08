@@ -1,4 +1,3 @@
-
 export type Status = 'passed' | 'failed' | 'pending' | 'blocked' | 'Ready' | 'Draft';
 
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
@@ -32,7 +31,8 @@ export type TestCase = {
   createdAt?: string;
   updatedAt?: string;
   steps?: TestStep[];
-  children?: TestCase[];
+  // To avoid circular references, we'll make children optional and limited
+  children?: Omit<TestCase, 'children'>[];
 };
 
 export type TestExecution = {
