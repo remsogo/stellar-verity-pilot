@@ -8,6 +8,20 @@ interface TestsChartProps {
 }
 
 export const TestsChart = ({ data }: TestsChartProps) => {
+  // If no data, show message
+  if (!data || data.length === 0) {
+    return (
+      <Card className="col-span-3">
+        <CardHeader className="pb-2">
+          <CardTitle>Test Execution Trends</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[300px] text-muted-foreground">
+          <p>No execution data available yet</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="col-span-3">
       <CardHeader className="pb-2">
@@ -27,7 +41,10 @@ export const TestsChart = ({ data }: TestsChartProps) => {
             >
               <XAxis
                 dataKey="date"
-                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                tickFormatter={(value) => {
+                  const date = new Date(value);
+                  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                }}
                 stroke="#888"
                 fontSize={12}
                 tickLine={false}
@@ -47,8 +64,15 @@ export const TestsChart = ({ data }: TestsChartProps) => {
                   borderRadius: 'var(--radius)',
                   fontSize: '12px',
                 }}
-                formatter={(value) => [`${value}`, '']}
-                labelFormatter={(label) => new Date(label).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                formatter={(value: any) => [`${value}`, '']}
+                labelFormatter={(label) => {
+                  const date = new Date(label);
+                  return date.toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                  });
+                }}
               />
               <Line
                 type="monotone"

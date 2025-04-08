@@ -17,7 +17,10 @@ export const DashboardStats = ({ stats }: DashboardStatsProps) => {
             <div className="flex flex-col">
               <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
               <div className="flex items-baseline mt-2">
-                <span className="text-3xl font-bold">{stat.label.includes('Time') ? `${stat.value}m` : stat.value}{stat.label.includes('Coverage') && '%'}</span>
+                <span className="text-3xl font-bold">
+                  {stat.label.includes('Time') ? `${stat.value}m` : stat.value}
+                  {stat.label.includes('Rate') || stat.label.includes('Coverage') ? '%' : ''}
+                </span>
                 <div 
                   className={cn(
                     "ml-2 flex items-center text-xs",

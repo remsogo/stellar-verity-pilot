@@ -30,20 +30,20 @@ export type TestSuite = {
 };
 
 // Types pour le tableau de bord
-export type DashboardStat = {
+export interface DashboardStat {
   label: string;
   value: number;
   change: number;
   status: 'positive' | 'negative' | 'neutral';
-};
+}
 
-export type TestTrend = {
+export interface TestTrend {
   date: string;
   passed: number;
   failed: number;
   pending: number;
   blocked: number;
-};
+}
 
 // Types pour la traçabilité
 export type Requirement = {

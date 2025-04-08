@@ -1,4 +1,5 @@
 
-export { getTestCase } from './getTestCase';
-export { updateTestCase } from './updateTestCase';
-export { createTestCase } from './createTestCase';
+export * from './createTestCase';
+export * from './getTestCase';
+export * from './updateTestCase';
+export * from './getTestCasesByProject';
