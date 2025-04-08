@@ -60,7 +60,7 @@ export async function getProject(id: string): Promise<Project | null> {
 }
 
 /**
- * Creates a new project
+ * Creates a new project and handles owner assignment directly without relying on RLS policies
  */
 export async function createProject(name: string, description?: string): Promise<Project | null> {
   try {
@@ -70,7 +70,7 @@ export async function createProject(name: string, description?: string): Promise
       throw new Error('Authentication required to create a project');
     }
     
-    // Create the project - our trigger will handle the owner assignment
+    // First insert the project record
     const { data: projectData, error: projectError } = await supabase
       .from('projects')
       .insert([{ name, description }])
@@ -79,6 +79,24 @@ export async function createProject(name: string, description?: string): Promise
     
     if (projectError) {
       throw projectError;
+    }
+    
+    if (!projectData) {
+      throw new Error('Failed to create project');
+    }
+    
+    // Now explicitly call a server function to handle the owner assignment
+    // This avoids the infinite recursion with RLS policies
+    const { error: membershipError } = await supabase
+      .rpc('add_project_owner', { 
+        project_id: projectData.id,
+        owner_id: session.user.id 
+      });
+    
+    if (membershipError) {
+      // If adding the owner fails, we should clean up the project
+      await supabase.from('projects').delete().eq('id', projectData.id);
+      throw membershipError;
     }
     
     return projectData as Project;
