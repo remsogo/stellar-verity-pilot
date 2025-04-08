@@ -30,15 +30,17 @@ export const useTestExecution = (testCaseId: string | undefined) => {
       return await getTestCase(testCaseId);
     },
     enabled: !!testCaseId,
-    onSuccess: (data) => {
-      setTestCase(data);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error fetching test case",
-        description: error.message,
-        variant: "destructive"
-      });
+    meta: {
+      onSuccess: (data: TestCase) => {
+        setTestCase(data);
+      },
+      onError: (error: Error) => {
+        toast({
+          title: "Error fetching test case",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
     }
   });
 
@@ -50,12 +52,14 @@ export const useTestExecution = (testCaseId: string | undefined) => {
       return await getTestExecution(testCaseId);
     },
     enabled: !!testCaseId,
-    onSuccess: (data) => {
-      if (data) {
-        setExecution(data);
-        setStepResults(data.notes?.split(',').map(r => r === 'true') || []);
-        setNotes(data.notes || "");
-        setCurrentStepIndex(data.notes?.split(',').length || 0);
+    meta: {
+      onSuccess: (data: TestExecution | null) => {
+        if (data) {
+          setExecution(data);
+          setStepResults(data.notes?.split(',').map(r => r === 'true') || []);
+          setNotes(data.notes || "");
+          setCurrentStepIndex(data.notes?.split(',').length || 0);
+        }
       }
     }
   });

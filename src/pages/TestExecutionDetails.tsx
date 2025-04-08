@@ -24,12 +24,14 @@ const TestExecutionDetails = () => {
       return await getExecutionDetails(id);
     },
     enabled: !!id,
-    onError: (error: Error) => {
-      toast({
-        title: 'Error fetching execution details',
-        description: error.message,
-        variant: 'destructive'
-      });
+    meta: {
+      onError: (error: Error) => {
+        toast({
+          title: 'Error fetching execution details',
+          description: error.message,
+          variant: 'destructive'
+        });
+      }
     }
   });
 

@@ -1,89 +1,84 @@
 
-import { FileText, Zap } from "lucide-react";
-import { 
-  Card, 
-  CardContent, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { TestCase } from "@/types";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TestCase } from '@/types';
+import { Calendar, Clock, Tag, FileText } from "lucide-react";
+import { Badge } from '@/components/ui/badge';
 
 interface TestCaseInfoCardProps {
   testCase: TestCase;
 }
 
-export const TestCaseInfoCard = ({ testCase }: TestCaseInfoCardProps) => {
-  const navigate = useNavigate();
-  
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleString();
-  };
-
+export const TestCaseInfoCard: React.FC<TestCaseInfoCardProps> = ({ testCase }) => {
   return (
-    <Card className="bg-gradient-to-br from-background to-muted/40 border-none shadow-md">
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <FileText className="h-5 w-5 mr-2 text-primary" />
-          Test Case Info
-        </CardTitle>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">Test Case Information</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
+      <CardContent className="space-y-4">
+        <div>
+          <h4 className="text-sm font-medium text-muted-foreground mb-1">Priority</h4>
+          <div className="flex items-center">
+            <Badge variant={
+              testCase.priority === 'critical' ? 'destructive' :
+              testCase.priority === 'high' ? 'destructive' :
+              testCase.priority === 'medium' ? 'default' :
+              'secondary'
+            }>
+              {testCase.priority.charAt(0).toUpperCase() + testCase.priority.slice(1)}
+            </Badge>
+          </div>
+        </div>
+        
+        {testCase.estimate_time && (
           <div>
-            <div className="text-sm text-muted-foreground">Priority</div>
-            <div className="font-medium mt-0.5 capitalize flex items-center">
-              {testCase.priority === "critical" ? (
-                <span className="flex items-center text-red-600">
-                  <Zap className="h-4 w-4 mr-1.5" fill="currentColor" />
-                  Critical
-                </span>
-              ) : testCase.priority}
+            <h4 className="text-sm font-medium text-muted-foreground mb-1">Estimated Time</h4>
+            <div className="flex items-center">
+              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span className="text-sm">{testCase.estimate_time} min</span>
             </div>
           </div>
+        )}
+        
+        {testCase.created_at && (
           <div>
-            <div className="text-sm text-muted-foreground">Author</div>
-            <div className="font-medium mt-0.5">{testCase.author}</div>
-          </div>
-          <div>
-            <div className="text-sm text-muted-foreground">Created</div>
-            <div className="font-medium mt-0.5">
-              {formatDate(testCase.created_at)}
+            <h4 className="text-sm font-medium text-muted-foreground mb-1">Created</h4>
+            <div className="flex items-center">
+              <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span className="text-sm">{new Date(testCase.created_at).toLocaleDateString()}</span>
             </div>
           </div>
+        )}
+        
+        {testCase.preconditions && (
           <div>
-            <div className="text-sm text-muted-foreground">Last Updated</div>
-            <div className="font-medium mt-0.5">
-              {formatDate(testCase.updated_at)}
+            <h4 className="text-sm font-medium text-muted-foreground mb-1">Preconditions</h4>
+            <p className="text-sm">{testCase.preconditions}</p>
+          </div>
+        )}
+        
+        {testCase.tags && testCase.tags.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-muted-foreground mb-1">Tags</h4>
+            <div className="flex flex-wrap gap-1">
+              {testCase.tags.map((tag, index) => (
+                <Badge key={index} variant="outline" className="flex items-center">
+                  <Tag className="h-3 w-3 mr-1" />
+                  {tag}
+                </Badge>
+              ))}
             </div>
           </div>
-          {testCase.automated !== undefined && (
-            <div>
-              <div className="text-sm text-muted-foreground">Automation</div>
-              <div className="font-medium mt-0.5 flex items-center">
-                {testCase.automated ? (
-                  <span className="flex items-center text-blue-600">
-                    <Zap className="h-3.5 w-3.5 mr-1.5" />
-                    Automated
-                  </span>
-                ) : "Manual"}
-              </div>
-            </div>
-          )}
+        )}
+        
+        <div>
+          <h4 className="text-sm font-medium text-muted-foreground mb-1">Author</h4>
+          <div className="flex items-center">
+            <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
+            <span className="text-sm">{testCase.author}</span>
+          </div>
         </div>
       </CardContent>
-      <CardFooter>
-        <Button 
-          variant="outline" 
-          className="w-full hover:bg-primary hover:text-primary-foreground transition-all"
-          onClick={() => navigate(`/test-cases/${testCase.id}`)}
-        >
-          View Test Case
-        </Button>
-      </CardFooter>
     </Card>
   );
 };
