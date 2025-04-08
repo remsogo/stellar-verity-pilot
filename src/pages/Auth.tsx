@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -208,22 +209,29 @@ const SignupForm = ({ onSubmit, isLoading }: { onSubmit: (values: SignupFormValu
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const [checkingSession, setCheckingSession] = useState(true);
   const { refreshProjectSelection } = useSelectedProject();
+  
+  // Get the redirect path from location state or default to '/projects'
+  const from = (location.state as { from?: string })?.from || "/projects";
 
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/", { replace: true });
+        console.log("User already authenticated, redirecting to:", from);
+        navigate(from, { replace: true });
+      } else {
+        console.log("No active session found, showing login form");
       }
       setCheckingSession(false);
     };
     
     checkSession();
-  }, [navigate]);
+  }, [navigate, from]);
 
   if (checkingSession) {
     return (
@@ -236,6 +244,7 @@ const Auth = () => {
   const handleLogin = async (values: LoginFormValues) => {
     setIsLoading(true);
     try {
+      console.log("Attempting login with:", values.email);
       const { error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
@@ -247,9 +256,11 @@ const Auth = () => {
 
       toast.success("Successfully logged in");
       
+      console.log("Login successful, refreshing project selection");
       await refreshProjectSelection();
       
-      navigate("/", { replace: true });
+      console.log("Redirecting to:", from);
+      navigate(from, { replace: true });
     } catch (error: any) {
       console.error("Login error:", error);
       toast.error(error.message || "Failed to login");

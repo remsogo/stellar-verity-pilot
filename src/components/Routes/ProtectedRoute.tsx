@@ -91,7 +91,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   // Redirect to auth if not authenticated
   if (!isAuthenticated) {
     console.log('User not authenticated, redirecting to /auth');
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
   // Allow access to exempt paths without a selected project
