@@ -1,5 +1,6 @@
 
 import { z } from "zod";
+import { Priority, Status } from "@/types";
 
 export const testCaseSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
@@ -14,3 +15,22 @@ export const testCaseSchema = z.object({
 });
 
 export type TestCaseFormValues = z.infer<typeof testCaseSchema>;
+
+// Conversion functions for form values to API types
+export const convertFormPriorityToApiPriority = (formPriority: string): Priority => {
+  switch (formPriority.toLowerCase()) {
+    case "high": return "high";
+    case "medium": return "medium";
+    case "low": return "low";
+    default: return "medium";
+  }
+};
+
+export const convertFormStatusToApiStatus = (formStatus: string): Status => {
+  switch (formStatus.toLowerCase()) {
+    case "draft": return "draft";
+    case "ready": return "ready";
+    case "blocked": return "blocked";
+    default: return "draft";
+  }
+};

@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { DbTestCase, TestCase } from "@/types";
+import { DbTestCase, TestCase, Priority, Status } from "@/types";
 import { mapDbTestCaseToTestCase } from "../testCaseMappers";
 
 /**

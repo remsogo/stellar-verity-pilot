@@ -3,6 +3,7 @@
 export * from './testCase';
 export * from './testExecution';
 export * from './testPlan';
+export * from './testCycle';
 
 // Types génériques ou partagés
 
@@ -12,7 +13,7 @@ export type Defect = {
   title: string;
   description?: string;
   status: 'open' | 'in-progress' | 'resolved' | 'closed' | 'reopened';
-  severity: "low" | "medium" | "high" | "critical"; // Use string literals directly
+  severity: "low" | "medium" | "high" | "critical"; 
   reporter: string;
   assignee?: string;
   project_id: string;
@@ -43,4 +44,34 @@ export type TestTrend = {
   failed: number;
   pending: number;
   blocked: number;
+};
+
+// Types pour la traçabilité
+export type Requirement = {
+  id: string;
+  name: string;
+  description?: string;
+  status: 'active' | 'completed' | 'obsolete';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  project_id: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RequirementCoverage = {
+  requirement_id: string;
+  test_case_ids: string[];
+  coverage_percent: number;
+};
+
+// Types pour les folders et organisation hiérarchique
+export type TestFolder = {
+  id: string;
+  name: string;
+  description?: string;
+  parent_id?: string | null;
+  project_id: string;
+  created_at: string;
+  updated_at: string;
+  items: (TestFolder | TestCase)[];
 };

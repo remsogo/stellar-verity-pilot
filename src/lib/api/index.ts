@@ -1,40 +1,9 @@
 
-// Export APIs from organized module files
-export { 
-  getTestCase, 
-  updateTestCase, 
-  createTestCase, 
-  getChildTestCases 
-} from './testCases';
-
-export { 
-  getTestExecution, 
-  getExecutionDetails, 
-  createTestExecution, 
-  updateTestExecution 
-} from './testExecutions';
-
-export {
-  getDefects,
-  getDefect,
-  createDefect,
-  updateDefect,
-  deleteDefect
-} from './defects';
-
-export {
-  getProjects,
-  getProject,
-  createProject,
-  updateProject,
-  deleteProject,
-  inviteUserToProject
-} from './projects';
-
-export {
-  getTestPlans,
-  getTestPlan,
-  createTestPlan,
-  updateTestPlan,
-  deleteTestPlan
-} from './testPlans';
+// Root API index file
+export * from './defects';
+export * from './projects';
+export * from './testCases';
+export * from './testPlans';
+export * from './testExecutions';
+export * from './testCycles';
+export * from './requirements';

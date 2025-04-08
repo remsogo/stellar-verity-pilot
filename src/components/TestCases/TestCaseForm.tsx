@@ -12,12 +12,12 @@ import { TestCaseRelationship } from "./TestCaseRelationship";
 import { TestCaseSteps } from "./TestCaseSteps";
 import { TestCaseMetadata } from "./TestCaseMetadata";
 import { TestCaseButtons } from "./TestCaseButtons";
-import { testCaseSchema, TestCaseFormValues } from "./TestCaseFormTypes";
+import { TestCaseFormValues, testCaseSchema, convertFormPriorityToApiPriority, convertFormStatusToApiStatus } from "./TestCaseFormTypes";
 import { getTestCase } from "@/lib/api/testCases/getTestCase";
 import { createTestCase } from "@/lib/api/testCases/createTestCase";
 import { updateTestCase } from "@/lib/api/testCases/updateTestCase";
-import { supabase } from "@/integrations/supabase/client";
-import { normalizeStatus } from "@/types";
+import { useLoadParentTestCases } from "@/hooks/use-load-parent-test-cases";
+import { Priority, Status } from "@/types";
 
 interface TestCaseFormProps {
   id?: string;
@@ -25,10 +25,10 @@ interface TestCaseFormProps {
 
 export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [parentTestCases, setParentTestCases] = useState<Array<{ id: string; title: string }>>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { selectedProjectId } = useSelectedProject();
+  const { parentTestCases } = useLoadParentTestCases(selectedProjectId);
 
   const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<TestCaseFormValues>({
     resolver: zodResolver(testCaseSchema),
@@ -40,43 +40,12 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
     },
   });
 
-  // Fetch parent test cases once when the component mounts and project ID is available
-  useEffect(() => {
-    if (selectedProjectId) {
-      fetchParentTestCases();
-    }
-  }, [selectedProjectId]);
-
   // Fetch test case details if ID is provided
   useEffect(() => {
     if (id) {
       fetchTestCase(id);
     }
   }, [id]);
-
-  const fetchParentTestCases = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("test_cases")
-        .select("id, title")
-        .eq("project_id", selectedProjectId)
-        .eq("is_parent", true);
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        setParentTestCases(data);
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error fetching parent test cases",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
 
   const fetchTestCase = async (testCaseId: string) => {
     setIsLoading(true);
@@ -145,12 +114,16 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
         data.parent_id = null;
       }
       
+      // Convert form values to API types
+      const priorityValue: Priority = convertFormPriorityToApiPriority(data.priority);
+      const statusValue: Status = convertFormStatusToApiStatus(data.status);
+      
       const testCaseData = {
         title: data.title,
         description: data.description,
         preconditions: data.preconditions,
-        priority: data.priority.toLowerCase(),
-        status: normalizeStatus(data.status.toLowerCase()),
+        priority: priorityValue,
+        status: statusValue,
         author: "Current User",
         project_id: selectedProjectId,
         is_parent: data.is_parent,
