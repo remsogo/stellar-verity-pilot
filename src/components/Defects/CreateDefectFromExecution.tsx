@@ -34,6 +34,7 @@ export const CreateDefectFromExecution: React.FC<CreateDefectFromExecutionProps>
         ...values,
         test_execution_id: testExecutionId,
         reporter: user?.email || values.reporter,
+        project_id: projectId, // Ensure project_id is always provided
       };
 
       await createDefect(defectData);

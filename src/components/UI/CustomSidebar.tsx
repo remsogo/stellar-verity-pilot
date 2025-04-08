@@ -3,11 +3,11 @@ import { Link, useLocation } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/UI/ThemeToggle";
-import { ChevronRight, CircleUser, ClipboardList, Home, LogOut, Rocket, History, Bug, Users } from "lucide-react";
+import { ChevronRight, CircleUser, ClipboardList, Home, LogOut, Rocket, History, Bug, Users, Settings } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 
 export const CustomSidebar = () => {
-  const { collapsed } = useSidebar();
+  const { isCollapsed } = useSidebar();
   const location = useLocation();
   const { user, signOut } = useUser();
 
@@ -17,12 +17,12 @@ export const CustomSidebar = () => {
     { name: "Executions", path: "/test-executions", icon: History },
     { name: "Defects", path: "/defects", icon: Bug },
     { name: "Projects", path: "/projects", icon: Users },
+    { name: "Parameters", path: "/parameters", icon: Settings },
   ];
 
   return (
     <Sidebar 
       className="border-r border-border/40 bg-card/80 backdrop-blur-lg" 
-      collapsed={collapsed}
     >
       <SidebarHeader className="px-6 py-3">
         <Link to="/" className="flex items-center gap-2">

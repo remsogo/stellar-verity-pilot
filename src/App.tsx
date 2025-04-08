@@ -21,6 +21,7 @@ import DefectDetails from "./pages/DefectDetails";
 import Projects from "./pages/Projects";
 import ProjectForm from "./pages/ProjectForm";
 import ProjectDetails from "./pages/ProjectDetails";
+import Parameters from "./pages/Parameters";
 
 const queryClient = new QueryClient();
 
@@ -186,6 +187,15 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <ProjectForm />
+                  </ProtectedRoute>
+                } 
+              />
+              {/* Parameters Page */}
+              <Route 
+                path="/parameters" 
+                element={
+                  <ProtectedRoute>
+                    <Parameters />
                   </ProtectedRoute>
                 } 
               />
