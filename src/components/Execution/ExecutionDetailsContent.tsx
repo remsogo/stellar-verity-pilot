@@ -97,7 +97,10 @@ export const ExecutionDetailsContent: React.FC<ExecutionDetailsContentProps> = (
               <div className="space-y-4">
                 {executionSteps.length > 0 ? (
                   executionSteps.map((step, index) => (
-                    <ExecutionStepCard key={step.id} step={step} stepNumber={index + 1} />
+                    <ExecutionStepCard 
+                      key={step.id} 
+                      step={step} 
+                    />
                   ))
                 ) : (
                   <div className="text-center p-6 text-muted-foreground">

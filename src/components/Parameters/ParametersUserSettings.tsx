@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PencilIcon, TrashIcon, UserPlus } from 'lucide-react';
 import { useUser } from '@/hooks/use-user';
+import { Switch } from '@/components/ui/switch';
 
 export const ParametersUserSettings = () => {
   const { user } = useUser();

@@ -7,7 +7,7 @@ import { ChevronRight, CircleUser, ClipboardList, Home, LogOut, Rocket, History,
 import { useUser } from "@/hooks/use-user";
 
 export const CustomSidebar = () => {
-  const { isCollapsed } = useSidebar();
+  const { collapsed } = useSidebar();
   const location = useLocation();
   const { user, signOut } = useUser();
 

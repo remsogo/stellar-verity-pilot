@@ -76,16 +76,21 @@ const DefectFormPage = () => {
   const handleSubmit = (values: DefectFormValues) => {
     setIsSubmitting(true);
 
+    // Ensure required fields are filled
+    const formData = {
+      ...values,
+      title: values.title || '',
+      reporter: user?.email || values.reporter || '',
+      project_id: values.project_id || projects[0].id,
+    };
+
     if (id) {
       updateDefectMutation.mutate({
         id,
-        data: values,
+        data: formData,
       });
     } else {
-      createDefectMutation.mutate({
-        ...values,
-        reporter: user?.email || values.reporter,
-      });
+      createDefectMutation.mutate(formData);
     }
   };
 

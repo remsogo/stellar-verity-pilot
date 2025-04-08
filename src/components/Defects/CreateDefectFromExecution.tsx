@@ -29,12 +29,16 @@ export const CreateDefectFromExecution: React.FC<CreateDefectFromExecutionProps>
   const handleSubmit = async (values: DefectFormValues) => {
     setIsSubmitting(true);
     try {
-      // Set the test execution ID in the form values
+      // Ensure all required fields are provided
       const defectData = {
-        ...values,
+        title: values.title || `Issue with "${testCaseTitle}"`,
+        description: values.description || '',
+        status: values.status || 'open',
+        severity: values.severity || 'medium',
+        reporter: user?.email || values.reporter || '',
+        assignee: values.assignee,
         test_execution_id: testExecutionId,
-        reporter: user?.email || values.reporter,
-        project_id: projectId, // Ensure project_id is always provided
+        project_id: projectId,
       };
 
       await createDefect(defectData);
@@ -47,6 +51,7 @@ export const CreateDefectFromExecution: React.FC<CreateDefectFromExecutionProps>
         onDefectCreated();
       }
     } catch (error) {
+      console.error('Error creating defect:', error);
       toast({
         title: 'Error',
         description: 'An error occurred while creating the defect.',

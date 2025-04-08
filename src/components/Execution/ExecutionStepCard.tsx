@@ -1,48 +1,55 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from '@/components/ui/card';
 import { ExecutionStep } from '@/types';
-import { Check, X } from "lucide-react";
+import { AlertTriangle, Check, Clock, X } from 'lucide-react';
 
 interface ExecutionStepCardProps {
   step: ExecutionStep;
 }
 
 export const ExecutionStepCard: React.FC<ExecutionStepCardProps> = ({ step }) => {
+  const getStatusIcon = () => {
+    switch (step.status) {
+      case 'passed':
+        return <Check className="h-5 w-5 text-green-500" />;
+      case 'failed':
+        return <X className="h-5 w-5 text-red-500" />;
+      case 'blocked':
+        return <AlertTriangle className="h-5 w-5 text-orange-500" />;
+      default:
+        return <Clock className="h-5 w-5 text-yellow-500" />;
+    }
+  };
+
+  const getStatusClass = () => {
+    switch (step.status) {
+      case 'passed':
+        return 'border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30';
+      case 'failed':
+        return 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30';
+      case 'blocked':
+        return 'border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30';
+      default:
+        return 'border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950/30';
+    }
+  };
+
   return (
-    <Card className="overflow-hidden">
+    <Card className={`border ${getStatusClass()}`}>
       <CardContent className="p-4">
-        <div className="flex items-start space-x-4">
-          <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${step.status === 'passed' ? 'bg-green-100' : step.status === 'failed' ? 'bg-red-100' : 'bg-gray-100'}`}>
-            {step.status === 'passed' ? (
-              <Check className="h-5 w-5 text-green-600" />
-            ) : step.status === 'failed' ? (
-              <X className="h-5 w-5 text-red-600" />
-            ) : (
-              <span className="text-gray-600">{step.step_order}</span>
-            )}
-          </div>
+        <div className="flex items-start gap-3">
+          <div className="mt-1">{getStatusIcon()}</div>
           <div className="flex-1">
-            <h4 className="text-sm font-medium">Step {step.step_order}</h4>
-            <p className="text-sm mt-1">{step.description}</p>
-            <div className="mt-2 border-l-2 border-primary/30 pl-3">
-              <p className="text-xs font-medium text-muted-foreground">Expected Result:</p>
-              <p className="text-sm mt-0.5">{step.expected_result}</p>
+            <h4 className="text-sm font-medium mb-1">Step {step.step_order}: {step.description}</h4>
+            <div className="text-xs text-muted-foreground mb-2">
+              <strong>Expected:</strong> {step.expected_result}
             </div>
             {step.actual_result && (
-              <div className="mt-2 border-l-2 border-secondary/30 pl-3">
-                <p className="text-xs font-medium text-muted-foreground">Actual Result:</p>
-                <p className="text-sm mt-0.5">{step.actual_result}</p>
+              <div className="text-xs mb-2">
+                <strong>Actual:</strong> {step.actual_result}
               </div>
             )}
-          </div>
-          <div className={`flex-shrink-0 px-2 py-1 rounded-full text-xs font-medium ${
-            step.status === 'passed' ? 'bg-green-100 text-green-800' : 
-            step.status === 'failed' ? 'bg-red-100 text-red-800' : 
-            step.status === 'blocked' ? 'bg-orange-100 text-orange-800' : 
-            'bg-gray-100 text-gray-800'
-          }`}>
-            {step.status}
           </div>
         </div>
       </CardContent>

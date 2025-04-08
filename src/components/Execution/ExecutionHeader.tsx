@@ -1,18 +1,18 @@
 
 import React from 'react';
 import { CardHeader } from "@/components/ui/card";
-import { TestCase } from "@/types";
+import { TestExecution } from "@/types";
 
 interface ExecutionHeaderProps {
-  testCase: TestCase;
+  execution: TestExecution;
 }
 
-export const ExecutionHeader: React.FC<ExecutionHeaderProps> = ({ testCase }) => {
+export const ExecutionHeader: React.FC<ExecutionHeaderProps> = ({ execution }) => {
   return (
     <CardHeader>
-      <h3 className="text-lg font-semibold">Test Case: {testCase.title}</h3>
+      <h3 className="text-lg font-semibold">Test Case: {execution.testCase.title}</h3>
       <p className="text-sm text-muted-foreground">
-        Description: {testCase.description || "No description provided"}
+        Description: {execution.testCase.description || "No description provided"}
       </p>
     </CardHeader>
   );
