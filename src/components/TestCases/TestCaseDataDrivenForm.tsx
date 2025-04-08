@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Control, Controller, useWatch } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -9,6 +9,7 @@ import { InfoIcon } from "lucide-react";
 import { TestCaseFormValues } from "./TestCaseFormTypes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { parameterService } from "@/lib/utils/parameterService";
 
 interface TestCaseDataDrivenFormProps {
   control: Control<TestCaseFormValues>;
@@ -22,6 +23,29 @@ export const TestCaseDataDrivenForm: React.FC<TestCaseDataDrivenFormProps> = ({
   detectedParameters,
 }) => {
   const dataEnabled = useWatch({ control, name: "data_driven" });
+  
+  // Generate parameters JSON when detected parameters change
+  useEffect(() => {
+    if (detectedParameters.length > 0 && dataEnabled) {
+      // Convert to Parameter objects
+      const parameters = detectedParameters.map(param => ({
+        name: param,
+        type: "string",
+        description: `Parameter for ${param}`,
+        defaultValue: ""
+      }));
+      
+      // Get the form's current parameters value
+      const parametersField = document.getElementById("parameters") as HTMLTextAreaElement;
+      if (parametersField && (!parametersField.value || parametersField.value === "[]")) {
+        // Update the parameters field with the serialized parameters
+        parametersField.value = parameterService.serializeParameters(parameters);
+        // Trigger change event to update the form
+        const event = new Event("input", { bubbles: true });
+        parametersField.dispatchEvent(event);
+      }
+    }
+  }, [detectedParameters, dataEnabled]);
 
   return (
     <div className="space-y-4">

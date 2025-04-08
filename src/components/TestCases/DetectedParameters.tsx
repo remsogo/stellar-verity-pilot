@@ -1,10 +1,11 @@
 
 import React, { useEffect } from "react";
-import { extractParametersFromText } from "@/lib/utils/parameterUtils";
+import { parameterService } from "@/lib/utils/parameterService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Control, useWatch } from "react-hook-form";
 import { TestCaseFormValues } from "./TestCaseFormTypes";
+import { Parameter } from "@/types/parameter";
 
 interface DetectedParametersProps {
   control: Control<TestCaseFormValues>;
@@ -20,8 +21,8 @@ export const DetectedParameters: React.FC<DetectedParametersProps> = ({
   
   // Detect parameters in steps and expected result
   const detectedParameters = React.useMemo(() => {
-    const stepsParams = extractParametersFromText(steps || "");
-    const expectedParams = extractParametersFromText(expectedResult || "");
+    const stepsParams = parameterService.extractParameters(steps || "").map(p => p.name);
+    const expectedParams = parameterService.extractParameters(expectedResult || "").map(p => p.name);
     
     // Combine and remove duplicates
     return [...new Set([...stepsParams, ...expectedParams])];

@@ -9,6 +9,7 @@ import { InfoIcon } from "lucide-react";
 import { TestCaseFormValues } from "./TestCaseFormTypes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { parameterService } from "@/lib/utils/parameterService";
 
 interface TestCaseParametersProps {
   control: Control<TestCaseFormValues>;
@@ -36,7 +37,7 @@ export const TestCaseParameters: React.FC<TestCaseParametersProps> = ({
         }
       }
       
-      // Generate a JSON structure for the parameters
+      // Convert to Parameter objects
       const parametersObject = detectedParameters.map(param => ({
         name: param,
         type: "string",
@@ -47,7 +48,7 @@ export const TestCaseParameters: React.FC<TestCaseParametersProps> = ({
       // This is a workaround, ideally we would pass setValue from the parent
       const parametersField = document.getElementById("parameters") as HTMLTextAreaElement;
       if (parametersField && (!parametersField.value || parametersField.value === "[]")) {
-        parametersField.value = JSON.stringify(parametersObject, null, 2);
+        parametersField.value = parameterService.serializeParameters(parametersObject);
         // Trigger change event to update the form
         const event = new Event("input", { bubbles: true });
         parametersField.dispatchEvent(event);

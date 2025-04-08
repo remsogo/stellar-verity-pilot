@@ -3,18 +3,15 @@ import React from 'react';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useQuery } from '@tanstack/react-query';
-import { useUser } from '@/hooks/use-user';
-import { Sliders, Wrench, Cog, UserCog, Shield, Database, BellRing } from 'lucide-react';
+import { Sliders, Wrench, Cog, UserCog, Shield, Database, BellRing, Variable } from 'lucide-react';
 import { ParametersGeneralSettings } from '@/components/Parameters/ParametersGeneralSettings';
 import { ParametersNotificationSettings } from '@/components/Parameters/ParametersNotificationSettings';
 import { ParametersUserSettings } from '@/components/Parameters/ParametersUserSettings';
 import { ParametersSecuritySettings } from '@/components/Parameters/ParametersSecuritySettings';
 import { ParametersDatabaseSettings } from '@/components/Parameters/ParametersDatabaseSettings';
+import { ParameterManagement } from '@/components/Parameters/ParameterManagement';
 
 const Parameters = () => {
-  const { user } = useUser();
-  
   return (
     <MainLayout 
       pageTitle="Parameters" 
@@ -23,7 +20,7 @@ const Parameters = () => {
       <div className="container py-6">
         <Tabs defaultValue="general" className="space-y-6">
           <div className="flex justify-between items-center">
-            <TabsList className="grid grid-cols-5 w-full max-w-2xl">
+            <TabsList className="grid grid-cols-6 w-full max-w-3xl">
               <TabsTrigger value="general" className="flex items-center gap-2">
                 <Sliders className="h-4 w-4" />
                 <span className="hidden sm:inline">General</span>
@@ -31,6 +28,10 @@ const Parameters = () => {
               <TabsTrigger value="notifications" className="flex items-center gap-2">
                 <BellRing className="h-4 w-4" />
                 <span className="hidden sm:inline">Notifications</span>
+              </TabsTrigger>
+              <TabsTrigger value="parameters" className="flex items-center gap-2">
+                <Variable className="h-4 w-4" />
+                <span className="hidden sm:inline">Parameters</span>
               </TabsTrigger>
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <UserCog className="h-4 w-4" />
@@ -53,6 +54,10 @@ const Parameters = () => {
           
           <TabsContent value="notifications">
             <ParametersNotificationSettings />
+          </TabsContent>
+          
+          <TabsContent value="parameters">
+            <ParameterManagement />
           </TabsContent>
           
           <TabsContent value="users">
