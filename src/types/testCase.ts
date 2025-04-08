@@ -36,7 +36,7 @@ export interface BaseTestCase {
 // Type principal with children reference as string[] to avoid circular reference
 export type TestCase = BaseTestCase & {
   // Store just the IDs of children to avoid circular reference
-  children: string[];
+  children?: string[];
 };
 
 // Type pour la base de données

@@ -16,7 +16,8 @@ const mapDbExecutionToExecution = (dbExecution: DbTestExecution): TestExecution 
       priority: 'medium',
       author: '',
       project_id: '',
-      tags: []
+      tags: [],
+      children: [] // Ajout de la propriété children
     },
     executor: dbExecution.executor,
     status: dbExecution.status as Status,

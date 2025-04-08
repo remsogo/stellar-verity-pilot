@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/Layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,7 +49,6 @@ const TestCases = () => {
       }
 
       if (data) {
-        // Convertir les données en TestCase[]
         const typedData = data.map(item => mapDbTestCaseToTestCase(item as any));
         
         const parents: TestCase[] = [];
@@ -193,8 +191,8 @@ const TestCases = () => {
                         <TableCell>
                           <Badge
                             variant={
-                              testCase.status === "Ready" || testCase.status === "passed" ? "default" :
-                              testCase.status === "Draft" || testCase.status === "pending" ? "secondary" :
+                              testCase.status === "passed" || testCase.status === "ready" ? "default" :
+                              testCase.status === "pending" || testCase.status === "draft" ? "secondary" :
                               "destructive"
                             }
                           >
@@ -227,8 +225,8 @@ const TestCases = () => {
                             <TableCell>
                               <Badge
                                 variant={
-                                  child.status === "Ready" || child.status === "passed" ? "default" :
-                                  child.status === "Draft" || child.status === "pending" ? "secondary" :
+                                  child.status === "passed" || child.status === "ready" ? "default" :
+                                  child.status === "pending" || child.status === "draft" ? "secondary" :
                                   "destructive"
                                 }
                               >

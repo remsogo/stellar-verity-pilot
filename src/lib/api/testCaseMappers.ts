@@ -37,7 +37,7 @@ export const mapDbTestCaseToTestCase = (dbTestCase: DbTestCase): TestCase => {
     updated_at: dbTestCase.updated_at,
     // Conversion des étapes de test si elles existent
     steps: dbTestCase.steps ? dbTestCase.steps.map(mapDbTestStepToTestStep) : undefined,
-    // Initialize children as empty array by default
+    // Initialize children as empty array (optional)
     children: [],
   };
 };

@@ -1,3 +1,4 @@
+
 import { DashboardStat, Status, TestCase, TestExecution, TestTrend } from "@/types";
 
 // Dashboard Stats
@@ -48,7 +49,7 @@ export const testCases: TestCase[] = [
     status: "passed",
     priority: "critical",
     author: "John Doe",
-    project_id: "proj-001", // Added project_id
+    project_id: "proj-001",
     createdAt: "2023-05-10T14:30:00",
     updatedAt: "2023-05-15T09:45:00",
     steps: [
@@ -75,6 +76,7 @@ export const testCases: TestCase[] = [
       },
     ],
     tags: ["authentication", "security", "ui"],
+    children: [], // Ajout de la propriété children
   },
   {
     id: "tc-002",
@@ -83,7 +85,7 @@ export const testCases: TestCase[] = [
     status: "failed",
     priority: "high",
     author: "Jane Smith",
-    project_id: "proj-001", // Added project_id
+    project_id: "proj-001",
     createdAt: "2023-05-08T11:20:00",
     updatedAt: "2023-05-15T10:15:00",
     steps: [
@@ -110,6 +112,7 @@ export const testCases: TestCase[] = [
       },
     ],
     tags: ["registration", "user-management", "ui"],
+    children: [], // Ajout de la propriété children
   },
   {
     id: "tc-003",
@@ -118,7 +121,7 @@ export const testCases: TestCase[] = [
     status: "pending",
     priority: "medium",
     author: "Alice Johnson",
-    project_id: "proj-001", // Added project_id
+    project_id: "proj-001",
     createdAt: "2023-05-05T08:00:00",
     updatedAt: "2023-05-15T11:00:00",
     steps: [
@@ -145,6 +148,7 @@ export const testCases: TestCase[] = [
       },
     ],
     tags: ["password", "security", "user-management"],
+    children: [], // Ajout de la propriété children
   },
   {
     id: "tc-004",
@@ -153,7 +157,7 @@ export const testCases: TestCase[] = [
     status: "blocked",
     priority: "low",
     author: "Bob Williams",
-    project_id: "proj-001", // Added project_id
+    project_id: "proj-001",
     createdAt: "2023-05-01T16:45:00",
     updatedAt: "2023-05-15T12:30:00",
     steps: [
@@ -180,6 +184,7 @@ export const testCases: TestCase[] = [
       },
     ],
     tags: ["data", "export", "reporting"],
+    children: [], // Ajout de la propriété children
   },
   {
     id: "tc-005",
@@ -188,7 +193,7 @@ export const testCases: TestCase[] = [
     status: "passed",
     priority: "medium",
     author: "Emily Davis",
-    project_id: "proj-001", // Added project_id
+    project_id: "proj-001",
     createdAt: "2023-04-28T09:15:00",
     updatedAt: "2023-05-15T13:45:00",
     steps: [
@@ -215,6 +220,7 @@ export const testCases: TestCase[] = [
       },
     ],
     tags: ["user-management", "profile", "settings"],
+    children: [], // Ajout de la propriété children
   },
 ];
 

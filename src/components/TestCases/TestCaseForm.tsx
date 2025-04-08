@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -149,8 +148,8 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
       
       if (id) {
         await updateTestCase({
-          id,
-          ...testCaseData
+          ...testCaseData,
+          id // Passez l'id en tant que propriété de l'objet plutôt que comme paramètre séparé
         });
         
         toast({
