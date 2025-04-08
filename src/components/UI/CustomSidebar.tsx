@@ -96,7 +96,6 @@ export const CustomSidebar = () => {
     <Sidebar
       id="sidebar"
       className="border-r h-screen w-64 flex flex-col justify-between"
-      togglable={true}
     >
       <div className="flex flex-col h-full">
         <div className="p-4 pt-6 pb-6 flex items-center gap-2">
@@ -167,9 +166,7 @@ export const CustomSidebar = () => {
           </div>
         </div>
       </div>
-      {isModalOpen && (
-        <SearchBar isOpen={isModalOpen} onClose={toggleModal} />
-      )}
+      {isModalOpen && <SearchBar onClose={toggleModal} />}
     </Sidebar>
   );
 };

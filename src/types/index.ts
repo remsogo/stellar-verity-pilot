@@ -67,3 +67,14 @@ export type TestTrend = {
   pending: number;
   blocked: number;
 };
+
+export type ExecutionStep = {
+  id: string;
+  test_step_id: string;
+  execution_id: string;
+  status: Status;
+  actual_result: string | null;
+  step_order: number;
+  description: string;
+  expected_result: string;
+};

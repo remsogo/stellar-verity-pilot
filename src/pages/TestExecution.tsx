@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -185,21 +186,24 @@ const TestExecution = () => {
       setExecutionId(newExecutionId);
       
       // Save step results to the execution_steps table
-      const executionSteps = testSteps.map(step => ({
-        execution_id: newExecutionId,
-        test_step_id: step.id,
-        actual_result: step.actualResult,
-        status: step.status,
-        step_order: step.order
-      }));
-      
-      const { error: stepsError } = await supabase
-        .from("execution_steps")
-        .insert(executionSteps);
+      if (testSteps.length > 0) {
+        // We need to manually structure this to match database columns
+        const executionStepsData = testSteps.map(step => ({
+          execution_id: newExecutionId,
+          test_step_id: step.id as string,
+          status: step.status,
+          actual_result: step.actualResult || null,
+          step_order: step.order
+        }));
         
-      if (stepsError) {
-        console.error("Error saving step results:", stepsError);
-        toast.error("Failed to save step results");
+        const { error: stepsInsertError } = await supabase
+          .from("execution_steps")
+          .insert(executionStepsData);
+          
+        if (stepsInsertError) {
+          console.error("Error saving step results:", stepsInsertError);
+          toast.error("Failed to save step results");
+        }
       }
       
       // Update test case status based on execution
@@ -472,6 +476,20 @@ const TestExecution = () => {
       </div>
     </div>
   );
+};
+
+// Helper function that got removed in the truncation
+const getStatusIcon = (status: Status) => {
+  switch (status) {
+    case "passed":
+      return <CheckCircle className="h-5 w-5 text-green-500" />;
+    case "failed":
+      return <XCircle className="h-5 w-5 text-red-500" />;
+    case "blocked":
+      return <AlertCircle className="h-5 w-5 text-amber-500" />;
+    default:
+      return <Clock className="h-5 w-5 text-gray-500" />;
+  }
 };
 
 export default TestExecution;

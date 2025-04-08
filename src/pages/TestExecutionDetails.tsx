@@ -16,19 +16,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Calendar, Clock, User, Tag, CheckCircle, XCircle, AlertCircle } from "lucide-react";
-import { TestExecution, TestCase, Status } from "@/types";
+import { TestExecution, TestCase, Status, ExecutionStep } from "@/types";
 import { toast } from "sonner";
-
-interface ExecutionStep {
-  id: string;
-  test_step_id: string;
-  execution_id: string;
-  status: Status;
-  actual_result: string | null;
-  step_order: number;
-  description: string;
-  expected_result: string;
-}
 
 const TestExecutionDetails = () => {
   const { id } = useParams();
@@ -67,8 +56,8 @@ const TestExecutionDetails = () => {
           id: testCaseData.id,
           title: testCaseData.title,
           description: testCaseData.description,
-          status: testCaseData.status,
-          priority: testCaseData.priority,
+          status: testCaseData.status as Status,
+          priority: testCaseData.priority as Priority,
           author: testCaseData.author,
           project_id: testCaseData.project_id,
           automated: testCaseData.automated,
@@ -86,7 +75,7 @@ const TestExecutionDetails = () => {
           testCaseId: executionData.test_case_id,
           testCase: testCase,
           executor: executionData.executor,
-          status: executionData.status,
+          status: executionData.status as Status,
           startTime: executionData.start_time,
           endTime: executionData.end_time || executionData.start_time,
           environment: executionData.environment,
@@ -96,35 +85,23 @@ const TestExecutionDetails = () => {
 
         setExecution(executionObj);
 
-        // Fetch execution steps with test step details
+        // Fetch execution steps with test step details using a SQL query since we need joins
         const { data: stepsData, error: stepsError } = await supabase
-          .from("execution_steps")
-          .select(`
-            id, 
-            execution_id, 
-            test_step_id, 
-            status, 
-            actual_result, 
-            step_order,
-            test_steps (description, expected_result)
-          `)
-          .eq("execution_id", id)
-          .order("step_order", { ascending: true });
+          .rpc('get_execution_steps_with_details', { execution_id_param: id });
 
         if (stepsError) {
-          throw stepsError;
-        }
-
-        if (stepsData && stepsData.length > 0) {
-          const formattedSteps: ExecutionStep[] = stepsData.map(step => ({
+          console.error("Error fetching steps:", stepsError);
+          toast.error("Could not load execution step details");
+        } else if (stepsData && stepsData.length > 0) {
+          const formattedSteps: ExecutionStep[] = stepsData.map((step: any) => ({
             id: step.id,
             test_step_id: step.test_step_id,
             execution_id: step.execution_id,
             status: step.status as Status,
             actual_result: step.actual_result,
             step_order: step.step_order,
-            description: step.test_steps?.description || "No description",
-            expected_result: step.test_steps?.expected_result || "No expected result"
+            description: step.description || "No description",
+            expected_result: step.expected_result || "No expected result"
           }));
           
           setExecutionSteps(formattedSteps);

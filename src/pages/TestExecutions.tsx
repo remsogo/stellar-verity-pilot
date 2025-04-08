@@ -16,7 +16,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { TestExecution, TestCase } from "@/types";
+import { TestExecution, TestCase, Status, Priority } from "@/types";
 import { 
   Search, 
   Calendar, 
@@ -79,8 +79,8 @@ const TestExecutions = () => {
           id: testCase.id,
           title: testCase.title,
           description: testCase.description,
-          status: testCase.status,
-          priority: testCase.priority,
+          status: testCase.status as Status,
+          priority: testCase.priority as Priority,
           author: testCase.author,
           project_id: testCase.project_id,
           automated: testCase.automated,
@@ -99,7 +99,7 @@ const TestExecutions = () => {
         testCaseId: execution.test_case_id,
         testCase: testCasesMap[execution.test_case_id],
         executor: execution.executor,
-        status: execution.status,
+        status: execution.status as Status,
         startTime: execution.start_time,
         endTime: execution.end_time || execution.start_time,
         environment: execution.environment,
@@ -339,6 +339,85 @@ const TestExecutions = () => {
         </main>
       </div>
     </div>
+  );
+};
+
+// Add the missing helper functions here
+const filteredExecutions = (executions: TestExecution[], searchQuery: string) => {
+  if (!searchQuery.trim()) return executions;
+  
+  const searchLower = searchQuery.toLowerCase();
+  return executions.filter((execution) => {
+    return (
+      execution.testCase?.title.toLowerCase().includes(searchLower) ||
+      execution.executor.toLowerCase().includes(searchLower) ||
+      execution.environment.toLowerCase().includes(searchLower) ||
+      execution.status.toLowerCase().includes(searchLower)
+    );
+  });
+};
+
+const handleSortChange = (field: string, currentField: string, direction: "asc" | "desc", setField: React.Dispatch<React.SetStateAction<string>>, setDirection: React.Dispatch<React.SetStateAction<"asc" | "desc">>) => {
+  if (field === currentField) {
+    setDirection(direction === "asc" ? "desc" : "asc");
+  } else {
+    setField(field);
+    setDirection("desc");
+  }
+};
+
+const getSortIcon = (field: string, sortField: string, sortDirection: "asc" | "desc") => {
+  if (field !== sortField) return null;
+  return sortDirection === "asc" ? <ArrowUp className="h-4 w-4 ml-1" /> : <ArrowDown className="h-4 w-4 ml-1" />;
+};
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleString();
+};
+
+const calculateDuration = (start: string, end: string) => {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const diffMs = endDate.getTime() - startDate.getTime();
+  
+  // If it's less than a minute
+  if (diffMs < 60000) {
+    return `${Math.round(diffMs / 1000)}s`;
+  }
+  
+  // If it's less than an hour
+  if (diffMs < 3600000) {
+    return `${Math.floor(diffMs / 60000)}m ${Math.floor((diffMs % 60000) / 1000)}s`;
+  }
+  
+  // Hours and minutes
+  return `${Math.floor(diffMs / 3600000)}h ${Math.floor((diffMs % 3600000) / 60000)}m`;
+};
+
+const getStatusBadge = (status: Status) => {
+  let className = "bg-gray-100 text-gray-800";
+  
+  switch (status) {
+    case "passed":
+      className = "bg-green-100 text-green-800";
+      break;
+    case "failed":
+      className = "bg-red-100 text-red-800";
+      break;
+    case "blocked":
+      className = "bg-amber-100 text-amber-800";
+      break;
+    case "pending":
+      className = "bg-blue-100 text-blue-800";
+      break;
+    default:
+      break;
+  }
+  
+  return (
+    <Badge className={className}>
+      <span className="capitalize">{status}</span>
+    </Badge>
   );
 };
 
