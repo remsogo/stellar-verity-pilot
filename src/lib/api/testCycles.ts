@@ -17,23 +17,22 @@ export const mapDbTestCycleToTestCycle = async (dbTestCycle: DbTestCycle): Promi
     total: testPlan.test_cases.length
   };
   
-  // Try to get execution stats if supported
+  // Try to get execution stats using the function we created
   try {
-    const { data: executionStats, error } = await supabase
-      .from("test_executions")
-      .select("status, count(*)")
-      .eq("test_cycle_id", dbTestCycle.id)
-      .in("status", ['passed', 'failed', 'blocked', 'pending'])
-      .group_by('status') as any;
-    
-    if (executionStats && !error) {
-      // Process the stats
-      executionStats.forEach((stat: any) => {
-        if (stat.status === 'passed') progress.passed = parseInt(stat.count) || 0;
-        if (stat.status === 'failed') progress.failed = parseInt(stat.count) || 0;
-        if (stat.status === 'blocked') progress.blocked = parseInt(stat.count) || 0;
-        if (stat.status === 'pending') progress.pending = parseInt(stat.count) || 0;
+    const { data: statsData, error: statsError } = await supabase
+      .rpc('get_test_cycle_stats', {
+        p_cycle_id: dbTestCycle.id
       });
+    
+    if (statsData && !statsError) {
+      // Process the stats
+      progress = {
+        passed: statsData.passed || 0,
+        failed: statsData.failed || 0,
+        blocked: statsData.blocked || 0,
+        pending: statsData.pending || 0,
+        total: statsData.total || testPlan.test_cases.length
+      };
     }
   } catch (error) {
     console.error("Error fetching execution stats:", error);
@@ -62,25 +61,23 @@ export const mapDbTestCycleToTestCycle = async (dbTestCycle: DbTestCycle): Promi
 // Get all test cycles for a project
 export const getTestCycles = async (projectId: string): Promise<TestCycle[]> => {
   try {
-    // Use a more generic approach to handle tables not in the typed schema
-    const result = await supabase.rpc('get_project_test_cycles', {
+    const { data, error } = await supabase.rpc('get_project_test_cycles', {
       p_project_id: projectId
-    }) as any;
+    });
     
-    if (result.error) {
-      throw new Error(`Error fetching test cycles: ${result.error.message}`);
+    if (error) {
+      throw new Error(`Error fetching test cycles: ${error.message}`);
     }
     
     const cycles: TestCycle[] = [];
-    if (result.data) {
-      for (const cycle of result.data as DbTestCycle[]) {
+    if (data) {
+      for (const cycle of data as DbTestCycle[]) {
         cycles.push(await mapDbTestCycleToTestCycle(cycle));
       }
     }
     
     return cycles;
   } catch (error: any) {
-    // For development/testing, return an empty array if the table or RPC doesn't exist
     console.error("Error in getTestCycles:", error.message);
     return [];
   }
@@ -89,22 +86,20 @@ export const getTestCycles = async (projectId: string): Promise<TestCycle[]> => 
 // Get a single test cycle by ID
 export const getTestCycle = async (id: string): Promise<TestCycle> => {
   try {
-    // Use a more generic approach
-    const result = await supabase.rpc('get_test_cycle_by_id', {
+    const { data, error } = await supabase.rpc('get_test_cycle_by_id', {
       p_cycle_id: id
-    }) as any;
+    });
     
-    if (result.error) {
-      throw new Error(`Error fetching test cycle: ${result.error.message}`);
+    if (error) {
+      throw new Error(`Error fetching test cycle: ${error.message}`);
     }
     
-    if (!result.data || result.data.length === 0) {
+    if (!data || data.length === 0) {
       throw new Error(`Test cycle not found: ${id}`);
     }
     
-    return await mapDbTestCycleToTestCycle(result.data[0] as DbTestCycle);
+    return await mapDbTestCycleToTestCycle(data[0] as DbTestCycle);
   } catch (error: any) {
-    // For testing/development purpose, return a minimal object
     console.error("Error in getTestCycle:", error.message);
     throw error;
   }
@@ -126,20 +121,19 @@ export const createTestCycle = async (testCycle: Omit<TestCycle, 'id' | 'created
       created_by: testCycle.created_by
     };
     
-    // Use a more generic approach
-    const result = await supabase.rpc('create_test_cycle', {
+    const { data, error } = await supabase.rpc('create_test_cycle', {
       cycle_data: dbTestCycle
-    }) as any;
+    });
     
-    if (result.error) {
-      throw new Error(`Error creating test cycle: ${result.error.message}`);
+    if (error) {
+      throw new Error(`Error creating test cycle: ${error.message}`);
     }
     
-    if (!result.data) {
+    if (!data) {
       throw new Error('Failed to create test cycle');
     }
     
-    return await mapDbTestCycleToTestCycle(result.data as DbTestCycle);
+    return await mapDbTestCycleToTestCycle(data as DbTestCycle);
   } catch (error: any) {
     console.error("Error in createTestCycle:", error.message);
     throw error;
@@ -160,20 +154,19 @@ export const updateTestCycle = async (testCycle: Partial<TestCycle> & { id: stri
       build_version: testCycle.build_version
     };
     
-    // Use a more generic approach
-    const result = await supabase.rpc('update_test_cycle', {
+    const { data, error } = await supabase.rpc('update_test_cycle', {
       cycle_data: dbTestCycle
-    }) as any;
+    });
     
-    if (result.error) {
-      throw new Error(`Error updating test cycle: ${result.error.message}`);
+    if (error) {
+      throw new Error(`Error updating test cycle: ${error.message}`);
     }
     
-    if (!result.data) {
+    if (!data) {
       throw new Error(`Test cycle not found: ${testCycle.id}`);
     }
     
-    return await mapDbTestCycleToTestCycle(result.data as DbTestCycle);
+    return await mapDbTestCycleToTestCycle(data as DbTestCycle);
   } catch (error: any) {
     console.error("Error in updateTestCycle:", error.message);
     throw error;
@@ -183,13 +176,12 @@ export const updateTestCycle = async (testCycle: Partial<TestCycle> & { id: stri
 // Delete a test cycle
 export const deleteTestCycle = async (id: string): Promise<void> => {
   try {
-    // Use a more generic approach
-    const result = await supabase.rpc('delete_test_cycle', {
+    const { error } = await supabase.rpc('delete_test_cycle', {
       p_cycle_id: id
-    }) as any;
+    });
     
-    if (result.error) {
-      throw new Error(`Error deleting test cycle: ${result.error.message}`);
+    if (error) {
+      throw new Error(`Error deleting test cycle: ${error.message}`);
     }
   } catch (error: any) {
     console.error("Error in deleteTestCycle:", error.message);

@@ -274,6 +274,69 @@ export type Database = {
           },
         ]
       }
+      test_cycles: {
+        Row: {
+          build_version: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string
+          environment: string
+          id: string
+          name: string
+          project_id: string
+          start_date: string
+          status: string
+          test_plan_id: string
+          updated_at: string
+        }
+        Insert: {
+          build_version?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date: string
+          environment: string
+          id?: string
+          name: string
+          project_id: string
+          start_date: string
+          status?: string
+          test_plan_id: string
+          updated_at?: string
+        }
+        Update: {
+          build_version?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string
+          environment?: string
+          id?: string
+          name?: string
+          project_id?: string
+          start_date?: string
+          status?: string
+          test_plan_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_cycles_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_cycles_test_plan_id_fkey"
+            columns: ["test_plan_id"]
+            isOneToOne: false
+            referencedRelation: "test_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       test_executions: {
         Row: {
           build_version: string | null
@@ -287,6 +350,7 @@ export type Database = {
           start_time: string
           status: string
           test_case_id: string
+          test_cycle_id: string | null
           test_suite_id: string | null
           updated_at: string
         }
@@ -302,6 +366,7 @@ export type Database = {
           start_time: string
           status: string
           test_case_id: string
+          test_cycle_id?: string | null
           test_suite_id?: string | null
           updated_at?: string
         }
@@ -317,6 +382,7 @@ export type Database = {
           start_time?: string
           status?: string
           test_case_id?: string
+          test_cycle_id?: string | null
           test_suite_id?: string | null
           updated_at?: string
         }
@@ -326,6 +392,13 @@ export type Database = {
             columns: ["test_case_id"]
             isOneToOne: false
             referencedRelation: "test_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_executions_test_cycle_id_fkey"
+            columns: ["test_cycle_id"]
+            isOneToOne: false
+            referencedRelation: "test_cycles"
             referencedColumns: ["id"]
           },
           {
@@ -528,7 +601,86 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_test_cycle: {
+        Args: { cycle_data: Json }
+        Returns: {
+          build_version: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string
+          environment: string
+          id: string
+          name: string
+          project_id: string
+          start_date: string
+          status: string
+          test_plan_id: string
+          updated_at: string
+        }
+      }
+      delete_test_cycle: {
+        Args: { p_cycle_id: string }
+        Returns: undefined
+      }
+      get_project_test_cycles: {
+        Args: { p_project_id: string }
+        Returns: {
+          build_version: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string
+          environment: string
+          id: string
+          name: string
+          project_id: string
+          start_date: string
+          status: string
+          test_plan_id: string
+          updated_at: string
+        }[]
+      }
+      get_test_cycle_by_id: {
+        Args: { p_cycle_id: string }
+        Returns: {
+          build_version: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string
+          environment: string
+          id: string
+          name: string
+          project_id: string
+          start_date: string
+          status: string
+          test_plan_id: string
+          updated_at: string
+        }[]
+      }
+      get_test_cycle_stats: {
+        Args: { p_cycle_id: string }
+        Returns: Json
+      }
+      update_test_cycle: {
+        Args: { cycle_data: Json }
+        Returns: {
+          build_version: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string
+          environment: string
+          id: string
+          name: string
+          project_id: string
+          start_date: string
+          status: string
+          test_plan_id: string
+          updated_at: string
+        }
+      }
     }
     Enums: {
       [_ in never]: never

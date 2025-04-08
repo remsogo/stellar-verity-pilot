@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { DbTestExecution, TestExecution, Status } from "@/types";
 import { mapDbTestCaseToTestCase } from "./testCaseMappers";
@@ -110,4 +109,20 @@ export const updateTestExecution = async (params: {
   }
   
   return mapDbExecutionToExecution(data as DbTestExecution);
+};
+
+// Get all test executions for a project
+export const getTestExecutions = async (projectId: string): Promise<TestExecution[]> => {
+  // Join with test_cases to get project filtered executions
+  const { data, error } = await supabase
+    .from("test_executions")
+    .select(`*, testCase:test_cases(*)`)
+    .eq("testCase.project_id", projectId)
+    .order("created_at", { ascending: false });
+  
+  if (error) {
+    throw new Error(`Error fetching test executions: ${error.message}`);
+  }
+  
+  return (data || []).map(item => mapDbExecutionToExecution(item as DbTestExecution));
 };

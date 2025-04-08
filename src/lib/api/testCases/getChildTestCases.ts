@@ -2,7 +2,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { BaseTestCase } from "@/types/testCase";
 
-// Define a non-recursive type for child test cases
+/**
+ * Type definition for child test cases, explicitly using BaseTestCase
+ * to avoid circular reference issues
+ */
 export type ChildTestCase = BaseTestCase;
 
 /**

@@ -3,7 +3,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/hooks/use-toast';
 
-// Use a simple standalone type to avoid recursive dependencies
+/**
+ * Simple type definition for parent test cases
+ * Explicitly avoiding references to TestCase to prevent circular references
+ */
 type ParentTestCase = {
   id: string;
   title: string;
