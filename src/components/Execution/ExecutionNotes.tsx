@@ -7,12 +7,21 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
 interface ExecutionNotesProps {
-  notes: string;
-  onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
+  notes?: string;
+  execution?: TestExecution;
+  onChange?: (e: ChangeEvent<HTMLTextAreaElement>) => void;
 }
 
-export const ExecutionNotes: React.FC<ExecutionNotesProps> = ({ notes, onChange }) => {
+export const ExecutionNotes: React.FC<ExecutionNotesProps> = ({ notes, execution, onChange }) => {
   const { toast } = useToast();
+  const [localNotes, setLocalNotes] = useState(notes || execution?.notes || "");
+  
+  const handleLocalChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setLocalNotes(e.target.value);
+    if (onChange) {
+      onChange(e);
+    }
+  };
   
   const handleSaveNotes = () => {
     // In a real app, you would save the notes to the database
@@ -30,8 +39,8 @@ export const ExecutionNotes: React.FC<ExecutionNotesProps> = ({ notes, onChange 
       <CardContent className="space-y-4">
         <Textarea
           placeholder="Add notes about this execution..."
-          value={notes}
-          onChange={onChange}
+          value={onChange ? notes : localNotes}
+          onChange={onChange || handleLocalChange}
           className="min-h-24 bg-background"
         />
         <div className="flex justify-end">

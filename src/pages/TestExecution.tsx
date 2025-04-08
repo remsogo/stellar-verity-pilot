@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Loader2, XCircle } from "lucide-react";
 import { useTestExecution } from "@/hooks/use-test-execution";
-import { TestCase } from "@/types";
+import { Status, TestCase } from "@/types";
 import { ExecutionHeader } from "@/components/Execution/ExecutionHeader";
 import { ExecutionNotes } from "@/components/Execution/ExecutionNotes";
 import { ExecutionControls } from "@/components/Execution/ExecutionControls";
@@ -83,7 +83,7 @@ const TestExecution = () => {
     testCaseId: testCase.id,
     testCase: testCase as TestCase,
     executor: 'Current User',
-    status: 'pending',
+    status: 'pending' as Status,
     startTime: new Date().toISOString(),
     environment: 'Test',
     notes: notes,
