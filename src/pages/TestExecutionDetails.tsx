@@ -30,6 +30,11 @@ interface ExecutionStepWithDetails {
   expected_result: string;
 }
 
+// Interface for the RPC function parameters
+interface GetExecutionStepsParams {
+  execution_id_param: string;
+}
+
 const TestExecutionDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -99,7 +104,7 @@ const TestExecutionDetails = () => {
         // Fetch execution steps with test step details
         if (id) {
           const { data, error: stepsError } = await supabase
-            .rpc<ExecutionStepWithDetails[]>('get_execution_steps_with_details', { 
+            .rpc<ExecutionStepWithDetails[], GetExecutionStepsParams>('get_execution_steps_with_details', { 
               execution_id_param: id 
             });
 
