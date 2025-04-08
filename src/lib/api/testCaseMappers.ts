@@ -31,15 +31,9 @@ export const mapDbTestCaseToTestCase = (dbTestCase: DbTestCase): TestCase => {
     preconditions: dbTestCase.preconditions,
     requirements: dbTestCase.requirements,
     tags: dbTestCase.tags,
-    is_parent: dbTestCase.is_parent,
-    parent_id: dbTestCase.parent_id,
     created_at: dbTestCase.created_at,
     updated_at: dbTestCase.updated_at,
     // Map steps if they exist
     steps: dbTestCase.steps ? dbTestCase.steps.map(mapDbTestStepToTestStep) : undefined,
-    // Initialize empty children array
-    children: [],
-    // Store children_ids for reference
-    children_ids: [],
   };
 };

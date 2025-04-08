@@ -32,17 +32,26 @@ export enum TestCasePriority {
 export type Status = "passed" | "failed" | "pending" | "blocked" | "ready" | "draft";
 export type Priority = "low" | "medium" | "high" | "critical";
 
-// Simple reference type for children to avoid circular references
-export type TestCaseReference = {
+// Tag interface to support categorization
+export interface TestTag {
   id: string;
-  title: string;
-  description?: string;
-  status: Status;
-  priority: Priority;
-};
+  name: string;
+  color?: string;
+  category?: string;
+}
 
-// Base test case type without children relationship
-export interface BaseTestCase {
+// Collection interface for dynamic organization
+export interface TestCollection {
+  id: string;
+  name: string;
+  description?: string;
+  isSmartCollection: boolean;
+  criteria?: Record<string, any>; // For smart collections
+  testCaseIds: string[];
+}
+
+// Complete TestCase type with tags for organization
+export type TestCase = {
   id: string;
   title: string;
   description?: string;
@@ -55,21 +64,11 @@ export interface BaseTestCase {
   preconditions?: string;
   requirements?: string[];
   tags: string[];
-  is_parent?: boolean;
-  parent_id?: string | null;
   created_at?: string;
   updated_at?: string;
   createdAt?: string;
   updatedAt?: string;
   steps?: TestStep[];
-}
-
-// Complete TestCase type with proper children array that won't cause circular references
-export type TestCase = BaseTestCase & {
-  // Using TestCaseReference type for children to avoid circular references
-  children?: TestCaseReference[];
-  // For storing children IDs separately to avoid circular references
-  children_ids?: string[];
 };
 
 // Type pour la base de données
@@ -88,8 +87,6 @@ export type DbTestCase = {
   tags: string[];
   created_at: string;
   updated_at: string;
-  is_parent?: boolean;
-  parent_id?: string | null;
   steps?: DbTestStep[];
 };
 

@@ -4,32 +4,37 @@ import { Card, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Folder } from "lucide-react";
+import { ArrowRight, Tag } from "lucide-react";
 
 interface TestCaseCardProps {
   testCase: TestCase;
-  isChild?: boolean;
-  showBadge?: boolean;
+  showTags?: boolean;
 }
 
-export const TestCaseCard = ({ testCase, isChild = false, showBadge = false }: TestCaseCardProps) => {
+export const TestCaseCard = ({ testCase, showTags = false }: TestCaseCardProps) => {
   return (
-    <Card className={`p-4 ${isChild ? 'border-l-4 border-l-primary/30' : ''}`}>
+    <Card className="p-4">
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
             <h3 className="font-medium">
               {testCase.title}
             </h3>
-            {showBadge && testCase.is_parent && (
-              <Badge variant="outline" className="text-xs">
-                Parent
-              </Badge>
-            )}
           </div>
           <CardDescription className="mt-1 line-clamp-2">
             {testCase.description || "No description provided"}
           </CardDescription>
+          
+          {showTags && testCase.tags && testCase.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {testCase.tags.map((tag, index) => (
+                <Badge key={index} variant="outline" className="text-xs flex items-center">
+                  <Tag className="h-3 w-3 mr-1" />
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
         
         <div className="flex items-center gap-2">
@@ -55,12 +60,6 @@ export const TestCaseCard = ({ testCase, isChild = false, showBadge = false }: T
         <span>ID: {testCase.id.substring(0, 8)}</span>
         <span>•</span>
         <span>Priority: {testCase.priority}</span>
-        {testCase.is_parent && testCase.children && (
-          <>
-            <span>•</span>
-            <span>Child Tests: {testCase.children.length}</span>
-          </>
-        )}
       </CardFooter>
     </Card>
   );
