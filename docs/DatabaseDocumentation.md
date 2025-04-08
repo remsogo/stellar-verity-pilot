@@ -1,4 +1,3 @@
-
 # Database Documentation
 
 ## Overview
@@ -50,7 +49,11 @@ Table: project_users
 | created_at | timestamp | Creation timestamp |
 | updated_at | timestamp | Last update timestamp |
 
-This junction table manages the many-to-many relationship between users and projects, including role-based permissions.
+This junction table manages the many-to-many relationship between users and projects, including role-based permissions. The system supports four distinct roles:
+- **owner**: Full control over the project, including deletion
+- **admin**: Can manage users and project settings
+- **editor**: Can create and modify test cases and other project entities
+- **viewer**: Read-only access to project data
 
 ### Test Cases
 
@@ -277,6 +280,8 @@ Table: user_profiles
 | created_at | timestamp | Creation timestamp |
 | updated_at | timestamp | Last update timestamp |
 
+User profiles store additional information about authenticated users and enables system-wide functionality.
+
 ### Attachments
 
 ```
@@ -302,11 +307,13 @@ Table: attachments
 1. **get_user_projects()** 
    - Returns all projects the current user has access to
    - Used for project selection and listing
+   - Security definer function that prevents RLS recursion
 
 2. **is_member_of_project(project_id UUID)**
    - Checks if the current user is a member of the specified project
    - Returns boolean
    - Used for permission checks
+   - Security definer function that prevents RLS recursion
 
 3. **is_project_member(project_id UUID, user_id UUID)**
    - Checks if a specific user is a member of a project
@@ -321,6 +328,12 @@ Table: attachments
 5. **get_project_users(p_project_id UUID)**
    - Returns all users who are members of a project
    - Used for user management in projects
+   - Returns comprehensive user data including email and roles
+
+6. **handle_new_project()**
+   - Automatically adds the creator as an owner when a new project is created
+   - Trigger function that runs after project insertion
+   - Ensures proper user assignment at project creation
 
 ### Test Cycle Management Functions
 
@@ -389,6 +402,19 @@ The general pattern is:
 1. Users can see resources for projects they're members of
 2. Users with admin/owner roles can modify resources
 3. Users with viewer roles can only read data
+
+Security definer functions like `is_member_of_project` and `get_user_projects` are used to prevent infinite recursion in RLS policies, which could occur when a policy attempts to query the same table it's protecting.
+
+## Project User Management
+
+The system provides a complete API for project user management:
+
+1. **getProjectUsers(projectId)** - Gets all users for a specific project
+2. **getProjectWithMembers(projectId)** - Gets a project with its member details
+3. **addUserToProject(projectId, email, role)** - Adds a user to a project
+4. **updateUserRole(projectId, userId, role)** - Updates a user's role in the project
+5. **removeUserFromProject(projectId, userId)** - Removes a user from a project
+6. **checkUserProjectMembership(projectId)** - Checks if the current user is a member of a project
 
 ## Typical Data Flow
 
