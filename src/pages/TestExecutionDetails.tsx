@@ -97,32 +97,40 @@ const TestExecutionDetails = () => {
 
         // Fetch execution steps with test step details
         if (id) {
-          // Fixed: Specify both type parameters - return type and params type
+          // Completely refactored approach to avoid typing issues
           const { data, error: stepsError } = await supabase
-            .rpc<ExecutionStepWithDetails, GetExecutionStepsParams>('get_execution_steps_with_details', { 
-              execution_id_param: id 
-            });
+            .from('execution_steps')
+            .select(`
+              id,
+              test_step_id,
+              execution_id,
+              status,
+              actual_result,
+              step_order,
+              test_steps (
+                description,
+                expected_result
+              )
+            `)
+            .eq('execution_id', id)
+            .order('step_order');
 
           if (stepsError) {
             console.error("Error fetching steps:", stepsError);
             toast.error("Could not load execution step details");
-          } else if (data) {
-            // Ensure data is an array before proceeding
-            const stepsArray = Array.isArray(data) ? data : [];
-            if (stepsArray.length > 0) {
-              const formattedSteps: ExecutionStep[] = stepsArray.map((step: ExecutionStepWithDetails) => ({
-                id: step.id,
-                test_step_id: step.test_step_id,
-                execution_id: step.execution_id,
-                status: step.status as Status,
-                actual_result: step.actual_result,
-                step_order: step.step_order,
-                description: step.description || "No description",
-                expected_result: step.expected_result || "No expected result"
-              }));
+          } else if (data && data.length > 0) {
+            const formattedSteps: ExecutionStep[] = data.map((step) => ({
+              id: step.id,
+              test_step_id: step.test_step_id,
+              execution_id: step.execution_id,
+              status: step.status as Status,
+              actual_result: step.actual_result,
+              step_order: step.step_order,
+              description: step.test_steps?.description || "No description",
+              expected_result: step.test_steps?.expected_result || "No expected result"
+            }));
               
-              setExecutionSteps(formattedSteps);
-            }
+            setExecutionSteps(formattedSteps);
           }
         }
       } catch (error) {
