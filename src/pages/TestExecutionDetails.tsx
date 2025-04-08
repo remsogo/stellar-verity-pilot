@@ -1,44 +1,88 @@
+
 import { MainLayout } from "@/components/Layout/MainLayout";
-import { useRouter } from 'next/router';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { ExecutionDetailsLoadingState } from "@/components/Execution/ExecutionDetailsLoadingState";
+import { ExecutionDetailsNotFound } from "@/components/Execution/ExecutionDetailsNotFound";
+import { ExecutionDetailsContent } from "@/components/Execution/ExecutionDetailsContent";
+import { TestExecution, ExecutionStep } from "@/types";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const TestExecutionDetails = () => {
-  const router = useRouter();
-  const { id } = router.query;
-  const [executionDetails, setExecutionDetails] = useState(null);
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [executionSteps, setExecutionSteps] = useState<ExecutionStep[]>([]);
+
+  const { data: execution, isLoading, error } = useQuery({
+    queryKey: ["execution", id],
+    queryFn: async () => {
+      if (!id) throw new Error("No execution ID provided");
+      
+      const { data, error } = await supabase
+        .from("test_executions")
+        .select(`
+          *,
+          testCase:test_cases(*)
+        `)
+        .eq("id", id)
+        .single();
+      
+      if (error) throw error;
+      return data as TestExecution;
+    },
+    enabled: !!id
+  });
 
   useEffect(() => {
-    // Fetch execution details based on the ID
-    // Replace this with your actual data fetching logic
-    const fetchExecutionDetails = async () => {
-      if (id) {
-        // Mock data for demonstration
-        const mockDetails = {
-          id: id,
-          testCaseName: "Sample Test Case",
-          status: "Passed",
-          startTime: new Date().toLocaleTimeString(),
-          endTime: new Date().toLocaleTimeString(),
-          steps: [
-            { id: 1, description: "Step 1: Open the application", result: "Passed" },
-            { id: 2, description: "Step 2: Log in", result: "Passed" },
-            { id: 3, description: "Step 3: Navigate to dashboard", result: "Passed" },
-          ],
-        };
-        setExecutionDetails(mockDetails);
+    const fetchExecutionSteps = async () => {
+      if (!id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .rpc('get_execution_steps_with_details', { execution_id: id });
+        
+        if (error) throw error;
+        setExecutionSteps(data as ExecutionStep[]);
+      } catch (err: any) {
+        toast({
+          title: "Error fetching execution steps",
+          description: err.message,
+          variant: "destructive"
+        });
       }
     };
 
-    fetchExecutionDetails();
-  }, [id, router]);
+    if (id) {
+      fetchExecutionSteps();
+    }
+  }, [id, toast]);
 
-  if (!executionDetails) {
-    return <MainLayout
-      pageTitle="Execution Details"
-      pageDescription="View detailed results of a test execution."
-    >
-      <div>Loading...</div>
-    </MainLayout>;
+  if (isLoading) {
+    return (
+      <MainLayout
+        pageTitle="Execution Details"
+        pageDescription="View detailed results of a test execution."
+      >
+        <ExecutionDetailsLoadingState />
+      </MainLayout>
+    );
+  }
+
+  if (error || !execution) {
+    return (
+      <MainLayout
+        pageTitle="Execution Details"
+        pageDescription="View detailed results of a test execution."
+      >
+        <ExecutionDetailsNotFound navigate={navigate} />
+      </MainLayout>
+    );
   }
 
   return (
@@ -46,20 +90,23 @@ const TestExecutionDetails = () => {
       pageTitle="Execution Details"
       pageDescription="View detailed results of a test execution."
     >
-      <div>
-        <h2>Test Case: {executionDetails.testCaseName}</h2>
-        <p>Status: {executionDetails.status}</p>
-        <p>Start Time: {executionDetails.startTime}</p>
-        <p>End Time: {executionDetails.endTime}</p>
-        <h3>Steps:</h3>
-        <ul>
-          {executionDetails.steps.map((step) => (
-            <li key={step.id}>
-              {step.description} - Result: {step.result}
-            </li>
-          ))}
-        </ul>
+      <div className="mb-6">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => navigate("/test-executions")}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Executions
+        </Button>
       </div>
+      
+      <ExecutionDetailsContent 
+        execution={execution} 
+        executionSteps={executionSteps} 
+        navigate={navigate}
+      />
     </MainLayout>
   );
 };

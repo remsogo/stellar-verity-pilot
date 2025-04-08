@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/Layout/MainLayout";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -5,21 +6,35 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Check, Copy, Loader2, XCircle } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getTestCase, updateTestCase } from "@/lib/api/testCases";
-import { createTestExecution, getTestExecution, updateTestExecution } from "@/lib/api/testExecutions";
+import { Separator } from "@/components/ui/separator";
+import { supabase } from "@/integrations/supabase/client";
+import { TestStep, TestCase } from "@/types";
 import { TestExecutionStep } from "@/components/Execution/TestExecutionStep";
 import { useUser } from "@/hooks/use-user";
-import { Separator } from "@/components/ui/separator";
+
+interface TestExecution {
+  id: string;
+  test_case_id: string;
+  executor: string;
+  status: string;
+  start_time: string;
+  end_time?: string;
+  environment: string;
+  notes?: string;
+  step_results?: boolean[];
+  completed?: boolean;
+}
 
 const TestExecution = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useUser();
+  const { toast } = useToast();
   const [testCase, setTestCase] = useState<TestCase | null>(null);
-  const [execution, setExecution] = useState<TestExecutionType | null>(null);
+  const [execution, setExecution] = useState<TestExecution | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [stepResults, setStepResults] = useState<boolean[]>([]);
   const [notes, setNotes] = useState("");
@@ -28,38 +43,40 @@ const TestExecution = () => {
 
   const { data: testCaseData, isLoading: isTestCaseLoading } = useQuery({
     queryKey: ["testCase", id],
-    queryFn: () => getTestCase(id!),
-    enabled: !!id,
-    onSuccess: (data) => {
-      setTestCase(data);
+    queryFn: async () => {
+      if (!id) throw new Error("No test case ID provided");
+      
+      const { data, error } = await supabase
+        .from("test_cases")
+        .select("*, steps:test_steps(*)")
+        .eq("id", id)
+        .single();
+      
+      if (error) throw error;
+      return data as TestCase;
     },
-    onError: (error: any) => {
-      toast({
-        title: "Error fetching test case",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
+    enabled: !!id
   });
 
   const { data: executionData, isLoading: isExecutionLoading } = useQuery({
     queryKey: ["testExecution", id],
-    queryFn: () => getTestExecution(id!),
-    enabled: !!id,
-    onSuccess: (data) => {
-      setExecution(data);
-      setStepResults(data.step_results || []);
-      setNotes(data.notes || "");
-      setIsCompleted(data.completed || false);
-      setCurrentStepIndex(data.step_results?.length || 0);
+    queryFn: async () => {
+      if (!id) throw new Error("No test case ID provided");
+      
+      // Try to find an existing execution for this test case that isn't completed
+      const { data, error } = await supabase
+        .from("test_executions")
+        .select("*")
+        .eq("test_case_id", id)
+        .is("end_time", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data as TestExecution | null;
     },
-    onError: (error: any) => {
-      toast({
-        title: "Error fetching test execution",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
+    enabled: !!id
   });
 
   useEffect(() => {
@@ -68,15 +85,35 @@ const TestExecution = () => {
     }
     if (executionData) {
       setExecution(executionData);
-      setStepResults(executionData.step_results || []);
+      // Initialize step results if available
+      const existingResults = executionData.step_results || [];
+      setStepResults(existingResults);
       setNotes(executionData.notes || "");
-      setIsCompleted(executionData.completed || false);
-      setCurrentStepIndex(executionData.step_results?.length || 0);
+      setIsCompleted(!!executionData.completed);
+      setCurrentStepIndex(existingResults.length || 0);
     }
   }, [testCaseData, executionData]);
 
   const createExecutionMutation = useMutation({
-    mutationFn: createTestExecution,
+    mutationFn: async () => {
+      if (!id || !user?.id) throw new Error("Missing required data");
+      
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
+        .from("test_executions")
+        .insert({
+          test_case_id: id,
+          executor: user.id,
+          status: "pending",
+          start_time: now,
+          environment: "Development"
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as TestExecution;
+    },
     onSuccess: (data) => {
       setExecution(data);
       toast({
@@ -90,13 +127,37 @@ const TestExecution = () => {
         description: error.message,
         variant: "destructive",
       });
-    },
+    }
   });
 
   const updateExecutionMutation = useMutation({
-    mutationFn: updateTestExecution,
+    mutationFn: async (data: { 
+      id: string; 
+      step_results: boolean[]; 
+      notes: string; 
+      completed: boolean; 
+    }) => {
+      const updateData: any = {
+        notes: data.notes,
+      };
+      
+      if (data.completed) {
+        updateData.end_time = new Date().toISOString();
+        updateData.status = data.step_results.every(result => result) ? "passed" : "failed";
+      }
+      
+      const { data: updatedExecution, error } = await supabase
+        .from("test_executions")
+        .update(updateData)
+        .eq("id", data.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return updatedExecution;
+    },
     onSuccess: (data) => {
-      setExecution(data);
+      setExecution(data as TestExecution);
       toast({
         title: "Test execution updated",
         description: "The test execution has been updated successfully.",
@@ -108,20 +169,14 @@ const TestExecution = () => {
         description: error.message,
         variant: "destructive",
       });
-    },
+    }
   });
 
   useEffect(() => {
-    if (id && !execution && !createExecutionMutation.isLoading) {
-      createExecutionMutation.mutate({
-        test_case_id: id,
-        user_id: user?.id!,
-        step_results: [],
-        notes: "",
-        completed: false,
-      });
+    if (id && !execution && !createExecutionMutation.isPending && user?.id) {
+      createExecutionMutation.mutate();
     }
-  }, [id, execution, user, createExecutionMutation]);
+  }, [id, execution, user, createExecutionMutation.isPending]);
 
   const handleStepResult = (result: boolean) => {
     const newStepResults = [...stepResults];
@@ -130,7 +185,7 @@ const TestExecution = () => {
   };
 
   const handleNextStep = () => {
-    if (currentStepIndex < testCase!.steps.length - 1) {
+    if (testCase && currentStepIndex < testCase.steps!.length - 1) {
       setCurrentStepIndex(currentStepIndex + 1);
     } else {
       setIsCompleted(true);
@@ -148,49 +203,37 @@ const TestExecution = () => {
   };
 
   const handleSave = async () => {
+    if (!execution) return;
+    
     setIsSaving(true);
     try {
       await updateExecutionMutation.mutateAsync({
-        id: execution!.id,
+        id: execution.id,
         step_results: stepResults,
         notes: notes,
-        completed: isCompleted,
-      });
-      toast({
-        title: "Test execution saved",
-        description: "The test execution has been saved successfully.",
+        completed: isCompleted
       });
     } catch (error: any) {
-      toast({
-        title: "Error saving test execution",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error(error);
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleComplete = async () => {
+    if (!execution) return;
+    
     setIsSaving(true);
     try {
       await updateExecutionMutation.mutateAsync({
-        id: execution!.id,
+        id: execution.id,
         step_results: stepResults,
         notes: notes,
-        completed: true,
-      });
-      toast({
-        title: "Test execution completed",
-        description: "The test execution has been completed successfully.",
+        completed: true
       });
       navigate("/test-executions");
     } catch (error: any) {
-      toast({
-        title: "Error completing test execution",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error(error);
     } finally {
       setIsSaving(false);
     }
@@ -204,7 +247,7 @@ const TestExecution = () => {
     return <div>Test case not found</div>;
   }
 
-  const currentStep = testCase.steps[currentStepIndex];
+  const currentStep = testCase.steps && testCase.steps[currentStepIndex];
 
   return (
     <MainLayout 
@@ -222,7 +265,7 @@ const TestExecution = () => {
               <TestExecutionStep
                 step={currentStep}
                 stepNumber={currentStepIndex + 1}
-                totalSteps={testCase.steps.length}
+                totalSteps={testCase.steps?.length || 0}
                 onStepResult={handleStepResult}
                 result={stepResults[currentStepIndex]}
               />
@@ -238,7 +281,7 @@ const TestExecution = () => {
             </Button>
             <Button
               onClick={handleNextStep}
-              disabled={currentStepIndex === testCase.steps.length - 1}
+              disabled={testCase.steps && currentStepIndex === testCase.steps.length - 1}
             >
               {isCompleted ? "Complete" : "Next"}
             </Button>
