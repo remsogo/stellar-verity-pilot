@@ -15,37 +15,14 @@ interface ProjectUserData {
  */
 export async function getProjectUsers(projectId: string) {
   try {
-    // First, fetch the project users
-    const { data: projectUsers, error: projectUsersError } = await supabase
-      .from('project_users')
-      .select('id, user_id, role')
-      .eq('project_id', projectId);
-    
-    if (projectUsersError) throw projectUsersError;
-    if (!projectUsers || projectUsers.length === 0) return [];
-
-    // Then, fetch the user profiles for those users
-    const userIds = projectUsers.map(user => user.user_id);
-    const { data: userProfiles, error: profilesError } = await supabase
-      .from('user_profiles')
-      .select('auth_id, email, full_name')
-      .in('auth_id', userIds);
-    
-    if (profilesError) throw profilesError;
-    
-    // Combine the data
-    const transformedData = projectUsers.map(user => {
-      const profile = userProfiles?.find(profile => profile.auth_id === user.user_id);
-      return {
-        id: user.id,
-        user_id: user.user_id,
-        email: profile?.email || '',
-        full_name: profile?.full_name || null,
-        role: user.role
-      };
+    // Use the get_project_users Supabase function instead of querying project_users directly
+    // This avoids the infinite recursion issue in the RLS policy
+    const { data, error } = await supabase.rpc('get_project_users', {
+      p_project_id: projectId
     });
     
-    return transformedData;
+    if (error) throw error;
+    return data || [];
   } catch (error: any) {
     console.error('Error fetching project users:', error);
     throw error;

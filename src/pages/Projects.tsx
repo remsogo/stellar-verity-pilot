@@ -11,6 +11,8 @@ import { useUser } from '@/hooks/use-user';
 import { Button } from '@/components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
+import { Card, CardContent } from '@/components/ui/card';
+import { AlertCircle } from 'lucide-react';
 
 const Projects = () => {
   const queryClient = useQueryClient();
@@ -26,9 +28,17 @@ const Projects = () => {
     meta: {
       onError: (error: any) => {
         console.error('Error fetching projects:', error);
+        
+        const isRecursionError = error.message && 
+          error.message.includes('infinite recursion');
+        
         toast({
-          title: "Error fetching projects",
-          description: error.message || "There was an error fetching your projects",
+          title: isRecursionError 
+            ? "Database Policy Error" 
+            : "Error fetching projects",
+          description: isRecursionError
+            ? "There's a known issue with the database that needs to be fixed."
+            : error.message || "There was an error fetching your projects",
           variant: "destructive"
         });
       }
@@ -63,6 +73,11 @@ const Projects = () => {
     return null; // Will redirect in useEffect
   }
 
+  // Check if error is specifically the infinite recursion error
+  const isRecursionError = error && 
+    error instanceof Error && 
+    error.message.includes('infinite recursion');
+
   return (
     <div className="flex h-screen overflow-hidden w-full bg-gradient-to-br from-background to-background/80">
       <CustomSidebar />
@@ -95,6 +110,19 @@ const Projects = () => {
                   ))}
                 </div>
               </div>
+            ) : isRecursionError ? (
+              <Card className="border-destructive bg-destructive/10 mb-4">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5 text-destructive" />
+                    <h3 className="text-lg font-medium text-destructive">Database Policy Error</h3>
+                  </div>
+                  <p className="text-muted-foreground mt-2 mb-4">
+                    There's an issue with the database policies causing infinite recursion errors.
+                    Please contact your administrator to fix this issue.
+                  </p>
+                </CardContent>
+              </Card>
             ) : error ? (
               <div className="text-center py-10">
                 <h3 className="text-lg font-medium text-destructive">Error loading projects</h3>

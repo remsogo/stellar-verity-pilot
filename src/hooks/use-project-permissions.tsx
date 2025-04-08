@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useUser } from './use-user';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,7 +44,7 @@ export const useProjectPermissions = (projectId?: string) => {
         setError(null);
         console.log("Fetching project permissions for project:", projectId);
 
-        // Get all project members
+        // Get all project members using the updated function that avoids recursion
         const membersData = await getProjectUsers(projectId);
         console.log("Project members data:", membersData);
 
