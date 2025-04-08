@@ -17,6 +17,19 @@ export const getTestCase = async (id: string): Promise<TestCase> => {
   return mapDbTestCaseToTestCase(data as DbTestCase);
 };
 
+export const getChildTestCases = async (parentId: string): Promise<TestCase[]> => {
+  const { data, error } = await supabase
+    .from("test_cases")
+    .select("*, steps:test_steps(*)")
+    .eq("parent_id", parentId);
+
+  if (error) {
+    throw new Error(`Error fetching child test cases: ${error.message}`);
+  }
+
+  return (data as DbTestCase[]).map(mapDbTestCaseToTestCase);
+};
+
 export const updateTestCase = async (testCase: Partial<TestCase> & { id: string }): Promise<TestCase> => {
   // Convert frontend model to DB model for update
   const dbTestCase: Partial<DbTestCase> = {
@@ -29,7 +42,9 @@ export const updateTestCase = async (testCase: Partial<TestCase> & { id: string 
     estimate_time: testCase.estimate_time,
     preconditions: testCase.preconditions,
     requirements: testCase.requirements,
-    tags: testCase.tags
+    tags: testCase.tags,
+    is_parent: testCase.is_parent,
+    parent_id: testCase.parent_id
   };
 
   const { data, error } = await supabase
@@ -41,6 +56,37 @@ export const updateTestCase = async (testCase: Partial<TestCase> & { id: string 
 
   if (error) {
     throw new Error(`Error updating test case: ${error.message}`);
+  }
+
+  return mapDbTestCaseToTestCase(data as DbTestCase);
+};
+
+export const createTestCase = async (testCase: Partial<TestCase>): Promise<TestCase> => {
+  // Convert frontend model to DB model for creation
+  const dbTestCase: Partial<DbTestCase> = {
+    title: testCase.title || "New Test Case",
+    description: testCase.description,
+    status: testCase.status || "draft",
+    priority: testCase.priority || "medium",
+    author: testCase.author || "Unknown",
+    project_id: testCase.project_id,
+    estimate_time: testCase.estimate_time,
+    automated: testCase.automated || false,
+    preconditions: testCase.preconditions,
+    requirements: testCase.requirements,
+    tags: testCase.tags || [],
+    is_parent: testCase.is_parent || false,
+    parent_id: testCase.parent_id
+  };
+
+  const { data, error } = await supabase
+    .from("test_cases")
+    .insert(dbTestCase)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Error creating test case: ${error.message}`);
   }
 
   return mapDbTestCaseToTestCase(data as DbTestCase);

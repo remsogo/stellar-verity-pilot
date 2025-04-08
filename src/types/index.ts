@@ -24,12 +24,15 @@ export type TestCase = {
   preconditions?: string;
   requirements?: string[];
   tags: string[];
+  is_parent?: boolean;
+  parent_id?: string | null;
   created_at?: string;
   updated_at?: string;
   // These fields are for frontend use
   createdAt?: string;
   updatedAt?: string;
   steps?: TestStep[];
+  children?: TestCase[];
 };
 
 export type TestExecution = {
@@ -110,6 +113,8 @@ export type DbTestCase = {
   tags: string[];
   created_at: string;
   updated_at: string;
+  is_parent?: boolean;
+  parent_id?: string | null;
   steps?: DbTestStep[];
 };
 

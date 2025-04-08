@@ -1,5 +1,5 @@
 
-export { getTestCase, updateTestCase } from './testCases';
+export { getTestCase, updateTestCase, createTestCase, getChildTestCases } from './testCases';
 export { 
   getTestExecution, 
   getExecutionDetails, 
@@ -21,3 +21,10 @@ export {
   deleteProject,
   inviteUserToProject
 } from './projects';
+export {
+  getTestPlans,
+  getTestPlan,
+  createTestPlan,
+  updateTestPlan,
+  deleteTestPlan
+} from './testPlans';

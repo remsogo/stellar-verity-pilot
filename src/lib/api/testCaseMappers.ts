@@ -16,6 +16,8 @@ export const mapDbTestCaseToTestCase = (dbTestCase: DbTestCase): TestCase => {
     preconditions: dbTestCase.preconditions,
     requirements: dbTestCase.requirements,
     tags: dbTestCase.tags || [],
+    is_parent: dbTestCase.is_parent,
+    parent_id: dbTestCase.parent_id,
     createdAt: dbTestCase.created_at,
     updatedAt: dbTestCase.updated_at
   };

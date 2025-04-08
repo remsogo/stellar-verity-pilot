@@ -22,6 +22,9 @@ import Projects from "./pages/Projects";
 import ProjectForm from "./pages/ProjectForm";
 import ProjectDetails from "./pages/ProjectDetails";
 import Parameters from "./pages/Parameters";
+import TestPlans from "./pages/TestPlans";
+import TestPlanForm from "./pages/TestPlanForm";
+import TestPlanDetails from "./pages/TestPlanDetails";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +91,38 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <TestExecutionDetails />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/test-plans" 
+                element={
+                  <ProtectedRoute>
+                    <TestPlans />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/test-plans/new" 
+                element={
+                  <ProtectedRoute>
+                    <TestPlanForm />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/test-plans/:id" 
+                element={
+                  <ProtectedRoute>
+                    <TestPlanDetails />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/test-plans/:id/edit" 
+                element={
+                  <ProtectedRoute>
+                    <TestPlanForm />
                   </ProtectedRoute>
                 } 
               />
