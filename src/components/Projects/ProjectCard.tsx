@@ -15,7 +15,7 @@ interface ProjectCardProps {
   isSelected?: boolean;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
-  onInvite: (id: string) => void;
+  onInvite?: (id: string) => void;
 }
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({
@@ -56,14 +56,16 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           {isSelected ? "Selected" : "Select Project"}
         </Button>
         <div className="flex gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => onInvite(id)}
-          >
-            <UserPlus size={16} />
-          </Button>
+          {onInvite && (
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onInvite(id)}
+            >
+              <UserPlus size={16} />
+            </Button>
+          )}
           <Button 
             variant="ghost" 
             size="icon"

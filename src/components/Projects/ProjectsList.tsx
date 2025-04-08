@@ -89,6 +89,10 @@ export const ProjectsList: React.FC<ProjectsListProps> = ({ projects, onDelete }
     }
   };
 
+  const handleInviteUser = (projectId: string) => {
+    navigate(`/projects/${projectId}`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -123,6 +127,7 @@ export const ProjectsList: React.FC<ProjectsListProps> = ({ projects, onDelete }
               isSelected={selectedProjectId === project.id}
               onSelect={handleSelectProject}
               onDelete={(id) => setProjectToDelete(id)}
+              onInvite={handleInviteUser}
             />
           ))}
         </div>
