@@ -9,8 +9,8 @@ import { TestCase } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useTestPlanForm = (
-  testPlan?: TestPlan,
-  onSubmit: (data: Partial<TestPlan>) => Promise<void>
+  onSubmit: (data: Partial<TestPlan>) => Promise<void>,
+  testPlan?: TestPlan
 ) => {
   const [selectedTestCases, setSelectedTestCases] = useState<string[]>(testPlan?.test_cases || []);
   const [availableTestCases, setAvailableTestCases] = useState<TestCase[]>([]);

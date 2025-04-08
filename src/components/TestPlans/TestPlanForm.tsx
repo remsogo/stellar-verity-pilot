@@ -22,7 +22,7 @@ export const TestPlanForm = ({ testPlan, onSubmit, isLoading = false }: TestPlan
     isSubmitting,
     toggleTestCase,
     handleFormSubmit
-  } = useTestPlanForm(testPlan, onSubmit);
+  } = useTestPlanForm(onSubmit, testPlan);
   
   return (
     <FormProvider {...methods}>
