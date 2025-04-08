@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useUser } from './use-user';
-import { supabase } from '@/integrations/supabase/client';
 import { 
   getProjectUsers, 
   addUserToProject as apiAddUserToProject,
@@ -44,7 +43,7 @@ export const useProjectPermissions = (projectId?: string) => {
         setError(null);
         console.log("Fetching project permissions for project:", projectId);
 
-        // Get all project members using the updated function that avoids recursion
+        // Get all project members using the get_project_users RPC function
         const membersData = await getProjectUsers(projectId);
         console.log("Project members data:", membersData);
 

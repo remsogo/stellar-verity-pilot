@@ -15,14 +15,13 @@ interface ProjectUserData {
  */
 export async function getProjectUsers(projectId: string) {
   try {
-    // Use the get_project_users Supabase function instead of querying project_users directly
-    // This avoids the infinite recursion issue in the RLS policy
+    // Call the get_project_users function directly as an RPC
     const { data, error } = await supabase.rpc('get_project_users', {
       p_project_id: projectId
     });
     
     if (error) throw error;
-    return data || [];
+    return data as ProjectUserData[] || [];
   } catch (error: any) {
     console.error('Error fetching project users:', error);
     throw error;
