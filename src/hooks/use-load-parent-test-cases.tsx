@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/hooks/use-toast';
 
-// Define a simple non-recursive type for parent test cases
+// Use a simple standalone type to avoid recursive dependencies
 type ParentTestCase = {
   id: string;
   title: string;

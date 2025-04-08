@@ -56,7 +56,7 @@ export interface BaseTestCase {
 }
 
 // Complete TestCase type with optional children array
-// Use string[] rather than recursively defined children
+// Using string[] for children IDs rather than recursive definition
 export type TestCase = BaseTestCase & {
   children?: string[];
 };

@@ -26,11 +26,16 @@ export const TestCyclesList: React.FC<TestCyclesListProps> = ({ testCycles }) =>
       <div className="text-center p-10 bg-muted/20 rounded-lg">
         <h3 className="text-lg font-medium mb-2">No Test Cycles Found</h3>
         <p className="text-muted-foreground mb-4">
-          Create your first test cycle to start organizing your test execution.
+          Once the test_cycles table is created in your database, you can create test cycles to organize your test execution.
         </p>
-        <Button asChild>
-          <Link to="/test-cycles/new">Create Test Cycle</Link>
-        </Button>
+        <div className="flex flex-col space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Note: The test_cycles table needs to be created in your database first.
+          </p>
+          <Button asChild>
+            <Link to="/test-plans">View Test Plans</Link>
+          </Button>
+        </div>
       </div>
     );
   }
