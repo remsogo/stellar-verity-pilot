@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { createProject, updateProject } from '@/lib/api';
+import { createProject, updateProject } from '@/lib/api/projects';
 
 interface ProjectFormProps {
   projectId?: string;
@@ -45,10 +45,18 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
     try {
       if (isEditing && projectId) {
         await updateProject(projectId, { name, description });
+        toast({
+          title: 'Project updated',
+          description: `Project "${name}" has been updated successfully.`,
+        });
         navigate(`/projects/${projectId}`);
       } else {
         const project = await createProject(name, description);
         if (project) {
+          toast({
+            title: 'Project created',
+            description: `Project "${name}" has been created successfully.`,
+          });
           navigate(`/projects/${project.id}`);
         }
       }

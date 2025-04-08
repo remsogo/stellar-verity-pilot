@@ -24,9 +24,12 @@ export const useUser = () => {
             email: user.email || '',
             name: user.user_metadata?.full_name || 'Test User'
           });
+        } else {
+          setUser(null);
         }
       } catch (error) {
         console.error('Error fetching user:', error);
+        setUser(null);
       } finally {
         setLoading(false);
       }
