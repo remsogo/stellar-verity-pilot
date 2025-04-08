@@ -1,7 +1,13 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useUser } from './use-user';
+import { supabase } from '@/integrations/supabase/client';
+import { 
+  getProjectUsers, 
+  addUserToProject as apiAddUserToProject,
+  updateUserRole as apiUpdateUserRole,
+  removeUserFromProject as apiRemoveUserFromProject
+} from '@/lib/api/projects';
 import type { ProjectRole } from '@/integrations/supabase/project-types';
 
 // Re-export types with proper syntax for isolated modules
@@ -38,37 +44,29 @@ export const useProjectPermissions = (projectId?: string) => {
         setError(null);
 
         // Get all project members
-        const { data: membersData, error: membersError } = await supabase
-          .rpc('get_project_users', { p_project_id: projectId });
+        const membersData = await getProjectUsers(projectId);
 
-        if (membersError) {
-          console.error('Error fetching project members:', membersError);
-          setError('Failed to fetch project members.');
-          setMembers([]);
-          setUserRole(null);
-        } else if (membersData) {
+        if (membersData && Array.isArray(membersData)) {
           // Find current user's role
-          const currentUserData = Array.isArray(membersData) 
-            ? membersData.find((member: any) => member.user_id === user.id)
-            : null;
+          const currentUserData = membersData.find(
+            (member) => member.user_id === user.id
+          );
           
           setUserRole(currentUserData?.role as ProjectRole || null);
 
           // Convert the raw data to ProjectMember format
-          if (Array.isArray(membersData)) {
-            const membersList: ProjectMember[] = membersData.map((member: any) => ({
-              id: member.id as string,
-              email: member.email as string,
-              name: member.full_name as string || 'User',
-              role: member.role as ProjectRole,
-            }));
-            
-            setMembers(membersList);
-          } else {
-            setMembers([]);
-          }
+          const membersList: ProjectMember[] = membersData.map((member) => ({
+            id: member.id,
+            email: member.email as string,
+            name: member.full_name as string || undefined,
+            role: member.role as ProjectRole,
+          }));
+          
+          setMembers(membersList);
+        } else {
+          setMembers([]);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error in useProjectPermissions:', err);
         setError('An unexpected error occurred.');
       } finally {
@@ -84,29 +82,14 @@ export const useProjectPermissions = (projectId?: string) => {
     if (!projectId || !canManageUsers) return false;
 
     try {
-      const { data, error } = await supabase.rpc(
-        'add_user_to_project',
-        {
-          p_project_id: projectId,
-          p_user_id: email,
-          p_role: role
-        }
-      );
+      const newMember = await apiAddUserToProject(projectId, email, role);
 
-      if (error) {
-        console.error('Error adding user to project:', error);
-        throw new Error(error.message || 'Failed to add user to project.');
-      }
-
-      // Add the new member to the members list
-      const newMember: ProjectMember = {
-        id: data.id as string,
-        email: data.email as string,
-        name: data.full_name as string || 'New User',
-        role: data.role as ProjectRole,
-      };
-
-      setMembers(prev => [...prev, newMember]);
+      setMembers(prev => [...prev, {
+        id: newMember.id,
+        email: newMember.email as string,
+        name: newMember.full_name as string || undefined,
+        role: newMember.role as ProjectRole,
+      }]);
 
       return true;
     } catch (error: any) {
@@ -120,33 +103,18 @@ export const useProjectPermissions = (projectId?: string) => {
     if (!projectId || !canManageUsers) return false;
 
     try {
-      const memberToUpdate = members.find(m => m.id === memberId);
-      if (!memberToUpdate) {
-        throw new Error('Member not found');
+      const result = await apiUpdateUserRole(projectId, memberId, newRole);
+
+      if (result) {
+        // Update local state
+        setMembers(prev => 
+          prev.map(member => 
+            member.id === memberId ? { ...member, role: newRole } : member
+          )
+        );
+        return true;
       }
-
-      const { data, error } = await supabase.rpc(
-        'update_user_role',
-        {
-          p_project_id: projectId,
-          p_user_id: memberToUpdate.email,
-          p_role: newRole
-        }
-      );
-
-      if (error) {
-        console.error('Error updating user role:', error);
-        throw new Error(error.message || 'Failed to update user role.');
-      }
-
-      // Update local state
-      setMembers(prev => 
-        prev.map(member => 
-          member.id === memberId ? { ...member, role: newRole } : member
-        )
-      );
-
-      return true;
+      return false;
     } catch (error: any) {
       console.error('Error in updateUserRole:', error);
       throw error;
@@ -158,28 +126,14 @@ export const useProjectPermissions = (projectId?: string) => {
     if (!projectId || !canManageUsers) return false;
 
     try {
-      const memberToRemove = members.find(m => m.id === memberId);
-      if (!memberToRemove) {
-        throw new Error('Member not found');
+      const success = await apiRemoveUserFromProject(projectId, memberId);
+
+      if (success) {
+        // Update local state
+        setMembers(prev => prev.filter(member => member.id !== memberId));
+        return true;
       }
-
-      const { data, error } = await supabase.rpc(
-        'remove_user_from_project',
-        {
-          p_project_id: projectId,
-          p_user_id: memberToRemove.email
-        }
-      );
-
-      if (error) {
-        console.error('Error removing user from project:', error);
-        throw new Error(error.message || 'Failed to remove user from project.');
-      }
-
-      // Update local state
-      setMembers(prev => prev.filter(member => member.id !== memberId));
-
-      return true;
+      return false;
     } catch (error: any) {
       console.error('Error in removeUserFromProject:', error);
       throw error;
