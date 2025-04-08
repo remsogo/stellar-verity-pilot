@@ -13,6 +13,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Project } from '@/types/project';
 
 const Projects = () => {
   const queryClient = useQueryClient();

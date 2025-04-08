@@ -1,11 +1,12 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { Project } from '@/types/project';
 
 /**
  * Retrieves all projects the current user has access to
  */
-export async function getProjects() {
+export async function getProjects(): Promise<Project[]> {
   try {
     // Use the RPC function to avoid infinite recursion
     const { data, error } = await supabase
@@ -13,7 +14,7 @@ export async function getProjects() {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data || [];
+    return data as Project[] || [];
   } catch (error: any) {
     console.error('Error fetching projects:', error);
     toast({
@@ -28,7 +29,7 @@ export async function getProjects() {
 /**
  * Retrieves a single project by ID
  */
-export async function getProject(id: string) {
+export async function getProject(id: string): Promise<Project | null> {
   try {
     // Check if user has access to this project first
     const { data: projectAccess, error: accessError } = await supabase
@@ -47,7 +48,7 @@ export async function getProject(id: string) {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Project;
   } catch (error: any) {
     console.error('Error fetching project:', error);
     toast({
@@ -62,7 +63,7 @@ export async function getProject(id: string) {
 /**
  * Creates a new project
  */
-export async function createProject(name: string, description?: string) {
+export async function createProject(name: string, description?: string): Promise<Project | null> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -80,7 +81,7 @@ export async function createProject(name: string, description?: string) {
       throw error;
     }
     
-    return data;
+    return data as Project;
   } catch (error: any) {
     console.error('Error creating project:', error);
     throw error;
@@ -90,7 +91,7 @@ export async function createProject(name: string, description?: string) {
 /**
  * Updates an existing project
  */
-export async function updateProject(id: string, updates: { name?: string; description?: string }) {
+export async function updateProject(id: string, updates: { name?: string; description?: string }): Promise<Project | null> {
   try {
     const { data, error } = await supabase
       .from('projects')
@@ -101,7 +102,7 @@ export async function updateProject(id: string, updates: { name?: string; descri
     
     if (error) throw error;
     
-    return data;
+    return data as Project;
   } catch (error: any) {
     console.error('Error updating project:', error);
     throw error;
@@ -111,7 +112,7 @@ export async function updateProject(id: string, updates: { name?: string; descri
 /**
  * Deletes a project by ID
  */
-export async function deleteProject(id: string) {
+export async function deleteProject(id: string): Promise<boolean> {
   try {
     const { error } = await supabase
       .from('projects')

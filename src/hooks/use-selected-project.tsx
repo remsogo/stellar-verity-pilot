@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getProjects } from '@/lib/api';
 import { toast } from '@/components/ui/use-toast';
+import { Project } from '@/types/project';
 
 export const useSelectedProject = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
@@ -38,7 +39,7 @@ export const useSelectedProject = () => {
           const projects = await getProjects();
           console.log('Projects fetched for auto-selection:', projects);
           
-          if (projects.length > 0) {
+          if (projects && projects.length > 0) {
             // Auto-select the first project (usually the most recent)
             console.log('Auto-selecting the first project', projects[0].id);
             setSelectedProjectId(projects[0].id);

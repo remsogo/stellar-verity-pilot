@@ -1,7 +1,6 @@
-
 // Root API index file
 export * from './defects';
-export * from './projects'; // This now re-exports from the projects folder
+export * from './projects';
 export * from './testCases';
 export * from './testExecutions';
 export * from './testPlans';

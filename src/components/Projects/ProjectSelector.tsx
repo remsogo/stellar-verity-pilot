@@ -10,6 +10,7 @@ import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSelectedProject } from '@/hooks/use-selected-project';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Project } from '@/types/project';
 
 export const ProjectSelector = () => {
   const [open, setOpen] = useState(false);
@@ -26,7 +27,9 @@ export const ProjectSelector = () => {
     refreshProjectSelection();
   }, [refreshProjectSelection]);
   
-  const selectedProject = projects?.find(project => project.id === selectedProjectId);
+  const selectedProject = projects && selectedProjectId ? 
+    projects.find(project => project.id === selectedProjectId) : 
+    undefined;
   
   if (isLoading) {
     return <Skeleton className="h-9 w-[200px]" />;

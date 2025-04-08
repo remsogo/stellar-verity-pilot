@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ProjectCard } from './ProjectCard';
 import { useNavigate } from 'react-router-dom';
@@ -17,13 +16,7 @@ import {
 import { deleteProject } from '@/lib/api';
 import { useSelectedProject } from '@/hooks/use-selected-project';
 import { toast } from '@/components/ui/use-toast';
-
-interface Project {
-  id: string;
-  name: string;
-  description?: string;
-  created_at: string;
-}
+import { Project } from '@/types/project';
 
 interface ProjectsListProps {
   projects: Project[];
@@ -58,22 +51,18 @@ export const ProjectsList: React.FC<ProjectsListProps> = ({ projects, onDelete }
   };
 
   const handleSelectProject = async (id: string) => {
-    // Prevent multiple selections at once
     if (selectionInProgress) return;
     
     try {
       setSelectionInProgress(true);
       
-      // Select the project
       selectProject(id);
       
-      // Show a toast notification to confirm selection
       toast({
         title: "Project selected",
         description: `Selected project: ${projects.find(p => p.id === id)?.name}`,
       });
       
-      // Navigate to home page after selection
       setTimeout(() => {
         navigate('/', { replace: true });
         setSelectionInProgress(false);
