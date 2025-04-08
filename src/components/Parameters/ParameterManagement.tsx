@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,7 +46,6 @@ export const ParameterManagement: React.FC = () => {
     };
 
     if (editingParameter) {
-      // Update existing parameter
       setParameters(parameters.map(p => 
         p.name === editingParameter.name ? newParameter : p
       ));
@@ -56,7 +54,6 @@ export const ParameterManagement: React.FC = () => {
         description: `Parameter "${newParameter.name}" has been updated.`
       });
     } else {
-      // Check for duplicate
       if (parameters.some(p => p.name === newParameter.name)) {
         toast({
           title: "Error",
@@ -66,7 +63,6 @@ export const ParameterManagement: React.FC = () => {
         return;
       }
       
-      // Add new parameter
       setParameters([...parameters, newParameter]);
       toast({
         title: "Parameter Added",
@@ -94,7 +90,6 @@ export const ParameterManagement: React.FC = () => {
   };
 
   const handleSaveAll = () => {
-    // Here you would save to the database
     toast({
       title: "Parameters Saved",
       description: `Successfully saved ${parameters.length} parameters.`

@@ -10,6 +10,7 @@ import { TestCaseFormValues } from "./TestCaseFormTypes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { parameterService } from "@/lib/utils/parameterService";
+import { Parameter, ParameterType } from "@/types/parameter";
 
 interface TestCaseParametersProps {
   control: Control<TestCaseFormValues>;
@@ -37,10 +38,10 @@ export const TestCaseParameters: React.FC<TestCaseParametersProps> = ({
         }
       }
       
-      // Convert to Parameter objects
-      const parametersObject = detectedParameters.map(param => ({
+      // Convert to Parameter objects with proper type casting
+      const parametersObject: Parameter[] = detectedParameters.map(param => ({
         name: param,
-        type: "string",
+        type: "string" as ParameterType, // Cast to ParameterType
         description: `Parameter for ${param}`,
         defaultValue: ""
       }));

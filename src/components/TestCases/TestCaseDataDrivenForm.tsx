@@ -10,6 +10,7 @@ import { TestCaseFormValues } from "./TestCaseFormTypes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { parameterService } from "@/lib/utils/parameterService";
+import { Parameter, ParameterType } from "@/types/parameter";
 
 interface TestCaseDataDrivenFormProps {
   control: Control<TestCaseFormValues>;
@@ -27,10 +28,10 @@ export const TestCaseDataDrivenForm: React.FC<TestCaseDataDrivenFormProps> = ({
   // Generate parameters JSON when detected parameters change
   useEffect(() => {
     if (detectedParameters.length > 0 && dataEnabled) {
-      // Convert to Parameter objects
-      const parameters = detectedParameters.map(param => ({
+      // Convert to Parameter objects with the correct type
+      const parameters: Parameter[] = detectedParameters.map(param => ({
         name: param,
-        type: "string",
+        type: "string" as ParameterType, // Cast to ParameterType
         description: `Parameter for ${param}`,
         defaultValue: ""
       }));
