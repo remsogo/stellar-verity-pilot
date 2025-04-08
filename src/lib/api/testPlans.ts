@@ -18,6 +18,7 @@ export const mapDbTestPlanToTestPlan = (dbTestPlan: DbTestPlan): TestPlan => {
 };
 
 export const getTestPlans = async (projectId: string): Promise<TestPlan[]> => {
+  // Use type assertion to let TypeScript know we're using the correct table
   const { data, error } = await supabase
     .from("test_plans")
     .select("*")
@@ -27,7 +28,8 @@ export const getTestPlans = async (projectId: string): Promise<TestPlan[]> => {
     throw new Error(`Error fetching test plans: ${error.message}`);
   }
 
-  return (data as DbTestPlan[]).map(mapDbTestPlanToTestPlan);
+  // Use type assertion to safely convert the returned data
+  return (data as unknown as DbTestPlan[]).map(mapDbTestPlanToTestPlan);
 };
 
 export const getTestPlan = async (id: string): Promise<TestPlan> => {
@@ -41,11 +43,11 @@ export const getTestPlan = async (id: string): Promise<TestPlan> => {
     throw new Error(`Error fetching test plan: ${error.message}`);
   }
 
-  return mapDbTestPlanToTestPlan(data as DbTestPlan);
+  return mapDbTestPlanToTestPlan(data as unknown as DbTestPlan);
 };
 
 export const createTestPlan = async (testPlan: Partial<TestPlan>): Promise<TestPlan> => {
-  const dbTestPlan: Partial<DbTestPlan> = {
+  const dbTestPlan = {
     title: testPlan.title || "New Test Plan",
     description: testPlan.description,
     project_id: testPlan.project_id,
@@ -56,7 +58,7 @@ export const createTestPlan = async (testPlan: Partial<TestPlan>): Promise<TestP
 
   const { data, error } = await supabase
     .from("test_plans")
-    .insert(dbTestPlan)
+    .insert([dbTestPlan]) // Wrap in array for insert
     .select()
     .single();
 
@@ -64,11 +66,11 @@ export const createTestPlan = async (testPlan: Partial<TestPlan>): Promise<TestP
     throw new Error(`Error creating test plan: ${error.message}`);
   }
 
-  return mapDbTestPlanToTestPlan(data as DbTestPlan);
+  return mapDbTestPlanToTestPlan(data as unknown as DbTestPlan);
 };
 
 export const updateTestPlan = async (testPlan: Partial<TestPlan> & { id: string }): Promise<TestPlan> => {
-  const dbTestPlan: Partial<DbTestPlan> = {
+  const dbTestPlan = {
     title: testPlan.title,
     description: testPlan.description,
     status: testPlan.status,
@@ -86,7 +88,7 @@ export const updateTestPlan = async (testPlan: Partial<TestPlan> & { id: string 
     throw new Error(`Error updating test plan: ${error.message}`);
   }
 
-  return mapDbTestPlanToTestPlan(data as DbTestPlan);
+  return mapDbTestPlanToTestPlan(data as unknown as DbTestPlan);
 };
 
 export const deleteTestPlan = async (id: string): Promise<void> => {

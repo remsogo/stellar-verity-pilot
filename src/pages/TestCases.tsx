@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/Layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,16 +18,7 @@ import { testCases } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { useSelectedProject } from "@/hooks/use-selected-project";
 import { Badge } from "@/components/ui/badge";
-
-interface TestCase {
-  id: string;
-  title: string;
-  description: string;
-  is_parent: boolean;
-  parent_id: string | null;
-  status: string;
-  children?: TestCase[];
-}
+import { TestCase } from "@/types";
 
 const TestCases = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -56,13 +46,16 @@ const TestCases = () => {
       }
 
       if (data) {
+        // Cast data to TestCase[] to ensure proper typing
+        const typedData = data as unknown as TestCase[];
+        
         // Organize test cases into parent-child structure
         const parents: TestCase[] = [];
         const childrenMap: Record<string, TestCase[]> = {};
         const orphans: TestCase[] = [];
 
         // First pass - categorize all tests
-        data.forEach((tc: TestCase) => {
+        typedData.forEach((tc: TestCase) => {
           if (tc.is_parent) {
             parents.push({...tc, children: []});
           } else if (tc.parent_id) {

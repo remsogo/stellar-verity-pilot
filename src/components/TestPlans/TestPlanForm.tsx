@@ -15,6 +15,7 @@ import { TestCase } from "@/types";
 import { getTestCase } from "@/lib/api";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TestPlanFormProps {
   testPlan?: TestPlan;
@@ -41,9 +42,43 @@ export const TestPlanForm = ({ testPlan, onSubmit, isLoading = false }: TestPlan
   const { selectedProjectId } = useSelectedProject();
   
   useEffect(() => {
+    if (selectedProjectId) {
+      fetchAvailableTestCases();
+    }
+  }, [selectedProjectId]);
+  
+  useEffect(() => {
     // Whenever selectedTestCases changes, update the form value
     setValue("test_cases", selectedTestCases);
   }, [selectedTestCases, setValue]);
+  
+  const fetchAvailableTestCases = async () => {
+    if (!selectedProjectId) return;
+    
+    setIsLoadingTestCases(true);
+    try {
+      const { data, error } = await supabase
+        .from("test_cases")
+        .select("*")
+        .eq("project_id", selectedProjectId);
+        
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        setAvailableTestCases(data as unknown as TestCase[]);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error fetching test cases",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingTestCases(false);
+    }
+  };
   
   const handleFormSubmit = async (data: Partial<TestPlan>) => {
     if (!selectedProjectId) {
