@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import TestCases from "./pages/TestCases";
 import TestCaseForm from "./pages/TestCaseForm";
+import TestExecution from "./pages/TestExecution";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +88,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <TestCaseForm />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/test-execution/:id" 
+                element={
+                  <ProtectedRoute>
+                    <TestExecution />
                   </ProtectedRoute>
                 } 
               />

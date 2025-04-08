@@ -2,8 +2,10 @@
 import { TestCase } from "@/types";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Tag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CalendarDays, Tag, PlayCircle, Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 interface TestCaseCardProps {
   testCase: TestCase;
@@ -40,7 +42,7 @@ export const TestCaseCard = ({ testCase }: TestCaseCardProps) => {
           <div className="flex items-center text-muted-foreground">
             <CalendarDays className="h-3.5 w-3.5 mr-1" />
             <span className="text-xs">
-              {new Date(testCase.updatedAt).toLocaleDateString()}
+              {new Date(testCase.updatedAt || testCase.updated_at).toLocaleDateString()}
             </span>
           </div>
           <Badge variant="outline" className={cn("text-xs font-normal", priorityVariants[testCase.priority])}>
@@ -48,21 +50,37 @@ export const TestCaseCard = ({ testCase }: TestCaseCardProps) => {
           </Badge>
         </div>
       </CardContent>
-      <CardFooter className="pt-0 flex-wrap gap-1">
-        {testCase.tags.slice(0, 3).map((tag) => (
-          <div
-            key={tag}
-            className="flex items-center text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground"
-          >
-            <Tag className="h-3 w-3 mr-1" />
-            {tag}
-          </div>
-        ))}
-        {testCase.tags.length > 3 && (
-          <div className="text-xs text-muted-foreground px-2 py-1">
-            +{testCase.tags.length - 3} more
-          </div>
-        )}
+      <CardFooter className="flex flex-col gap-2">
+        <div className="flex flex-wrap gap-1 w-full">
+          {testCase.tags.slice(0, 3).map((tag) => (
+            <div
+              key={tag}
+              className="flex items-center text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground"
+            >
+              <Tag className="h-3 w-3 mr-1" />
+              {tag}
+            </div>
+          ))}
+          {testCase.tags.length > 3 && (
+            <div className="text-xs text-muted-foreground px-2 py-1">
+              +{testCase.tags.length - 3} more
+            </div>
+          )}
+        </div>
+        <div className="flex gap-2 w-full mt-2">
+          <Button variant="outline" size="sm" className="flex-1" asChild>
+            <Link to={`/test-cases/${testCase.id}`}>
+              <Edit className="h-3.5 w-3.5 mr-1" />
+              Edit
+            </Link>
+          </Button>
+          <Button variant="default" size="sm" className="flex-1" asChild>
+            <Link to={`/test-execution/${testCase.id}`}>
+              <PlayCircle className="h-3.5 w-3.5 mr-1" />
+              Execute
+            </Link>
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
