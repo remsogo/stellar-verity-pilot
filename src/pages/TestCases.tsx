@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/Layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,11 +20,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSelectedProject } from "@/hooks/use-selected-project";
 import { Badge } from "@/components/ui/badge";
 import { TestCase } from "@/types";
+import { getChildTestCases } from "@/lib/api/testCases/getChildTestCases";
+import { mapDbTestCaseToTestCase } from "@/lib/api/testCaseMappers";
 
 const TestCases = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [testCasesList, setTestCasesList] = useState<TestCase[]>([]);
   const [expandedParents, setExpandedParents] = useState<Record<string, boolean>>({});
+  const [childrenMap, setChildrenMap] = useState<Record<string, TestCase[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const { selectedProjectId } = useSelectedProject();
 
@@ -46,31 +50,27 @@ const TestCases = () => {
       }
 
       if (data) {
-        const typedData = data as unknown as TestCase[];
+        // Convertir les données en TestCase[]
+        const typedData = data.map(item => mapDbTestCaseToTestCase(item as any));
         
         const parents: TestCase[] = [];
-        const childrenMap: Record<string, TestCase[]> = {};
+        const childrenMapTemp: Record<string, TestCase[]> = {};
         const orphans: TestCase[] = [];
 
         typedData.forEach((tc: TestCase) => {
           if (tc.is_parent) {
             parents.push({...tc, children: []});
           } else if (tc.parent_id) {
-            if (!childrenMap[tc.parent_id]) {
-              childrenMap[tc.parent_id] = [];
+            if (!childrenMapTemp[tc.parent_id]) {
+              childrenMapTemp[tc.parent_id] = [];
             }
-            childrenMap[tc.parent_id].push(tc);
+            childrenMapTemp[tc.parent_id].push(tc);
           } else {
             orphans.push(tc);
           }
         });
 
-        parents.forEach(parent => {
-          if (childrenMap[parent.id]) {
-            parent.children = childrenMap[parent.id];
-          }
-        });
-
+        setChildrenMap(childrenMapTemp);
         setTestCasesList([...parents, ...orphans]);
       }
     } catch (error: any) {
@@ -88,11 +88,12 @@ const TestCases = () => {
   };
 
   const handleSearch = () => {
+    // Fonction de recherche
   };
 
   const filteredTestCases = testCasesList.filter(testCase => 
     testCase.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (testCase.children && testCase.children.some(child => 
+    (childrenMap[testCase.id] && childrenMap[testCase.id].some(child => 
       child.title.toLowerCase().includes(searchQuery.toLowerCase())
     ))
   );
@@ -156,7 +157,7 @@ const TestCases = () => {
                     <>
                       <TableRow key={testCase.id} className={testCase.is_parent ? "bg-accent/20" : ""}>
                         <TableCell>
-                          {testCase.is_parent && testCase.children && testCase.children.length > 0 ? (
+                          {testCase.is_parent && childrenMap[testCase.id] && childrenMap[testCase.id].length > 0 ? (
                             <Button 
                               variant="ghost" 
                               size="icon" 
@@ -208,8 +209,8 @@ const TestCases = () => {
                           </Link>
                         </TableCell>
                       </TableRow>
-                      {testCase.is_parent && expandedParents[testCase.id] && testCase.children && 
-                        testCase.children.map(child => (
+                      {testCase.is_parent && expandedParents[testCase.id] && childrenMap[testCase.id] && 
+                        childrenMap[testCase.id].map(child => (
                           <TableRow key={`child-${child.id}`} className="bg-muted/10">
                             <TableCell>
                               <div className="h-6 w-6 flex items-center justify-center ml-4">

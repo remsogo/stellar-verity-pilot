@@ -1,5 +1,5 @@
 
-import { DbTestCase, DbTestStep, TestCase, TestStep } from "@/types";
+import { DbTestCase, DbTestStep, TestCase, TestStep, normalizeStatus } from "@/types";
 
 /**
  * Convertit un DbTestStep en TestStep
@@ -22,7 +22,7 @@ export const mapDbTestCaseToTestCase = (dbTestCase: DbTestCase): TestCase => {
     id: dbTestCase.id,
     title: dbTestCase.title,
     description: dbTestCase.description,
-    status: dbTestCase.status as any, // Conversion du statut
+    status: normalizeStatus(dbTestCase.status), // Utilisation de la fonction normalizeStatus
     priority: dbTestCase.priority as any, // Conversion de la priorité
     author: dbTestCase.author,
     project_id: dbTestCase.project_id,

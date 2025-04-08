@@ -71,5 +71,23 @@ export type DbTestStep = {
 };
 
 // Status et Priority
-export type Status = 'passed' | 'failed' | 'pending' | 'blocked' | 'Ready' | 'Draft';
+export type Status = 'passed' | 'failed' | 'pending' | 'blocked' | 'Ready' | 'Draft' | 'Blocked';
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
+
+// Assurons-nous que les statuts correspondent à ceux utilisés dans l'application
+export const normalizeStatus = (status: string): Status => {
+  // Mise en forme du statut pour être conforme au type Status
+  const normalizedStatus = status.toLowerCase();
+  
+  if (normalizedStatus === 'ready' || 
+      normalizedStatus === 'draft' || 
+      normalizedStatus === 'blocked' ||
+      normalizedStatus === 'passed' ||
+      normalizedStatus === 'failed' ||
+      normalizedStatus === 'pending') {
+    return normalizedStatus as Status;
+  }
+  
+  // Statut par défaut si non reconnu
+  return 'pending';
+};

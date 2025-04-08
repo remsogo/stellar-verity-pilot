@@ -4,9 +4,11 @@ import { TestCaseCard } from "./TestCaseCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Filter, Plus, ChevronRight, ChevronDown, Folder, FileText } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { getTestCase } from "@/lib/api/testCases/getTestCase";
+import { getChildTestCases } from "@/lib/api/testCases/getChildTestCases";
 
 interface TestCaseListProps {
   testCases: TestCase[];
@@ -15,31 +17,19 @@ interface TestCaseListProps {
 
 export const TestCaseList = ({ testCases, title = "Recent Test Cases" }: TestCaseListProps) => {
   const [expandedParents, setExpandedParents] = useState<Record<string, boolean>>({});
+  const [loadedChildTestCases, setLoadedChildTestCases] = useState<Record<string, TestCase[]>>({});
 
   // Organize test cases into parent-child structure
   const organizeTestCases = () => {
     const parents: TestCase[] = [];
-    const childrenMap: Record<string, TestCase[]> = {};
     const orphans: TestCase[] = [];
 
     // First pass - categorize all tests
     testCases.forEach((tc: TestCase) => {
       if (tc.is_parent) {
-        parents.push({...tc, children: []});
-      } else if (tc.parent_id) {
-        if (!childrenMap[tc.parent_id]) {
-          childrenMap[tc.parent_id] = [];
-        }
-        childrenMap[tc.parent_id].push(tc);
-      } else {
+        parents.push({...tc});
+      } else if (!tc.parent_id) {
         orphans.push(tc);
-      }
-    });
-
-    // Second pass - assign children to parents
-    parents.forEach(parent => {
-      if (childrenMap[parent.id]) {
-        parent.children = childrenMap[parent.id];
       }
     });
 
@@ -48,10 +38,33 @@ export const TestCaseList = ({ testCases, title = "Recent Test Cases" }: TestCas
 
   const organizedTestCases = organizeTestCases();
 
-  const handleToggleExpand = (parentId: string) => {
+  const handleToggleExpand = async (parentId: string) => {
+    // Si on ferme, pas besoin de charger les données
+    if (expandedParents[parentId]) {
+      setExpandedParents(prev => ({
+        ...prev,
+        [parentId]: false
+      }));
+      return;
+    }
+    
+    // Si les enfants n'ont pas encore été chargés, les charger
+    if (!loadedChildTestCases[parentId]) {
+      try {
+        const childTests = await getChildTestCases(parentId);
+        setLoadedChildTestCases(prev => ({
+          ...prev,
+          [parentId]: childTests
+        }));
+      } catch (error) {
+        console.error("Erreur lors du chargement des cas de test enfants:", error);
+      }
+    }
+    
+    // Ouvrir le nœud parent
     setExpandedParents(prev => ({
       ...prev,
-      [parentId]: !prev[parentId]
+      [parentId]: true
     }));
   };
 
@@ -79,7 +92,7 @@ export const TestCaseList = ({ testCases, title = "Recent Test Cases" }: TestCas
           {organizedTestCases.map((testCase) => (
             <div key={testCase.id}>
               <div className="flex items-start gap-2">
-                {testCase.is_parent && testCase.children && testCase.children.length > 0 ? (
+                {testCase.is_parent ? (
                   <Button 
                     variant="ghost" 
                     size="icon" 
@@ -103,9 +116,9 @@ export const TestCaseList = ({ testCases, title = "Recent Test Cases" }: TestCas
                   <TestCaseCard testCase={testCase} showBadge={true} />
                   
                   {/* Render children if parent is expanded */}
-                  {testCase.is_parent && expandedParents[testCase.id] && testCase.children && (
+                  {testCase.is_parent && expandedParents[testCase.id] && loadedChildTestCases[testCase.id] && (
                     <div className="ml-6 mt-2 space-y-2">
-                      {testCase.children.map(child => (
+                      {loadedChildTestCases[testCase.id].map(child => (
                         <TestCaseCard key={child.id} testCase={child} isChild={true} />
                       ))}
                     </div>

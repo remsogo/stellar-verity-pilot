@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +16,8 @@ import { testCaseSchema, TestCaseFormValues } from "./TestCaseFormTypes";
 import { getTestCase } from "@/lib/api/testCases/getTestCase";
 import { createTestCase } from "@/lib/api/testCases/createTestCase";
 import { updateTestCase } from "@/lib/api/testCases/updateTestCase";
+import { supabase } from "@/integrations/supabase/client";
+import { Status, normalizeStatus } from "@/types";
 
 interface TestCaseFormProps {
   id?: string;
@@ -92,11 +95,13 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
       const formattedPriority = testCase.priority.charAt(0).toUpperCase() + testCase.priority.slice(1);
       setValue("priority", formattedPriority as "High" | "Medium" | "Low");
       
-      setValue("status", 
-        (testCase.status === "Draft" || testCase.status === "Ready" || testCase.status === "Blocked") 
-          ? testCase.status 
-          : "Draft"
-      );
+      // Gérer les différentes valeurs possibles de status
+      const currentStatus = testCase.status.toLowerCase();
+      if (currentStatus === "draft" || currentStatus === "ready" || currentStatus === "blocked") {
+        setValue("status", currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1) as "Draft" | "Ready" | "Blocked");
+      } else {
+        setValue("status", "Draft");
+      }
       
       setValue("is_parent", Boolean(testCase.is_parent));
       
@@ -134,7 +139,7 @@ export const TestCaseForm: React.FC<TestCaseFormProps> = ({ id }) => {
         description: data.description,
         preconditions: data.preconditions,
         priority: data.priority.toLowerCase() as any,
-        status: data.status,
+        status: data.status.toLowerCase() as Status, // Convertir en minuscules pour correspondre au type Status
         author: "Current User",
         project_id: selectedProjectId,
         is_parent: data.is_parent,
