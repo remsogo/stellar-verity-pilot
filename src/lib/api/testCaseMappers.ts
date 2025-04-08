@@ -37,7 +37,7 @@ export const mapDbTestCaseToTestCase = (dbTestCase: DbTestCase): TestCase => {
     updated_at: dbTestCase.updated_at,
     // Map steps if they exist
     steps: dbTestCase.steps ? dbTestCase.steps.map(mapDbTestStepToTestStep) : undefined,
-    // Initialize empty children array (using array of BaseTestCase to avoid circular references)
+    // Initialize empty children array
     children: [],
   };
 };
