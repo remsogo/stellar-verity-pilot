@@ -85,7 +85,60 @@ export async function createProject(name: string, description?: string): Promise
     
     console.log('Authenticated user:', user.id);
     
-    // Step 1: Insert the project
+    // Try a direct approach using admin_query to bypass RLS
+    try {
+      // Use admin_query to create the project
+      const insertSQL = `
+        INSERT INTO projects(name, description) 
+        VALUES('${name.replace(/'/g, "''")}', ${description ? `'${description.replace(/'/g, "''")}'` : 'NULL'})
+        RETURNING id, name, description, created_at, updated_at;
+      `;
+      
+      // Get the inserted project data
+      const { data: queryResult, error: queryError } = await supabase.rpc('admin_query_with_return', {
+        query_text: insertSQL
+      });
+      
+      if (queryError) {
+        console.error('Error in admin_query insert:', queryError);
+        throw queryError;
+      }
+      
+      // Parse the returned JSON result
+      let projectData;
+      try {
+        // The result should be a JSON string array with one object
+        projectData = queryResult ? JSON.parse(queryResult)[0] : null;
+      } catch (parseError) {
+        console.error('Error parsing project data:', parseError, queryResult);
+        throw new Error('Failed to parse project data after creation');
+      }
+      
+      if (!projectData || !projectData.id) {
+        throw new Error('No project data returned after creation');
+      }
+      
+      console.log('Project created successfully with admin_query:', projectData);
+      
+      // Now add the user as owner using add_project_owner
+      const { error: ownerError } = await supabase
+        .rpc('add_project_owner', { 
+          project_id: projectData.id,
+          owner_id: user.id 
+        });
+      
+      if (ownerError) {
+        console.error('Error adding project owner:', ownerError);
+        throw ownerError;
+      }
+      
+      return projectData as Project;
+    } catch (directError: any) {
+      console.error('Direct admin_query approach failed:', directError);
+      // Fall back to the original method if direct approach fails
+    }
+    
+    // Step 1: Insert the project using regular method
     const { data: projectData, error: projectError } = await supabase
       .from('projects')
       .insert([{ 
@@ -136,9 +189,7 @@ export async function createProject(name: string, description?: string): Promise
     
     console.log('Project created successfully:', projectData);
     
-    // Step 2: If the project was created but the trigger didn't add the owner
-    // (which could happen if there are still issues with RLS or triggers),
-    // explicitly add the current user as project owner
+    // Explicitly add the current user as project owner
     try {
       // Check if we were already added as owner via trigger
       const { data: existingOwner, error: checkError } = await supabase

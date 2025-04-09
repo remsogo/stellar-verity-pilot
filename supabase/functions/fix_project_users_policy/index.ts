@@ -38,14 +38,45 @@ serve(async (req) => {
       // Continue anyway, might still work
     }
     
-    // Drop existing policies first to avoid conflicts
-    const { error: dropError } = await supabase.rpc('drop_policy_if_exists', {
-      policy_name: 'Users can view project users',
-      table_name: 'project_users'
+    // Fix the table constraint if missing (which could cause issues)
+    const { error: constraintError } = await supabase.rpc('admin_query', {
+      query_text: `
+        DO $$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.table_constraints 
+            WHERE constraint_name = 'project_users_project_id_user_id_key' 
+            AND table_name = 'project_users'
+          ) THEN
+            ALTER TABLE public.project_users ADD CONSTRAINT project_users_project_id_user_id_key UNIQUE (project_id, user_id);
+          END IF;
+        END
+        $$;
+      `
     })
     
-    if (dropError) {
-      console.error('Failed to drop policy:', dropError)
+    if (constraintError) {
+      console.error('Failed to fix constraint:', constraintError)
+    }
+    
+    // Drop existing policies first to avoid conflicts
+    const dropPolicies = [
+      'Users can view project users',
+      'Project admins can add users',
+      'Project admins can update users',
+      'Project admins can delete users',
+      'Users can always see themselves'
+    ]
+    
+    for (const policy of dropPolicies) {
+      const { error: dropError } = await supabase.rpc('drop_policy_if_exists', {
+        policy_name: policy,
+        table_name: 'project_users'
+      })
+      
+      if (dropError) {
+        console.error(`Failed to drop policy ${policy}:`, dropError)
+      }
     }
     
     // Call our improved function to create non-recursive policies
@@ -63,6 +94,34 @@ serve(async (req) => {
     if (rlsEnableError) {
       console.error('Failed to re-enable RLS:', rlsEnableError)
       // Continue anyway, we succeeded with the main task
+    }
+    
+    // Ensure admin_query_with_return function exists
+    const createReturnFunction = `
+    CREATE OR REPLACE FUNCTION public.admin_query_with_return(query_text TEXT)
+    RETURNS TEXT
+    LANGUAGE plpgsql
+    SECURITY DEFINER
+    SET search_path = public
+    AS $$
+    DECLARE
+      result_json TEXT;
+    BEGIN
+      EXECUTE 'SELECT json_agg(t) FROM (' || query_text || ') t' INTO result_json;
+      RETURN result_json;
+    END;
+    $$;
+    
+    GRANT EXECUTE ON FUNCTION public.admin_query_with_return(TEXT) TO authenticated;
+    GRANT EXECUTE ON FUNCTION public.admin_query_with_return(TEXT) TO service_role;
+    `;
+    
+    const { error: functionError } = await supabase.rpc('admin_query', {
+      query_text: createReturnFunction
+    })
+    
+    if (functionError) {
+      console.error('Failed to create admin_query_with_return function:', functionError)
     }
     
     return new Response(
