@@ -940,6 +940,10 @@ export type Database = {
         Args: { p_project_id: string; p_user_id: string }
         Returns: boolean
       }
+      safe_add_user_to_project: {
+        Args: { p_project_id: string; p_user_id: string; p_role: string }
+        Returns: string
+      }
       update_test_cycle: {
         Args: { cycle_data: Json }
         Returns: {
@@ -960,6 +964,10 @@ export type Database = {
       }
       update_user_role: {
         Args: { p_project_id: string; p_user_id: string; p_role: string }
+        Returns: boolean
+      }
+      validate_parameter_value: {
+        Args: { p_param_type: string; p_value: Json }
         Returns: boolean
       }
     }
