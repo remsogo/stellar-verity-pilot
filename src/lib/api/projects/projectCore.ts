@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { Project } from '@/types/project';
+import { fixProjectUsersPolicy } from './fixPolicyUtils';
 
 /**
  * Retrieves all projects the current user has access to
@@ -66,6 +67,9 @@ export async function createProject(name: string, description?: string): Promise
   console.log('Starting project creation with:', { name, description });
   
   try {
+    // First try to fix any policy issues to avoid recursion
+    await fixProjectUsersPolicy();
+    
     // Get current user session
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
@@ -93,6 +97,35 @@ export async function createProject(name: string, description?: string): Promise
     
     if (projectError) {
       console.error('Error inserting project:', projectError);
+      
+      // If we get a recursion error, try to fix it and retry
+      if (projectError.code === '42P17' && projectError.message.includes('recursion')) {
+        console.log('Detected recursion error, attempting policy fix...');
+        const fixed = await fixProjectUsersPolicy();
+        
+        if (fixed) {
+          console.log('Policy fixed, retrying project creation...');
+          // Retry the insert after fixing
+          const { data: retryData, error: retryError } = await supabase
+            .from('projects')
+            .insert([{ name, description }])
+            .select()
+            .single();
+            
+          if (retryError) {
+            console.error('Error in retry insert:', retryError);
+            throw retryError;
+          }
+          
+          if (!retryData) {
+            throw new Error('No project data returned after retry');
+          }
+          
+          console.log('Project created successfully on retry:', retryData);
+          return retryData as Project;
+        }
+      }
+      
       throw projectError;
     }
     
@@ -103,20 +136,38 @@ export async function createProject(name: string, description?: string): Promise
     
     console.log('Project created successfully:', projectData);
     
-    // Step 2: Add the current user as project owner directly to avoid RLS issues
+    // Step 2: If the project was created but the trigger didn't add the owner
+    // (which could happen if there are still issues with RLS or triggers),
+    // explicitly add the current user as project owner
     try {
-      const { error: ownerError } = await supabase
-        .rpc('add_project_owner', { 
-          project_id: projectData.id,
-          owner_id: user.id 
+      // Check if we were already added as owner via trigger
+      const { data: existingOwner, error: checkError } = await supabase
+        .rpc('is_project_member_secure', { 
+          p_project_id: projectData.id
         });
       
-      if (ownerError) {
-        console.error('Error adding project owner:', ownerError);
-        throw ownerError;
+      if (checkError) {
+        console.error('Error checking project membership:', checkError);
       }
       
-      console.log('Owner added successfully to project:', projectData.id);
+      // If we're not already an owner, add explicitly
+      if (!existingOwner) {
+        console.log('Explicitly adding owner to project:', projectData.id);
+        const { error: ownerError } = await supabase
+          .rpc('add_project_owner', { 
+            project_id: projectData.id,
+            owner_id: user.id 
+          });
+        
+        if (ownerError) {
+          console.error('Error adding project owner:', ownerError);
+          throw ownerError;
+        }
+        
+        console.log('Owner added successfully to project:', projectData.id);
+      } else {
+        console.log('User already added as project member by trigger');
+      }
     } catch (ownerError: any) {
       console.error('Error in add_project_owner RPC call:', ownerError);
       
