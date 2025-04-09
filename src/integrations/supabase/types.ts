@@ -809,6 +809,10 @@ export type Database = {
         Args: { user_uuid: string; project_uuid: string }
         Returns: boolean
       }
+      create_project_users_policy: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       create_test_cycle: {
         Args: { cycle_data: Json }
         Returns: {
@@ -829,6 +833,10 @@ export type Database = {
       }
       delete_test_cycle: {
         Args: { p_cycle_id: string }
+        Returns: undefined
+      }
+      drop_policy_if_exists: {
+        Args: { policy_name: string; table_name: string }
         Returns: undefined
       }
       get_project_parameters: {
