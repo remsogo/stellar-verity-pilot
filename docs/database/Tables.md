@@ -1,22 +1,9 @@
-# Database Documentation
 
-## Overview
+# Database Tables
 
-This document provides comprehensive information about the database structure for the test management application. It covers tables, relationships, and Row Level Security (RLS) policies that control data access.
+This document details the tables in the TestMaster application database.
 
-## Database Schema
-
-The application uses a Supabase PostgreSQL database with the following main entities:
-
-### Core Entities
-
-1. **Projects** - The top-level organizational units
-2. **Test Cases** - Individual test scenarios
-3. **Test Plans** - Collections of test cases for execution 
-4. **Test Executions** - Records of test case runs
-5. **Defects** - Issues found during testing
-
-## Tables and Relationships
+## Projects and Users
 
 ### Projects
 
@@ -54,6 +41,26 @@ This junction table manages the many-to-many relationship between users and proj
 - **admin**: Can manage users and project settings
 - **editor**: Can create and modify test cases and other project entities
 - **viewer**: Read-only access to project data
+
+### User Profiles
+
+```
+Table: user_profiles
+```
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| auth_id | uuid | Reference to auth.users.id |
+| email | text | User email |
+| full_name | text | User's full name |
+| avatar_url | text | Profile picture URL |
+| created_at | timestamp | Creation timestamp |
+| updated_at | timestamp | Last update timestamp |
+
+User profiles store additional information about authenticated users and enables system-wide functionality.
+
+## Test Management
 
 ### Test Cases
 
@@ -99,6 +106,8 @@ Table: test_steps
 | updated_at | timestamp | Last update timestamp |
 
 Test steps represent the individual actions and verifications within a test case.
+
+## Test Planning and Execution
 
 ### Test Plans
 
@@ -180,6 +189,8 @@ Table: execution_steps
 | created_at | timestamp | Creation timestamp |
 | updated_at | timestamp | Last update timestamp |
 
+## Defect Tracking
+
 ### Defects
 
 ```
@@ -199,6 +210,8 @@ Table: defects
 | test_execution_id | uuid | Reference to test_executions.id (optional) |
 | created_at | timestamp | Creation timestamp |
 | updated_at | timestamp | Last update timestamp |
+
+## Test Organization
 
 ### Test Suites
 
@@ -246,6 +259,8 @@ Table: test_collections
 | created_at | timestamp | Creation timestamp |
 | updated_at | timestamp | Last update timestamp |
 
+## Requirements Management
+
 ### Requirements
 
 ```
@@ -263,24 +278,58 @@ Table: requirements
 | created_at | timestamp | Creation timestamp |
 | updated_at | timestamp | Last update timestamp |
 
-### User Profiles
+## Parameter Management
+
+### System Parameters
 
 ```
-Table: user_profiles
+Table: system_parameters
 ```
 
 | Column | Type | Description |
 |--------|------|-------------|
 | id | uuid | Primary key |
-| auth_id | uuid | Reference to auth.users.id |
-| email | text | User email |
-| full_name | text | User's full name |
-| role | text | Global system role |
-| avatar_url | text | Profile picture URL |
+| name | text | Parameter name |
+| description | text | Parameter description |
+| param_type | text | Parameter type |
+| default_value | jsonb | Default value |
 | created_at | timestamp | Creation timestamp |
 | updated_at | timestamp | Last update timestamp |
 
-User profiles store additional information about authenticated users and enables system-wide functionality.
+### Project Parameters
+
+```
+Table: project_parameters
+```
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| project_id | uuid | Reference to projects.id |
+| name | text | Parameter name |
+| description | text | Parameter description |
+| param_type | text | Parameter type |
+| default_value | jsonb | Default value |
+| created_at | timestamp | Creation timestamp |
+| updated_at | timestamp | Last update timestamp |
+
+### Parameter Values
+
+```
+Table: parameter_values
+```
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| context_type | text | Context type (system, project, test_case) |
+| entity_id | uuid | ID of the entity this value belongs to |
+| parameter_id | uuid | Reference to parameter definition |
+| value | jsonb | Parameter value |
+| created_at | timestamp | Creation timestamp |
+| updated_at | timestamp | Last update timestamp |
+
+## File Attachments
 
 ### Attachments
 
@@ -299,132 +348,3 @@ Table: attachments
 | file_size | integer | File size in bytes |
 | uploaded_by | text | User who uploaded the file |
 | created_at | timestamp | Upload timestamp |
-
-## Database Functions
-
-### Project Management Functions
-
-1. **get_user_projects()** 
-   - Returns all projects the current user has access to
-   - Used for project selection and listing
-   - Security definer function that prevents RLS recursion
-
-2. **is_member_of_project(project_id UUID)**
-   - Checks if the current user is a member of the specified project
-   - Returns boolean
-   - Used for permission checks
-   - Security definer function that prevents RLS recursion
-
-3. **is_project_member(project_id UUID, user_id UUID)**
-   - Checks if a specific user is a member of a project
-   - Returns boolean
-   - Used for administrative functions
-
-4. **is_project_admin(project_id UUID, user_id UUID)**
-   - Checks if a specific user is an admin of a project
-   - Returns boolean
-   - Used for administrative functions
-
-5. **get_project_users(p_project_id UUID)**
-   - Returns all users who are members of a project
-   - Used for user management in projects
-   - Returns comprehensive user data including email and roles
-
-6. **handle_new_project()**
-   - Automatically adds the creator as an owner when a new project is created
-   - Trigger function that runs after project insertion
-   - Ensures proper user assignment at project creation
-
-### Test Cycle Management Functions
-
-1. **get_project_test_cycles(p_project_id UUID)**
-   - Returns all test cycles for a project
-   - Used for test cycle listing
-
-2. **get_test_cycle_by_id(p_cycle_id UUID)**
-   - Returns a specific test cycle
-   - Used for test cycle details
-
-3. **create_test_cycle(cycle_data JSONB)**
-   - Creates a new test cycle
-   - Returns the created test cycle
-
-4. **update_test_cycle(cycle_data JSONB)**
-   - Updates an existing test cycle
-   - Returns the updated test cycle
-
-5. **delete_test_cycle(p_cycle_id UUID)**
-   - Deletes a test cycle
-   - Returns void
-
-6. **get_test_cycle_stats(p_cycle_id UUID)**
-   - Returns execution statistics for a test cycle
-   - Returns JSONB with counts by status
-
-## Entity Relationship Diagram
-
-```
-projects 1──┐
-            │
-            │ *
-project_users
-            │
-            │
-auth.users 1─┘
-
-projects 1───┐
-             │
-             │ *
-test_cases ◄─┼───┐
-         │   │   │
-         │   │   │
-         │   │   │ *
-         │   │   └── test_steps
-         │   │
-         │   │ *
-         └──►test_plans
-             │
-             │ *
-             └── test_cycles
-                  │
-                  │ *
-                  └── test_executions
-                        │
-                        │ *
-                        └── execution_steps
-```
-
-## Row Level Security (RLS)
-
-Most tables have Row Level Security policies applied that restrict access based on project membership. These policies ensure that users can only see and manipulate data for projects they are members of.
-
-The general pattern is:
-1. Users can see resources for projects they're members of
-2. Users with admin/owner roles can modify resources
-3. Users with viewer roles can only read data
-
-Security definer functions like `is_member_of_project` and `get_user_projects` are used to prevent infinite recursion in RLS policies, which could occur when a policy attempts to query the same table it's protecting.
-
-## Project User Management
-
-The system provides a complete API for project user management:
-
-1. **getProjectUsers(projectId)** - Gets all users for a specific project
-2. **getProjectWithMembers(projectId)** - Gets a project with its member details
-3. **addUserToProject(projectId, email, role)** - Adds a user to a project
-4. **updateUserRole(projectId, userId, role)** - Updates a user's role in the project
-5. **removeUserFromProject(projectId, userId)** - Removes a user from a project
-6. **checkUserProjectMembership(projectId)** - Checks if the current user is a member of a project
-
-## Typical Data Flow
-
-1. Create a Project
-2. Add Users to the Project with appropriate roles
-3. Create Test Cases with Steps
-4. Create Test Plans by selecting Test Cases
-5. Create Test Cycles based on Test Plans
-6. Execute Tests, recording results in Test Executions
-7. Create Defects for failed tests
-8. Track and resolve Defects
-
-This documentation provides a foundation for understanding the database structure and relationships. Refer to specific code files for implementation details.
