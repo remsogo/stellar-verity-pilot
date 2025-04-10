@@ -10,19 +10,30 @@ import { fixProjectUsersPolicy } from './fixPolicyUtils';
 export async function createNewProject(name: string, description?: string): Promise<Project | null> {
   try {
     // First check if a project with this name already exists
-    const { data: existingProject, error: checkError } = await supabase
+    // Only use direct equals comparison to avoid false positives
+    const { data: existingProjects, error: checkError } = await supabase
       .from('projects')
-      .select('id')
-      .eq('name', name)
-      .maybeSingle();
+      .select('id, name')
+      .eq('name', name);
     
     if (checkError) {
       console.error('Error checking for existing project:', checkError);
+      if (checkError.message && checkError.message.includes('recursion')) {
+        console.log('Recursion error detected, proceeding with project creation attempt anyway');
+        // Continue despite the error since this might be a false positive due to RLS recursion
+      } else {
+        throw checkError;
+      }
+    } else if (existingProjects && existingProjects.length > 0) {
+      console.log('Found existing projects with the same name:', existingProjects);
+      // Double check the exact match to avoid case sensitivity issues
+      const exactMatch = existingProjects.find(p => p.name === name);
+      if (exactMatch) {
+        throw new Error('A project with this name already exists');
+      }
     }
     
-    if (existingProject) {
-      throw new Error('A project with this name already exists');
-    }
+    console.log('No duplicate project found, proceeding with creation');
     
     // Always use the create_project_bypass function which handles both 
     // project creation and user assignment in a single transaction
@@ -34,6 +45,13 @@ export async function createNewProject(name: string, description?: string): Prom
     
     if (error) {
       console.error('Error in create_project_bypass:', error);
+      
+      // Check if the error is a duplicate key error for the project itself
+      if (error.message && error.message.includes('duplicate key') && 
+          error.message.includes('projects_name_key')) {
+        throw new Error('A project with this name already exists');
+      }
+      
       throw error;
     }
     
