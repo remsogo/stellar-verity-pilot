@@ -67,78 +67,41 @@ export async function createProject(name: string, description?: string): Promise
   console.log('Starting project creation with:', { name, description });
   
   try {
-    // First try to fix any policy issues to avoid recursion
-    await fixProjectUsersPolicy();
-    
-    // Get current user session
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError) {
-      console.error('Error getting current user:', userError);
-      throw userError;
-    }
-    
-    if (!user) {
-      console.error('No authenticated user found');
-      throw new Error('Authentication required to create a project');
-    }
-    
-    console.log('Authenticated user:', user.id);
-    
-    // Try a direct approach using admin_query to bypass RLS
-    try {
-      // Use admin_query to create the project
-      const insertSQL = `
-        INSERT INTO projects(name, description) 
-        VALUES('${name.replace(/'/g, "''")}', ${description ? `'${description.replace(/'/g, "''")}'` : 'NULL'})
-        RETURNING id, name, description, created_at, updated_at;
-      `;
-      
-      // Get the inserted project data
-      const { data: queryResult, error: queryError } = await supabase.rpc('admin_query_with_return', {
-        query_text: insertSQL
+    // Try the new bypass function first which avoids RLS issues entirely
+    const { data: projectId, error: bypassError } = await supabase
+      .rpc('create_project_bypass', { 
+        p_name: name,
+        p_description: description || null
       });
+    
+    if (bypassError) {
+      console.error('Error in create_project_bypass:', bypassError);
       
-      if (queryError) {
-        console.error('Error in admin_query insert:', queryError);
-        throw queryError;
-      }
+      // If the bypass function fails, try the fix_project_users_policy and retry
+      console.log('Attempting alternative project creation approach...');
+      await fixProjectUsersPolicy();
+    } else if (projectId) {
+      console.log('Project created successfully with bypass function:', projectId);
       
-      // Parse the returned JSON result
-      let projectData;
-      try {
-        // The result should be a JSON string array with one object
-        projectData = queryResult ? JSON.parse(queryResult)[0] : null;
-      } catch (parseError) {
-        console.error('Error parsing project data:', parseError, queryResult);
-        throw new Error('Failed to parse project data after creation');
-      }
+      // Fetch the complete project details
+      const { data: projectData, error: fetchError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
       
-      if (!projectData || !projectData.id) {
-        throw new Error('No project data returned after creation');
-      }
-      
-      console.log('Project created successfully with admin_query:', projectData);
-      
-      // Now add the user as owner using add_project_owner
-      const { error: ownerError } = await supabase
-        .rpc('add_project_owner', { 
-          project_id: projectData.id,
-          owner_id: user.id 
-        });
-      
-      if (ownerError) {
-        console.error('Error adding project owner:', ownerError);
-        throw ownerError;
+      if (fetchError) {
+        console.error('Error fetching new project:', fetchError);
+        throw fetchError;
       }
       
       return projectData as Project;
-    } catch (directError: any) {
-      console.error('Direct admin_query approach failed:', directError);
-      // Fall back to the original method if direct approach fails
     }
     
-    // Step 1: Insert the project using regular method
+    // Fallback to direct insert only if bypass failed
+    console.log('Using fallback direct insert approach');
+    
+    // Fallback direct insert
     const { data: projectData, error: projectError } = await supabase
       .from('projects')
       .insert([{ 
@@ -150,35 +113,6 @@ export async function createProject(name: string, description?: string): Promise
     
     if (projectError) {
       console.error('Error inserting project:', projectError);
-      
-      // If we get a recursion error, try to fix it and retry
-      if (projectError.code === '42P17' && projectError.message.includes('recursion')) {
-        console.log('Detected recursion error, attempting policy fix...');
-        const fixed = await fixProjectUsersPolicy();
-        
-        if (fixed) {
-          console.log('Policy fixed, retrying project creation...');
-          // Retry the insert after fixing
-          const { data: retryData, error: retryError } = await supabase
-            .from('projects')
-            .insert([{ name, description }])
-            .select()
-            .single();
-            
-          if (retryError) {
-            console.error('Error in retry insert:', retryError);
-            throw retryError;
-          }
-          
-          if (!retryData) {
-            throw new Error('No project data returned after retry');
-          }
-          
-          console.log('Project created successfully on retry:', retryData);
-          return retryData as Project;
-        }
-      }
-      
       throw projectError;
     }
     
@@ -187,61 +121,9 @@ export async function createProject(name: string, description?: string): Promise
       throw new Error('Failed to create project');
     }
     
-    console.log('Project created successfully:', projectData);
+    console.log('Project created successfully with fallback approach:', projectData);
     
-    // Explicitly add the current user as project owner
-    try {
-      // Check if we were already added as owner via trigger
-      const { data: existingOwner, error: checkError } = await supabase
-        .rpc('is_project_member_secure', { 
-          p_project_id: projectData.id
-        });
-      
-      if (checkError) {
-        console.error('Error checking project membership:', checkError);
-      }
-      
-      // If we're not already an owner, add explicitly
-      if (!existingOwner) {
-        console.log('Explicitly adding owner to project:', projectData.id);
-        const { error: ownerError } = await supabase
-          .rpc('add_project_owner', { 
-            project_id: projectData.id,
-            owner_id: user.id 
-          });
-        
-        if (ownerError) {
-          console.error('Error adding project owner:', ownerError);
-          throw ownerError;
-        }
-        
-        console.log('Owner added successfully to project:', projectData.id);
-      } else {
-        console.log('User already added as project member by trigger');
-      }
-    } catch (ownerError: any) {
-      console.error('Error in add_project_owner RPC call:', ownerError);
-      
-      // Cleanup: Delete the project if we couldn't add the owner
-      try {
-        console.log('Attempting to clean up project:', projectData.id);
-        const { error: deleteError } = await supabase
-          .from('projects')
-          .delete()
-          .eq('id', projectData.id);
-        
-        if (deleteError) {
-          console.error('Error cleaning up project after owner addition failed:', deleteError);
-        } else {
-          console.log('Project cleaned up after owner addition failed');
-        }
-      } catch (cleanupError) {
-        console.error('Exception during project cleanup:', cleanupError);
-      }
-      
-      throw new Error(`Failed to add you as project owner: ${ownerError.message}`);
-    }
-    
+    // The trigger should have automatically added the user as owner
     return projectData as Project;
     
   } catch (error: any) {

@@ -65,7 +65,9 @@ serve(async (req) => {
       'Project admins can add users',
       'Project admins can update users',
       'Project admins can delete users',
-      'Users can always see themselves'
+      'Users can always see themselves',
+      'Users can view project members',
+      'Admins can modify project members'
     ]
     
     for (const policy of dropPolicies) {
@@ -79,11 +81,38 @@ serve(async (req) => {
       }
     }
     
-    // Call our improved function to create non-recursive policies
-    const { error: createError } = await supabase.rpc('create_project_users_policy')
+    // Create simplified policies to avoid recursion
+    const simplifiedPolicies = `
+      -- Simplified view policy
+      CREATE POLICY "Users can view project members" ON public.project_users
+        FOR SELECT
+        USING (
+          user_id = auth.uid() OR
+          project_id IN (
+            SELECT project_id FROM project_users
+            WHERE user_id = auth.uid()
+          )
+        );
+
+      -- Admin policies
+      CREATE POLICY "Admins can modify project members" ON public.project_users
+        FOR ALL
+        USING (
+          EXISTS (
+            SELECT 1 FROM project_users pu
+            WHERE pu.project_id = project_id 
+            AND pu.user_id = auth.uid()
+            AND (pu.role = 'admin' OR pu.role = 'owner')
+          )
+        );
+    `
     
-    if (createError) {
-      throw new Error(`Failed to create policies: ${createError.message}`)
+    const { error: policiesError } = await supabase.rpc('admin_query', {
+      query_text: simplifiedPolicies
+    })
+    
+    if (policiesError) {
+      throw new Error(`Failed to create policies: ${policiesError.message}`)
     }
     
     // Re-enable RLS
@@ -96,32 +125,39 @@ serve(async (req) => {
       // Continue anyway, we succeeded with the main task
     }
     
-    // Ensure admin_query_with_return function exists
-    const createReturnFunction = `
-    CREATE OR REPLACE FUNCTION public.admin_query_with_return(query_text TEXT)
-    RETURNS TEXT
+    // Ensure bypass function exists
+    const createBypassFunction = `
+    CREATE OR REPLACE FUNCTION public.create_project_bypass(p_name TEXT, p_description TEXT)
+    RETURNS UUID
     LANGUAGE plpgsql
     SECURITY DEFINER
     SET search_path = public
     AS $$
     DECLARE
-      result_json TEXT;
+      new_project_id UUID;
     BEGIN
-      EXECUTE 'SELECT json_agg(t) FROM (' || query_text || ') t' INTO result_json;
-      RETURN result_json;
+      -- Insert the new project
+      INSERT INTO projects(name, description)
+      VALUES(p_name, p_description)
+      RETURNING id INTO new_project_id;
+      
+      -- Add the current user as an owner
+      INSERT INTO project_users(project_id, user_id, role)
+      VALUES(new_project_id, auth.uid(), 'owner');
+      
+      RETURN new_project_id;
     END;
     $$;
     
-    GRANT EXECUTE ON FUNCTION public.admin_query_with_return(TEXT) TO authenticated;
-    GRANT EXECUTE ON FUNCTION public.admin_query_with_return(TEXT) TO service_role;
+    GRANT EXECUTE ON FUNCTION public.create_project_bypass(TEXT, TEXT) TO authenticated;
     `;
     
-    const { error: functionError } = await supabase.rpc('admin_query', {
-      query_text: createReturnFunction
+    const { error: bypassFunctionError } = await supabase.rpc('admin_query', {
+      query_text: createBypassFunction
     })
     
-    if (functionError) {
-      console.error('Failed to create admin_query_with_return function:', functionError)
+    if (bypassFunctionError) {
+      console.error('Failed to create bypass function:', bypassFunctionError)
     }
     
     return new Response(

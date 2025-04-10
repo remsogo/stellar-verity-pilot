@@ -801,6 +801,10 @@ export type Database = {
         Args: { project_id: string; owner_id: string }
         Returns: undefined
       }
+      admin_query_with_return: {
+        Args: { query_text: string }
+        Returns: string
+      }
       check_user_project_admin: {
         Args: { user_uuid: string; project_uuid: string }
         Returns: boolean
@@ -808,6 +812,10 @@ export type Database = {
       check_user_project_membership: {
         Args: { user_uuid: string; project_uuid: string }
         Returns: boolean
+      }
+      create_project_bypass: {
+        Args: { p_name: string; p_description: string }
+        Returns: string
       }
       create_project_users_policy: {
         Args: Record<PropertyKey, never>
