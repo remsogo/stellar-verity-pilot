@@ -47,9 +47,16 @@ export async function createProject(name: string, description?: string): Promise
   console.log('Starting project creation with:', { name, description });
   
   try {
-    return await createNewProject(name, description);
+    const project = await createNewProject(name, description);
+    return project;
   } catch (error: any) {
     console.error('Error in createProject flow:', error);
+    
+    // Handle specific error messages in a more user-friendly way
+    if (error.message && error.message.includes('already exists')) {
+      throw new Error('A project with this name already exists');
+    }
+    
     throw error;
   }
 }

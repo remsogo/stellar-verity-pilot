@@ -97,7 +97,9 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
       let errorMessage = err.message || 'An unexpected error occurred';
       
       // Check for specific error messages and make them more user-friendly
-      if (errorMessage.includes('duplicate key') || errorMessage.includes('unique constraint')) {
+      if (errorMessage.includes('duplicate key') || 
+          errorMessage.includes('unique constraint') || 
+          errorMessage.includes('already exists')) {
         errorMessage = 'A project with this name already exists.';
       } else if (errorMessage.includes('JWT')) {
         errorMessage = 'Your session has expired. Please log in again.';

@@ -9,6 +9,21 @@ import { fixProjectUsersPolicy } from './fixPolicyUtils';
  */
 export async function createNewProject(name: string, description?: string): Promise<Project | null> {
   try {
+    // First check if a project with this name already exists
+    const { data: existingProject, error: checkError } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('name', name)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error('Error checking for existing project:', checkError);
+    }
+    
+    if (existingProject) {
+      throw new Error('A project with this name already exists');
+    }
+    
     // Always use the create_project_bypass function which handles both 
     // project creation and user assignment in a single transaction
     const { data: projectId, error } = await supabase
@@ -83,6 +98,24 @@ export async function updateProjectDetails(
   id: string, 
   updates: { name?: string; description?: string }
 ): Promise<Project | null> {
+  // If trying to update the name, first check if it's a duplicate
+  if (updates.name) {
+    const { data: existingProject, error: checkError } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('name', updates.name)
+      .neq('id', id)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error('Error checking for existing project:', checkError);
+    }
+    
+    if (existingProject) {
+      throw new Error('A project with this name already exists');
+    }
+  }
+
   const { data, error } = await supabase
     .from('projects')
     .update(updates)
