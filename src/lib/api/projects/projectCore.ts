@@ -67,68 +67,57 @@ export async function createProject(name: string, description?: string): Promise
   console.log('Starting project creation with:', { name, description });
   
   try {
-    // Try the new bypass function first which avoids RLS issues entirely
-    const { data: projectId, error: bypassError } = await supabase
+    // Always use the create_project_bypass function which handles both 
+    // project creation and user assignment in a single transaction
+    const { data: projectId, error } = await supabase
       .rpc('create_project_bypass', { 
         p_name: name,
         p_description: description || null
       });
     
-    if (bypassError) {
-      console.error('Error in create_project_bypass:', bypassError);
-      
-      // If the bypass function fails, try the fix_project_users_policy and retry
-      console.log('Attempting alternative project creation approach...');
-      await fixProjectUsersPolicy();
-    } else if (projectId) {
-      console.log('Project created successfully with bypass function:', projectId);
-      
-      // Fetch the complete project details
-      const { data: projectData, error: fetchError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', projectId)
-        .single();
-      
-      if (fetchError) {
-        console.error('Error fetching new project:', fetchError);
-        throw fetchError;
-      }
-      
-      return projectData as Project;
+    if (error) {
+      console.error('Error in create_project_bypass:', error);
+      throw error;
     }
     
-    // Fallback to direct insert only if bypass failed
-    console.log('Using fallback direct insert approach');
+    console.log('Project created successfully with ID:', projectId);
     
-    // Fallback direct insert
-    const { data: projectData, error: projectError } = await supabase
+    // Fetch the complete project details
+    const { data: projectData, error: fetchError } = await supabase
       .from('projects')
-      .insert([{ 
-        name, 
-        description 
-      }])
-      .select()
+      .select('*')
+      .eq('id', projectId)
       .single();
     
-    if (projectError) {
-      console.error('Error inserting project:', projectError);
-      throw projectError;
+    if (fetchError) {
+      console.error('Error fetching new project:', fetchError);
+      throw fetchError;
     }
     
-    if (!projectData) {
-      console.error('No project data returned after insert');
-      throw new Error('Failed to create project');
-    }
-    
-    console.log('Project created successfully with fallback approach:', projectData);
-    
-    // The trigger should have automatically added the user as owner
     return projectData as Project;
     
   } catch (error: any) {
     console.error('Error in createProject flow:', error);
-    throw error;
+    
+    // Try policy fix as a last resort
+    try {
+      console.log('Attempting policy fix as fallback...');
+      await fixProjectUsersPolicy();
+      
+      // Try one more time with direct insert
+      console.log('Attempting direct project insert after policy fix...');
+      const { data, error: directError } = await supabase
+        .from('projects')
+        .insert([{ name, description }])
+        .select()
+        .single();
+        
+      if (directError) throw directError;
+      return data as Project;
+    } catch (fallbackError: any) {
+      console.error('Fallback attempt also failed:', fallbackError);
+      throw error; // Throw the original error
+    }
   }
 }
 
