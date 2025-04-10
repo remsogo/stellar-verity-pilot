@@ -3,6 +3,8 @@
 export * from './projectCore';
 export * from './projectUsers';
 export * from './projectModels';
+export * from './projectQueries';
+export * from './projectMutations';
 
 // Export a combined API for easier imports
 export const ProjectsAPI = {
