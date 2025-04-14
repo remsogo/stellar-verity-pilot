@@ -924,13 +924,7 @@ export type Database = {
       }
       get_user_projects: {
         Args: Record<PropertyKey, never>
-        Returns: {
-          created_at: string
-          description: string | null
-          id: string
-          name: string
-          updated_at: string
-        }[]
+        Returns: string[]
       }
       is_member_of_project: {
         Args: { project_id: string }

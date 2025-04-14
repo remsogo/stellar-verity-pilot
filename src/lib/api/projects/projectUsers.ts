@@ -13,10 +13,11 @@ export async function getProjectUsers(projectId: string): Promise<any[]> {
     const { data, error } = await supabase
       .from('project_users')
       .select(`
+        id,
         project_id,
         user_id,
         role,
-        user_profiles:user_profiles(user_id, full_name)
+        user_profiles:user_profiles(user_id, full_name, email)
       `)
       .eq('project_id', projectId);
     
@@ -25,12 +26,14 @@ export async function getProjectUsers(projectId: string): Promise<any[]> {
       throw error;
     }
     
+    console.log('Raw project users data:', data);
+    
     // Format the data to match the expected structure
     return data.map(item => ({
-      id: item.user_id, // Using user_id as the id in this context
+      id: item.id,
       user_id: item.user_id,
-      email: '', // Email not available in this query
-      full_name: item.user_profiles ? item.user_profiles.full_name : null,
+      email: item.user_profiles?.email || '',
+      full_name: item.user_profiles?.full_name || null,
       role: item.role
     }));
   } catch (error: any) {
