@@ -30,7 +30,7 @@ export async function getProjectUsers(projectId: string): Promise<any[]> {
       id: item.user_id, // Using user_id as the id in this context
       user_id: item.user_id,
       email: '', // Email not available in this query
-      full_name: item.user_profiles?.full_name || null,
+      full_name: item.user_profiles ? item.user_profiles.full_name : null,
       role: item.role
     }));
   } catch (error: any) {
