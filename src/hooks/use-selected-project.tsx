@@ -46,15 +46,34 @@ export const useSelectedProject = create<SelectedProjectState>()(
             return;
           }
           
-          // With the new schema, check if the user is the owner of the project
+          // First check if the user is the owner of the project
           const { data, error } = await supabase
             .from('projects')
             .select('id')
             .eq('id', selectedProjectId)
             .eq('owner_id', userData.user.id)
-            .single();
+            .maybeSingle();
           
-          if (error || !data) {
+          if (error) {
+            console.error("Error checking project ownership:", error);
+            // Don't reset selection on error, let's check project_users
+          }
+          
+          // If user is the owner, they have access
+          if (data) {
+            set({ isLoading: false });
+            return;
+          }
+          
+          // If not the owner, check if they are in project_users
+          const { data: projectUserData, error: projectUserError } = await supabase
+            .from('project_users')
+            .select('project_id')
+            .eq('project_id', selectedProjectId)
+            .eq('user_id', userData.user.id)
+            .maybeSingle();
+            
+          if (projectUserError || !projectUserData) {
             console.log("User no longer has access to this project, resetting selection");
             set({ selectedProjectId: null, isLoading: false });
           } else {

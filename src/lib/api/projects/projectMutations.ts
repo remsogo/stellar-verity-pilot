@@ -62,9 +62,14 @@ export async function createNewProject(name: string, description?: string): Prom
     
     console.log('Project created successfully with ID:', data.id);
     
-    // The project creation was successful
-    // Note: The schema's RLS policies will automatically restrict access
-    // and the database trigger will insert the user as a project_user automatically
+    // Add the current user to project_users as owner
+    await supabase
+      .from('project_users')
+      .insert({
+        project_id: data.id,
+        user_id: userData.user.id,
+        role: 'owner'
+      });
     
     return data as Project;
   } catch (error: any) {

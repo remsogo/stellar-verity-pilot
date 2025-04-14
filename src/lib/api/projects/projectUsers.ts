@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectRole } from '@/integrations/supabase/project-types';
 import { toast } from '@/components/ui/use-toast';
@@ -8,16 +9,14 @@ import { ProjectUser, ProjectWithMembers } from './projectModels';
  */
 export async function getProjectUsers(projectId: string): Promise<any[]> {
   try {
-    // Query project_users directly and join with user_profiles
+    // Updated query to match new schema structure
     const { data, error } = await supabase
       .from('project_users')
       .select(`
-        id,
         project_id,
         user_id,
         role,
-        added_at,
-        profiles:user_id(user_id, full_name)
+        user_profiles:user_id(user_id, full_name)
       `)
       .eq('project_id', projectId);
     
@@ -28,10 +27,10 @@ export async function getProjectUsers(projectId: string): Promise<any[]> {
     
     // Format the data to match the expected structure
     return data.map(item => ({
-      id: item.id,
+      id: item.user_id, // Using user_id as the id in this context
       user_id: item.user_id,
-      email: item.profiles?.email || 'Unknown',
-      full_name: item.profiles?.full_name || null,
+      email: '', // Email not available in this query
+      full_name: item.user_profiles?.full_name || null,
       role: item.role
     }));
   } catch (error: any) {
@@ -60,7 +59,7 @@ export async function getProjectWithMembers(projectId: string): Promise<ProjectW
     // Map the members to the expected format
     const formattedMembers = members.map(member => ({
       id: member.id,
-      email: member.email,
+      email: member.email || '',
       name: member.full_name || undefined,
       role: member.role as ProjectRole
     }));
@@ -86,7 +85,7 @@ export async function getProjectWithMembers(projectId: string): Promise<ProjectW
  */
 export async function addUserToProject(projectId: string, email: string, role: ProjectRole) {
   try {
-    // First check if user exists in auth.users by their email
+    // First check if user exists in user_profiles by their email
     const { data: userProfile, error: userError } = await supabase
       .from('user_profiles')
       .select('user_id, full_name')
@@ -109,7 +108,7 @@ export async function addUserToProject(projectId: string, email: string, role: P
           invited_email: email,
           invited_by: (await supabase.auth.getUser()).data.user?.id,
           token: Math.random().toString(36).substring(2, 15),
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+          status: 'pending'
         })
         .select()
         .single();
@@ -140,16 +139,16 @@ export async function addUserToProject(projectId: string, email: string, role: P
         role: role
       })
       .select()
-      .single();
+      .maybeSingle();
     
     if (error) throw error;
     
     return {
-      id: data.id,
-      user_id: data.user_id,
-      email: userProfile?.email || email,
+      id: userId,
+      user_id: userId,
+      email: email,
       full_name: userProfile?.full_name || null,
-      role: data.role
+      role: role
     };
   } catch (error: any) {
     console.error('Error adding user to project:', error);
@@ -166,7 +165,7 @@ export async function updateUserRole(projectId: string, userId: string, role: Pr
       .from('project_users')
       .update({ role })
       .eq('project_id', projectId)
-      .eq('id', userId)
+      .eq('user_id', userId)
       .select()
       .single();
     
@@ -188,7 +187,7 @@ export async function removeUserFromProject(projectId: string, userId: string) {
       .from('project_users')
       .delete()
       .eq('project_id', projectId)
-      .eq('id', userId);
+      .eq('user_id', userId);
     
     if (error) throw error;
     
@@ -211,25 +210,10 @@ export async function checkUserProjectMembership(projectId: string): Promise<boo
       return false;
     }
     
-    // First check if the user is the owner
-    const { data: project, error: projectError } = await supabase
-      .from('projects')
-      .select('id')
-      .eq('id', projectId)
-      .eq('owner_id', userId)
-      .maybeSingle();
-    
-    if (projectError) throw projectError;
-    
-    // If user is the owner, they are a member
-    if (project) {
-      return true;
-    }
-    
-    // Otherwise check if they're in the project_users table
+    // Check if the user is in the project_users table
     const { data, error } = await supabase
       .from('project_users')
-      .select('id')
+      .select('role')
       .eq('project_id', projectId)
       .eq('user_id', userId)
       .maybeSingle();

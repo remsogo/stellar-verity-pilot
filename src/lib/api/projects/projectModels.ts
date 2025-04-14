@@ -10,7 +10,7 @@ export interface ProjectUser {
   project_id: string;
   user_id: string;
   role: ProjectRole;
-  added_at: string;
+  added_at?: string;
 }
 
 /**
