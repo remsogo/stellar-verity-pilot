@@ -4,31 +4,30 @@ import { ProjectRole } from '@/integrations/supabase/project-types';
 import { toast } from '@/components/ui/use-toast';
 import { ProjectUser, ProjectWithMembers } from './projectModels';
 
-interface ProjectUserData {
-  id: string;
-  user_id: string;
-  email: string;
-  full_name: string | null;
-  role: string;
-}
-
 /**
  * Retrieves all users for a specific project
  */
-export async function getProjectUsers(projectId: string): Promise<ProjectUserData[]> {
+export async function getProjectUsers(projectId: string): Promise<any[]> {
   try {
-    // Call the get_project_users function directly as an RPC
-    // This leverages the security definer function to avoid the infinite recursion issue
-    const { data, error } = await supabase.rpc('get_project_users', {
-      p_project_id: projectId
-    });
+    // With the new schema, we query the project_users table directly
+    const { data, error } = await supabase
+      .from('project_users')
+      .select('*, user:user_id(id, email:user_profiles(email), name:user_profiles(full_name))')
+      .eq('project_id', projectId);
     
     if (error) {
-      console.error('RPC error:', error);
+      console.error('Error fetching project users:', error);
       throw error;
     }
     
-    return data as ProjectUserData[] || [];
+    // Format the data to match the expected structure
+    return data.map(item => ({
+      id: item.id,
+      user_id: item.user_id,
+      email: item.user?.email?.email || 'Unknown',
+      full_name: item.user?.name?.full_name || null,
+      role: item.role
+    }));
   } catch (error: any) {
     console.error('Error fetching project users:', error);
     throw error;
@@ -84,7 +83,7 @@ export async function addUserToProject(projectId: string, email: string, role: P
     // First check if user exists in user_profiles
     const { data: userProfile, error: userError } = await supabase
       .from('user_profiles')
-      .select('auth_id, email, full_name')
+      .select('user_id, email, full_name')
       .eq('email', email)
       .maybeSingle();
     
@@ -93,17 +92,38 @@ export async function addUserToProject(projectId: string, email: string, role: P
     let userId;
     
     if (userProfile) {
-      // If user exists, use their auth_id
-      userId = userProfile.auth_id;
+      // If user exists, use their user_id
+      userId = userProfile.user_id;
     } else {
-      // For now, we'll store the email as a placeholder
-      // In a real app, we would send an invitation email
-      userId = email;
+      // In your new schema, we need to handle this differently
+      // For now, we'll store the email as a placeholder in invitations
+      const { data: invitation, error: inviteError } = await supabase
+        .from('project_invitations')
+        .insert({
+          project_id: projectId,
+          invited_email: email,
+          invited_by: (await supabase.auth.getUser()).data.user?.id,
+          token: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+        })
+        .select()
+        .single();
+      
+      if (inviteError) throw inviteError;
       
       toast({
         title: 'User not found',
         description: 'An invitation will be sent to this email address.',
       });
+      
+      // Return a placeholder
+      return {
+        id: invitation.id,
+        user_id: null,
+        email: email,
+        full_name: null,
+        role: role
+      };
     }
     
     // Add user to project
@@ -179,13 +199,23 @@ export async function removeUserFromProject(projectId: string, userId: string) {
  */
 export async function checkUserProjectMembership(projectId: string): Promise<boolean> {
   try {
-    // Use our new secure function to avoid RLS recursion issues
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData.user?.id;
+    
+    if (!userId) {
+      return false;
+    }
+    
     const { data, error } = await supabase
-      .rpc('is_project_member_secure', { p_project_id: projectId });
+      .from('project_users')
+      .select('id')
+      .eq('project_id', projectId)
+      .eq('user_id', userId)
+      .maybeSingle();
     
     if (error) throw error;
     
-    return data || false;
+    return !!data;
   } catch (error: any) {
     console.error('Error checking project membership:', error);
     return false;

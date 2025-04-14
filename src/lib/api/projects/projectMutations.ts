@@ -5,12 +5,11 @@ import { Project } from '@/types/project';
 import { fixProjectUsersPolicy } from './fixPolicyUtils';
 
 /**
- * Creates a new project using the secure bypass function
+ * Creates a new project and makes the current user the owner
  */
 export async function createNewProject(name: string, description?: string): Promise<Project | null> {
   try {
     // First check if a project with this name already exists
-    // Only use direct equals comparison to avoid false positives
     const { data: existingProjects, error: checkError } = await supabase
       .from('projects')
       .select('id, name')
@@ -18,13 +17,10 @@ export async function createNewProject(name: string, description?: string): Prom
     
     if (checkError) {
       console.error('Error checking for existing project:', checkError);
-      if (checkError.message && checkError.message.includes('recursion')) {
-        console.log('Recursion error detected, proceeding with project creation attempt anyway');
-        // Continue despite the error since this might be a false positive due to RLS recursion
-      } else {
-        throw checkError;
-      }
-    } else if (existingProjects && existingProjects.length > 0) {
+      throw checkError;
+    }
+    
+    if (existingProjects && existingProjects.length > 0) {
       console.log('Found existing projects with the same name:', existingProjects);
       // Double check the exact match to avoid case sensitivity issues
       const exactMatch = existingProjects.find(p => p.name === name);
@@ -35,18 +31,21 @@ export async function createNewProject(name: string, description?: string): Prom
     
     console.log('No duplicate project found, proceeding with creation');
     
-    // Always use the create_project_bypass function which handles both 
-    // project creation and user assignment in a single transaction
-    const { data: projectId, error } = await supabase
-      .rpc('create_project_bypass', { 
-        p_name: name,
-        p_description: description || null
-      });
+    // Insert the project directly using the new schema structure
+    const { data, error } = await supabase
+      .from('projects')
+      .insert({ 
+        name, 
+        description,
+        owner_id: await supabase.auth.getUser().then(response => response.data.user?.id)
+      })
+      .select()
+      .single();
     
     if (error) {
-      console.error('Error in create_project_bypass:', error);
+      console.error('Error creating project:', error);
       
-      // Check if the error is a duplicate key error for the project itself
+      // Check if the error is a duplicate key error
       if (error.message && error.message.includes('duplicate key') && 
           error.message.includes('projects_name_key')) {
         throw new Error('A project with this name already exists');
@@ -55,56 +54,14 @@ export async function createNewProject(name: string, description?: string): Prom
       throw error;
     }
     
-    console.log('Project created successfully with ID:', projectId);
+    console.log('Project created successfully with ID:', data.id);
     
-    // Fetch the complete project details
-    const { data: projectData, error: fetchError } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', projectId)
-      .single();
+    // The schema change doesn't require manually adding the user as an owner
+    // Since the RLS policy for projects is based on the owner_id field
     
-    if (fetchError) {
-      console.error('Error fetching new project:', fetchError);
-      throw fetchError;
-    }
-    
-    return projectData as Project;
-    
+    return data as Project;
   } catch (error: any) {
     console.error('Error creating project:', error);
-    
-    // Try policy fix as a last resort if we see recursion errors
-    if (error.message && error.message.includes('recursion')) {
-      try {
-        console.log('Attempting policy fix as fallback...');
-        await fixProjectUsersPolicy();
-        
-        // Try again with the bypass function after fixing policies
-        console.log('Retrying project creation after policy fix...');
-        const { data: projectId, error: retryError } = await supabase
-          .rpc('create_project_bypass', { 
-            p_name: name,
-            p_description: description || null
-          });
-          
-        if (retryError) throw retryError;
-        
-        // Fetch the project details
-        const { data: projectData, error: fetchError } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('id', projectId)
-          .single();
-        
-        if (fetchError) throw fetchError;
-        return projectData as Project;
-      } catch (fallbackError: any) {
-        console.error('Fallback attempt also failed:', fallbackError);
-        throw error; // Throw the original error
-      }
-    }
-    
     throw error;
   }
 }

@@ -58,11 +58,6 @@ export async function createProject(name: string, description?: string): Promise
       throw new Error('A project with this name already exists');
     }
     
-    // Handle recursion errors
-    if (error.message && error.message.includes('recursion')) {
-      throw new Error('Database policy error - please try again or contact support');
-    }
-    
     // For any other error, just propagate it to be handled by the UI
     throw error;
   }

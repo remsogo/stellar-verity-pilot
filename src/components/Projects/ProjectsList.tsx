@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ProjectCard } from './ProjectCard';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { deleteProject } from '@/lib/api';
+import { deleteProject } from '@/lib/api/projects';
 import { useSelectedProject } from '@/hooks/use-selected-project';
 import { toast } from '@/components/ui/use-toast';
 import { Project } from '@/types/project';

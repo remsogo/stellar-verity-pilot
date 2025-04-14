@@ -105,8 +105,6 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
         errorMessage = 'Your session has expired. Please log in again.';
       } else if (errorMessage.includes('permission denied')) {
         errorMessage = 'You do not have permission to perform this action.';
-      } else if (errorMessage.includes('recursion')) {
-        errorMessage = 'Database error: Please try again later or contact support.';
       }
       
       setError(errorMessage);
