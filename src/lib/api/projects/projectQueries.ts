@@ -22,9 +22,8 @@ export async function getProjectById(id: string): Promise<Project | null> {
 
 /**
  * Retrieves all projects the current user has access to
- * Based on the new schema, this means projects where:
- * 1. The user is the owner OR
- * 2. The user has an entry in project_users table
+ * Based on the schema, this means projects where:
+ * 1. The user is in the project_users table
  */
 export async function getAllProjects(): Promise<Project[]> {
   // Get the current user ID
@@ -35,11 +34,11 @@ export async function getAllProjects(): Promise<Project[]> {
     throw new Error('User not authenticated');
   }
   
-  // Get projects where the user is either the owner or has an entry in project_users
+  // Get projects where the user has an entry in project_users
   const { data, error } = await supabase
     .from('projects')
     .select('*')
-    .or(`owner_id.eq.${userId},id.in.(select project_id from project_users where user_id = ${userId})`);
+    .eq('id', supabase.rpc('get_user_projects'));
   
   if (error) {
     console.error('Error fetching all projects:', error);

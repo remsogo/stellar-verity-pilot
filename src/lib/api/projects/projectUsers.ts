@@ -9,14 +9,14 @@ import { ProjectUser, ProjectWithMembers } from './projectModels';
  */
 export async function getProjectUsers(projectId: string): Promise<any[]> {
   try {
-    // Updated query to match new schema structure
+    // Updated query to match the schema structure
     const { data, error } = await supabase
       .from('project_users')
       .select(`
         project_id,
         user_id,
         role,
-        user_profiles:user_id(user_id, full_name)
+        user_profiles:user_profiles(user_id, full_name)
       `)
       .eq('project_id', projectId);
     

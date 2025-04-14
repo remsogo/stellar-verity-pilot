@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Project } from '@/types/project';
 
 /**
- * Creates a new project with the current user as the owner
+ * Creates a new project and adds current user as owner in project_users
  */
 export async function createNewProject(name: string, description?: string): Promise<Project | null> {
   try {
@@ -35,13 +35,12 @@ export async function createNewProject(name: string, description?: string): Prom
       throw new Error('User not authenticated');
     }
     
-    // Insert the project with the current user as owner
+    // Insert the project
     const { data, error } = await supabase
       .from('projects')
       .insert({ 
         name, 
-        description,
-        owner_id: userData.user.id
+        description
       })
       .select()
       .single();

@@ -3,7 +3,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { Project } from "@/types/project";
 import { supabase } from "@/integrations/supabase/client";
-import { getProject } from "@/lib/api";
 
 interface SelectedProjectState {
   selectedProjectId: string | null;
@@ -46,26 +45,7 @@ export const useSelectedProject = create<SelectedProjectState>()(
             return;
           }
           
-          // First check if the user is the owner of the project
-          const { data, error } = await supabase
-            .from('projects')
-            .select('id')
-            .eq('id', selectedProjectId)
-            .eq('owner_id', userData.user.id)
-            .maybeSingle();
-          
-          if (error) {
-            console.error("Error checking project ownership:", error);
-            // Don't reset selection on error, let's check project_users
-          }
-          
-          // If user is the owner, they have access
-          if (data) {
-            set({ isLoading: false });
-            return;
-          }
-          
-          // If not the owner, check if they are in project_users
+          // Check if they are in project_users
           const { data: projectUserData, error: projectUserError } = await supabase
             .from('project_users')
             .select('project_id')
