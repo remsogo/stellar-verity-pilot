@@ -13,6 +13,16 @@ export interface ProjectUser {
   project_id: string;
   user_id: string;
   role: ProjectRole;
+  added_at: string;
+}
+
+export interface ProjectInvitation {
+  id: string;
+  project_id: string;
+  invited_email: string;
+  invited_by: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  token: string;
   created_at: string;
-  updated_at: string;
+  expires_at: string | null;
 }

@@ -8,6 +8,7 @@ import {
   removeUserFromProject as apiRemoveUserFromProject
 } from '@/lib/api/projects';
 import type { ProjectRole } from '@/integrations/supabase/project-types';
+import { supabase } from '@/integrations/supabase/client';
 
 // Re-export types with proper syntax for isolated modules
 export type { ProjectRole };
@@ -22,6 +23,7 @@ export const useProjectPermissions = (projectId?: string) => {
   const { user } = useUser();
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<ProjectRole | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,6 +35,7 @@ export const useProjectPermissions = (projectId?: string) => {
     if (!projectId || !user) {
       setIsLoading(false);
       setUserRole(null);
+      setIsOwner(false);
       setMembers([]);
       return;
     }
@@ -43,19 +46,44 @@ export const useProjectPermissions = (projectId?: string) => {
         setError(null);
         console.log("Fetching project permissions for project:", projectId);
 
-        // Get all project members using the get_project_users RPC function
+        // First check if user is the owner
+        const { data: project, error: projectError } = await supabase
+          .from('projects')
+          .select('owner_id')
+          .eq('id', projectId)
+          .single();
+        
+        if (projectError) {
+          console.error("Error checking project ownership:", projectError);
+          throw projectError;
+        }
+        
+        const isProjectOwner = project && project.owner_id === user.id;
+        setIsOwner(isProjectOwner);
+        
+        if (isProjectOwner) {
+          setUserRole('owner');
+        } else {
+          // Check project_users table for role
+          const { data: userRole, error: roleError } = await supabase
+            .from('project_users')
+            .select('role')
+            .eq('project_id', projectId)
+            .eq('user_id', user.id)
+            .single();
+          
+          if (!roleError && userRole) {
+            setUserRole(userRole.role as ProjectRole);
+          } else {
+            setUserRole(null);
+          }
+        }
+
+        // Get all project members
         const membersData = await getProjectUsers(projectId);
         console.log("Project members data:", membersData);
 
         if (membersData && Array.isArray(membersData)) {
-          // Find current user's role
-          const currentUserData = membersData.find(
-            (member) => member.email === user.email
-          );
-          
-          console.log("Current user data:", currentUserData);
-          setUserRole(currentUserData?.role as ProjectRole || null);
-
           // Convert the raw data to ProjectMember format
           const membersList: ProjectMember[] = membersData.map((member) => ({
             id: member.id,
@@ -145,6 +173,7 @@ export const useProjectPermissions = (projectId?: string) => {
   return {
     isLoading,
     userRole,
+    isOwner,
     members,
     error,
     canEdit,

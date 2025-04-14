@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectRole } from '@/integrations/supabase/project-types';
 import { toast } from '@/components/ui/use-toast';
@@ -9,10 +8,17 @@ import { ProjectUser, ProjectWithMembers } from './projectModels';
  */
 export async function getProjectUsers(projectId: string): Promise<any[]> {
   try {
-    // With the new schema, we query the project_users table directly
+    // Query project_users directly and join with user_profiles
     const { data, error } = await supabase
       .from('project_users')
-      .select('*, user:user_id(id, email:user_profiles(email), name:user_profiles(full_name))')
+      .select(`
+        id,
+        project_id,
+        user_id,
+        role,
+        added_at,
+        profiles:user_id(user_id, full_name)
+      `)
       .eq('project_id', projectId);
     
     if (error) {
@@ -24,8 +30,8 @@ export async function getProjectUsers(projectId: string): Promise<any[]> {
     return data.map(item => ({
       id: item.id,
       user_id: item.user_id,
-      email: item.user?.email?.email || 'Unknown',
-      full_name: item.user?.name?.full_name || null,
+      email: item.profiles?.email || 'Unknown',
+      full_name: item.profiles?.full_name || null,
       role: item.role
     }));
   } catch (error: any) {
@@ -80,10 +86,10 @@ export async function getProjectWithMembers(projectId: string): Promise<ProjectW
  */
 export async function addUserToProject(projectId: string, email: string, role: ProjectRole) {
   try {
-    // First check if user exists in user_profiles
+    // First check if user exists in auth.users by their email
     const { data: userProfile, error: userError } = await supabase
       .from('user_profiles')
-      .select('user_id, email, full_name')
+      .select('user_id, full_name')
       .eq('email', email)
       .maybeSingle();
     
@@ -95,15 +101,14 @@ export async function addUserToProject(projectId: string, email: string, role: P
       // If user exists, use their user_id
       userId = userProfile.user_id;
     } else {
-      // In your new schema, we need to handle this differently
-      // For now, we'll store the email as a placeholder in invitations
+      // User doesn't exist, create an invitation
       const { data: invitation, error: inviteError } = await supabase
         .from('project_invitations')
         .insert({
           project_id: projectId,
           invited_email: email,
           invited_by: (await supabase.auth.getUser()).data.user?.id,
-          token: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+          token: Math.random().toString(36).substring(2, 15),
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
         })
         .select()
@@ -206,6 +211,22 @@ export async function checkUserProjectMembership(projectId: string): Promise<boo
       return false;
     }
     
+    // First check if the user is the owner
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('id', projectId)
+      .eq('owner_id', userId)
+      .maybeSingle();
+    
+    if (projectError) throw projectError;
+    
+    // If user is the owner, they are a member
+    if (project) {
+      return true;
+    }
+    
+    // Otherwise check if they're in the project_users table
     const { data, error } = await supabase
       .from('project_users')
       .select('id')

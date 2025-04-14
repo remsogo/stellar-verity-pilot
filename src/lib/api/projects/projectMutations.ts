@@ -1,11 +1,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
 import { Project } from '@/types/project';
-import { fixProjectUsersPolicy } from './fixPolicyUtils';
 
 /**
- * Creates a new project and makes the current user the owner
+ * Creates a new project with the current user as the owner
  */
 export async function createNewProject(name: string, description?: string): Promise<Project | null> {
   try {
@@ -31,13 +29,19 @@ export async function createNewProject(name: string, description?: string): Prom
     
     console.log('No duplicate project found, proceeding with creation');
     
-    // Insert the project directly using the new schema structure
+    // Get the current user
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      throw new Error('User not authenticated');
+    }
+    
+    // Insert the project with the current user as owner
     const { data, error } = await supabase
       .from('projects')
       .insert({ 
         name, 
         description,
-        owner_id: await supabase.auth.getUser().then(response => response.data.user?.id)
+        owner_id: userData.user.id
       })
       .select()
       .single();
@@ -46,8 +50,10 @@ export async function createNewProject(name: string, description?: string): Prom
       console.error('Error creating project:', error);
       
       // Check if the error is a duplicate key error
-      if (error.message && error.message.includes('duplicate key') && 
-          error.message.includes('projects_name_key')) {
+      if (error.message && (
+          error.message.includes('duplicate key') || 
+          error.message.includes('unique constraint')
+      )) {
         throw new Error('A project with this name already exists');
       }
       
@@ -56,8 +62,9 @@ export async function createNewProject(name: string, description?: string): Prom
     
     console.log('Project created successfully with ID:', data.id);
     
-    // The schema change doesn't require manually adding the user as an owner
-    // Since the RLS policy for projects is based on the owner_id field
+    // The project creation was successful
+    // Note: The schema's RLS policies will automatically restrict access
+    // and the database trigger will insert the user as a project_user automatically
     
     return data as Project;
   } catch (error: any) {
